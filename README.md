@@ -198,6 +198,149 @@ chats/{chatId}
 
 ---
 
+## API & Service Integrations
+
+### 1. Firebase Authentication — Phone OTP
+
+**SDK:** `firebase/auth` (Web SDK v12)  
+**Used in:** `PhoneAuthScreen`, `OTPVerifyScreen`, `AuthContext`
+
+| Operation | Method | Description |
+|---|---|---|
+| Send OTP | `signInWithPhoneNumber(auth, phone, recaptchaVerifier)` | Sends SMS via Firebase, returns `ConfirmationResult` |
+| Verify OTP | `confirmation.confirm(code)` | Validates code, returns `UserCredential` |
+| Sign out | `signOut(auth)` | Invalidates Firebase session |
+| Session listener | `onAuthStateChanged(auth, callback)` | Fires on login / logout / app restart |
+
+**Notes:**
+- reCAPTCHA is handled by `expo-firebase-recaptcha` (shows modal on physical device)
+- `inMemoryPersistence` used — cross-session restore is done via AsyncStorage + Firestore
+- Test phone numbers bypass SMS and reCAPTCHA entirely
+
+---
+
+### 2. Cloud Firestore — Database
+
+**SDK:** `firebase/firestore` (Web SDK v12)  
+**Used in:** `AuthContext`, `useActivities`, `useUnreadCount`, `ChatScreen`, `ActivityDetailScreen`, `CreateActivityScreen`
+
+#### Collections & Key Operations
+
+**`users/{uid}`**
+
+| Operation | Method | Trigger |
+|---|---|---|
+| Create user profile | `setDoc(ref, data)` | First OTP login |
+| Read user profile | `getDoc(ref)` | On auth state change |
+| Update profile | `setDoc(ref, data, { merge: true })` | Profile setup, interests, subscription |
+
+**`activities/{activityId}`**
+
+| Operation | Method | Trigger |
+|---|---|---|
+| Create activity | `setDoc(ref, data)` | User posts an activity |
+| Read all activities | `onSnapshot(query)` | Home & Activities screens (real-time) |
+| Read one activity | `onSnapshot(ref)` | Activity Detail screen (real-time) |
+| Update activity | `updateDoc(ref, data)` | Edit activity, join/leave, accept/reject |
+| Add join request | `arrayUnion(uid)` on `pendingRequests` | User taps Request to Join |
+| Accept request | `arrayUnion(uid)` on `participants` + `increment(1)` on `joinedCount` | Organiser taps Accept |
+| Reject / Leave | `arrayRemove(uid)` + `increment(-1)` | Organiser rejects or user leaves |
+
+**`chats/{chatId}`**
+
+| Operation | Method | Trigger |
+|---|---|---|
+| Create / update chat | `setDoc(ref, data, { merge: true })` | Open chat, send join request |
+| Increment unread | `updateDoc` with `increment(1)` on `unreadCounts.{uid}` | New message sent |
+| Reset unread | `updateDoc` with `{ unreadCounts.uid: 0 }` | User opens the chat |
+| List user's chats | `onSnapshot(where('participants', 'array-contains', uid))` | Chats screen |
+
+**`chats/{chatId}/messages/{messageId}`**
+
+| Operation | Method | Trigger |
+|---|---|---|
+| Send message | `addDoc(messagesRef, data)` | User sends a message |
+| Listen to messages | `onSnapshot(orderBy('createdAt', 'asc'))` | Chat screen (real-time) |
+
+**Firestore FieldValues used:** `serverTimestamp()`, `arrayUnion()`, `arrayRemove()`, `increment()`
+
+---
+
+### 3. Firebase Storage
+
+**SDK:** `firebase/storage`  
+**Used in:** `ProfileScreen` (profile photo upload)  
+**Path pattern:** `profiles/{uid}/avatar.jpg`
+
+| Operation | Notes |
+|---|---|
+| Upload photo | Selected via `expo-image-picker`, uploaded as blob |
+| Download URL | Stored in `users/{uid}.photoURL` in Firestore |
+
+---
+
+### 4. Razorpay — Payments
+
+**SDK:** `react-native-razorpay`  
+**Used in:** `SubscriptionScreen`  
+**Environment:** Native builds only (`expo run:ios`). Falls back to simulated payment in Expo Go.
+
+| Parameter | Value |
+|---|---|
+| Currency | INR |
+| Monthly amount | `monthlyPrice × 100` paise (e.g. ₹99 → 9900) |
+| Quarterly amount | `quarterlyPrice × 100` paise (e.g. ₹249 → 24900) |
+| Key | `EXPO_PUBLIC_RAZORPAY_KEY` (public key only — never the secret) |
+| Prefill | User's phone number |
+
+**Payment flow:**
+1. `RazorpayCheckout.open(options)` → Razorpay native sheet
+2. On success → `data.razorpay_payment_id` stored in Firestore under `subscription.razorpaySubscriptionId`
+3. Subscription `plan` set to `basic`, `expiresAt` set to +1 or +3 months
+4. On cancel/failure → `err.code === 'PAYMENT_CANCELLED'` is swallowed silently
+
+**Note:** For production, order creation using the Razorpay secret should happen on a backend server, not the client app. The secret key must never be in the mobile app.
+
+---
+
+### 5. expo-image-picker — Profile Photos
+
+**SDK:** `expo-image-picker`  
+**Used in:** `ProfileScreen`
+
+| Operation | API |
+|---|---|
+| Request permission | `requestMediaLibraryPermissionsAsync()` / `requestCameraPermissionsAsync()` |
+| Open camera | `launchCameraAsync({ allowsEditing: true, aspect: [1,1], quality: 0.7 })` |
+| Open library | `launchImageLibraryAsync({ mediaTypes: Images, allowsEditing: true })` |
+
+Result URI is saved to `user.photoURL` via `AuthContext.setUser()`.
+
+---
+
+### 6. expo-firebase-recaptcha — OTP reCAPTCHA
+
+**SDK:** `expo-firebase-recaptcha`  
+**Used in:** `PhoneAuthScreen`
+
+Provides `<FirebaseRecaptchaVerifierModal>` which handles the reCAPTCHA challenge required by Firebase phone auth. Mounted invisibly; triggered automatically when `signInWithPhoneNumber` is called.
+
+---
+
+### 7. @react-native-community/datetimepicker — Activity Date & Time
+
+**SDK:** `@react-native-community/datetimepicker`  
+**Used in:** `CreateActivityScreen`
+
+| Mode | Display | Usage |
+|---|---|---|
+| `date` | `inline` | Full calendar grid with `themeVariant="light"` to force visible text on physical devices |
+| `time` | `spinner` | Scroll wheel time picker |
+
+Both use `accentColor={COLORS.primary}` and `textColor="#000000"` for consistent styling.
+
+---
+
 ## Subscription Plans
 
 | Plan | Price | Duration |
@@ -232,14 +375,17 @@ Payments processed via **Razorpay** (UPI, cards, wallets). Add your Razorpay key
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
-| `EXPO_PUBLIC_FIREBASE_API_KEY` | Firebase web API key |
-| `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID |
-| `EXPO_PUBLIC_FIREBASE_APP_ID` | Firebase app ID |
+| Variable | Description | Required |
+|---|---|---|
+| `EXPO_PUBLIC_FIREBASE_API_KEY` | Firebase web API key | Yes |
+| `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | Yes |
+| `EXPO_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID | Yes |
+| `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | Yes |
+| `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | Yes |
+| `EXPO_PUBLIC_FIREBASE_APP_ID` | Firebase app ID | Yes |
+| `EXPO_PUBLIC_RAZORPAY_KEY` | Razorpay public key (test: `rzp_test_...`, live: `rzp_live_...`) | For payments |
+
+> **Never put `RAZORPAY_SECRET` in the app.** The secret is for backend order verification only.
 
 ---
 
