@@ -7,7 +7,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
-// import RazorpayCheckout from 'react-native-razorpay'; // uncomment when ready
+import Constants from 'expo-constants';
+
+// Razorpay only works in native builds, not Expo Go
+// executionEnvironment is 'storeClient' in Expo Go, 'standalone' or 'bare' in native builds
+const isExpoGo = Constants.executionEnvironment === 'storeClient';
+let RazorpayCheckout: any = null;
+if (!isExpoGo) {
+  try { RazorpayCheckout = require('react-native-razorpay').default; } catch { }
+}
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -49,23 +57,31 @@ export default function SubscriptionScreen({ navigation }: Props) {
     if (!user) return;
     setLoading(true);
     try {
-      // Razorpay — uncomment once react-native-razorpay is installed:
-      // const amount = selectedPlan === 'monthly' ? monthlyPrice * 100 : quarterlyPrice * 100;
-      // const data = await RazorpayCheckout.open({
-      //   description: `MyBuddy ${selectedPlan === 'monthly' ? 'Monthly' : 'Quarterly'} Plan`,
-      //   currency: 'INR',
-      //   key: 'rzp_test_XXXXXXXX',
-      //   amount,
-      //   name: 'MyBuddy',
-      //   prefill: { contact: user.phone },
-      //   theme: { color: '#FF6B35' },
-      // });
-      // const razorpaySubscriptionId = data.razorpay_payment_id;
+      const amount = selectedPlan === 'monthly' ? monthlyPrice * 100 : quarterlyPrice * 100;
+      let razorpaySubscriptionId: string;
 
-      // --- DEMO fallback (remove once Razorpay is wired) ---
-      await new Promise((r) => setTimeout(r, 1000));
-      const razorpaySubscriptionId = 'demo_pay_' + Date.now();
-      // -----------------------------------------------------
+      if (isExpoGo || !RazorpayCheckout) {
+        // Expo Go — simulate payment for testing
+        await new Promise((r) => setTimeout(r, 800));
+        razorpaySubscriptionId = 'test_pay_' + Date.now();
+        Alert.alert(
+          '⚡ Test Mode',
+          'Running in Expo Go — payment simulated. Build with expo run:ios for real Razorpay.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        // Native build — real Razorpay checkout
+        const data = await RazorpayCheckout.open({
+          key: process.env.EXPO_PUBLIC_RAZORPAY_KEY || '',
+          amount,
+          currency: 'INR',
+          name: 'MyBuddy',
+          description: `MyBuddy ${selectedPlan === 'monthly' ? 'Monthly' : 'Quarterly'} Plan`,
+          prefill: { contact: user.phone },
+          theme: { color: COLORS.primary },
+        });
+        razorpaySubscriptionId = data.razorpay_payment_id;
+      }
 
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + (selectedPlan === 'monthly' ? 1 : 3));
