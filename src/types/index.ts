@@ -80,6 +80,7 @@ export type RootStackParamList = {
   OTPVerify: { phone: string; verificationId: string };
   ProfileSetup: undefined;
   InterestPicker: undefined;
+  EditProfile: undefined;
   LocationSetup: undefined;
   MainTabs: undefined;
   ActivityDetail: { activityId: string };

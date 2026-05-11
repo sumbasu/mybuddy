@@ -170,6 +170,13 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   };
 
   const handleLeave = () => {
+    if (!auth.currentUser) {
+      Alert.alert(
+        'Session Expired',
+        'Your login session is not active. Please log out and sign in again to leave this activity.'
+      );
+      return;
+    }
     Alert.alert(
       'Leave Activity',
       `Are you sure you want to leave "${activity.title}"?`,
@@ -188,7 +195,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               console.error('Leave error:', err?.code, err?.message);
               Alert.alert('Error',
                 err?.code === 'permission-denied'
-                  ? 'Permission denied. Update Firestore rules to allow participants to leave.'
+                  ? 'Permission denied. Please publish the Firestore rules from the README.'
                   : err?.message || 'Could not leave the activity. Please try again.');
             }
           },

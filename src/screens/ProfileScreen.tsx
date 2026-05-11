@@ -290,7 +290,7 @@ export default function ProfileScreen({ navigation }: Props) {
           <MenuItem
             icon="happy-outline"
             label="Edit Profile"
-            onPress={() => navigation.navigate('InterestPicker')}
+            onPress={() => navigation.navigate('EditProfile')}
             showArrow
           />
           <MenuItem

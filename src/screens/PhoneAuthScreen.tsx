@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { signInWithPhoneNumber } from 'firebase/auth';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -65,7 +66,11 @@ export default function PhoneAuthScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.logo}>🤝</Text>
+          <View style={styles.logoWrap}>
+            <View style={styles.logoCircle}>
+              <Ionicons name="navigate" size={36} color={COLORS.primary} />
+            </View>
+          </View>
           <Text style={styles.title}>Welcome to MyBuddy</Text>
           <Text style={styles.subtitle}>Enter your mobile number to get started</Text>
         </View>
@@ -125,7 +130,13 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxl,
   },
   header: { alignItems: 'center', marginBottom: SPACING.xl },
-  logo: { fontSize: 56, marginBottom: SPACING.md },
+  logoWrap: { alignItems: 'center', marginBottom: SPACING.lg },
+  logoCircle: {
+    width: 80, height: 80, borderRadius: 24,
+    backgroundColor: COLORS.primary + '15',
+    borderWidth: 2, borderColor: COLORS.primary + '30',
+    alignItems: 'center', justifyContent: 'center',
+  },
   title: {
     fontSize: 26,
     fontWeight: '800',

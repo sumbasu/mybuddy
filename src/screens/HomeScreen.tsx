@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  RefreshControl, StatusBar, ImageBackground,
+  RefreshControl, StatusBar, Dimensions,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Activity } from '../types';
@@ -11,6 +12,8 @@ import { useActivities } from '../hooks/useActivities';
 import { useUnreadCount } from '../hooks/useUnreadCount';
 import { INTERESTS } from '../constants/interests';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+
+const CARD_WIDTH = Dimensions.get('window').width - SPACING.lg * 2;
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -40,7 +43,8 @@ export default function HomeScreen({ navigation }: Props) {
   const myActivities = activities.filter(a => a.creatorId === myUid);
   const myJoined = activities.filter(a => a.participants.includes(myUid) && a.creatorId !== myUid);
   const openActivities = activities.filter(a => a.status === 'open');
-  const featuredActivity = openActivities[0];
+  const featuredActivities = openActivities.slice(0, 6);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
 
   const getInterestActivities = (interestId: string) =>
     activities.filter(a => {
@@ -109,16 +113,42 @@ export default function HomeScreen({ navigation }: Props) {
           <StatCard icon="location-outline" label="City" value={user?.city?.split(' ')[0] || 'India'} color="#9B5DE5" />
         </View>
 
-        {/* Featured activity */}
-        {featuredActivity && (
+        {/* Featured Today — horizontal carousel */}
+        {featuredActivities.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>⚡ Featured Today</Text>
+              <Text style={styles.seeAll}>{featuredIndex + 1} / {featuredActivities.length}</Text>
             </View>
-            <FeaturedCard
-              activity={featuredActivity}
-              onPress={() => navigation.navigate('ActivityDetail', { activityId: featuredActivity.id })}
-            />
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToAlignment="center"
+              onScroll={(e) => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / CARD_WIDTH);
+                setFeaturedIndex(Math.max(0, Math.min(idx, featuredActivities.length - 1)));
+              }}
+              scrollEventThrottle={16}
+              contentContainerStyle={styles.featuredCarousel}
+            >
+              {featuredActivities.map((activity) => (
+                <FeaturedCard
+                  key={activity.id}
+                  activity={activity}
+                  onPress={() => navigation.navigate('ActivityDetail', { activityId: activity.id })}
+                />
+              ))}
+            </ScrollView>
+            {/* Dot indicators */}
+            {featuredActivities.length > 1 && (
+              <View style={styles.carouselDots}>
+                {featuredActivities.map((_, i) => (
+                  <View key={i} style={[styles.dot, i === featuredIndex && styles.dotActive]} />
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -342,8 +372,15 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary },
   seeAll: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
 
-  // Featured card
+  // Featured carousel
+  featuredCarousel: { gap: SPACING.md },
+  carouselDots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: SPACING.md },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.border },
+  dotActive: { width: 20, backgroundColor: COLORS.primary },
+
+  // Featured card — fixed width so pagingEnabled snaps per card
   featuredCard: {
+    width: CARD_WIDTH,
     backgroundColor: COLORS.primary, borderRadius: RADIUS.xl,
     padding: SPACING.lg, ...SHADOW.lg,
   },

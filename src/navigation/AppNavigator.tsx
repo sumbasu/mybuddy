@@ -26,6 +26,7 @@ import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import ChatsScreen from '../screens/ChatsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -158,6 +159,7 @@ export default function AppNavigator() {
             <Stack.Screen name="CreateActivity" component={CreateActivityScreen} />
             <Stack.Screen name="InterestPicker" component={InterestPickerScreen} />
             <Stack.Screen name="Chat"           component={ChatScreen} />
+            <Stack.Screen name="EditProfile"    component={EditProfileScreen} />
             <Stack.Screen name="Subscription"   component={SubscriptionScreen} />
           </>
         )}
