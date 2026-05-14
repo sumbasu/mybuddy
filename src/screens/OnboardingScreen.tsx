@@ -21,10 +21,10 @@ const SLIDES = [
   },
   {
     id: '2',
-    icon: 'cafe-outline' as const,
+    icon: 'fitness-outline' as const,
     iconBg: 'rgba(255,255,255,0.15)',
-    title: 'Not Just Sports',
-    subtitle: 'Looking for a coffee buddy, a movie companion, or a morning jogging partner? We have got you covered.',
+    title: 'Stay Fit Together',
+    subtitle: 'Find running partners, gym buddies, yoga companions or anyone who shares your fitness goals.',
     bg: '#2D3142',
   },
   {

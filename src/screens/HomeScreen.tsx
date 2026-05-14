@@ -18,10 +18,8 @@ const CARD_WIDTH = Dimensions.get('window').width - SPACING.lg * 2;
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
 const CATEGORIES = [
-  { id: 'sports',        label: 'Sports',       emoji: '🏆', color: '#FF6B35' },
-  { id: 'fitness',       label: 'Fitness',      emoji: '💪', color: '#06D6A0' },
-  { id: 'social',        label: 'Social',       emoji: '☕', color: '#4CC9F0' },
-  { id: 'entertainment', label: 'Fun',          emoji: '🎬', color: '#9B5DE5' },
+  { id: 'sports',  label: 'Sports',  emoji: '🏆', color: '#FF6B35' },
+  { id: 'fitness', label: 'Fitness', emoji: '💪', color: '#06D6A0' },
 ];
 
 export default function HomeScreen({ navigation }: Props) {
