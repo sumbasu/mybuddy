@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  RefreshControl, StatusBar, Dimensions,
+  RefreshControl, StatusBar, Dimensions, Alert,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -11,15 +11,25 @@ import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { useUnreadCount } from '../hooks/useUnreadCount';
 import { INTERESTS } from '../constants/interests';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { DEMO_PEOPLE, DemoPerson } from '../constants/demoPeople';
+import InterestIcon from '../components/InterestIcon';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 const CARD_WIDTH = Dimensions.get('window').width - SPACING.lg * 2;
+
+const initials = (name?: string) =>
+  (name || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
 const CATEGORIES = [
-  { id: 'sports',  label: 'Sports',  emoji: '🏆', color: '#FF6B35' },
-  { id: 'fitness', label: 'Fitness', emoji: '💪', color: '#06D6A0' },
+  { id: 'sports',  label: 'Sports',  icon: 'trophy-outline' as const, color: COLORS.primary },
+  { id: 'fitness', label: 'Fitness', icon: 'barbell-outline' as const, color: '#06D6A0' },
 ];
 
 export default function HomeScreen({ navigation }: Props) {
@@ -50,6 +60,15 @@ export default function HomeScreen({ navigation }: Props) {
       return interest?.category === interestId || a.interest === interestId;
     }).slice(0, 6);
 
+  const myInterests = user?.interests || [];
+  const peopleWithMatches = DEMO_PEOPLE
+    .map(p => ({ person: p, matches: p.interests.filter(i => myInterests.includes(i)) }))
+    .sort((a, b) => b.matches.length - a.matches.length || a.person.distanceKm - b.person.distanceKm);
+
+  const connect = (person: DemoPerson) => {
+    Alert.alert('Request Sent 👋', `Your connect request was sent to ${person.name}.`);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -59,11 +78,16 @@ export default function HomeScreen({ navigation }: Props) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hey, {user?.name?.split(' ')[0] || 'there'}</Text>
-            <View style={styles.locationRow}>
-              <Ionicons name="location-sharp" size={12} color={COLORS.primary} />
-              <Text style={styles.locationText}>{user?.city || 'India'}</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials(user?.name)}</Text>
+            </View>
+            <View>
+              <Text style={styles.greeting}>{user?.name || 'there'}</Text>
+              <View style={styles.locationRow}>
+                <Ionicons name="location-sharp" size={12} color={COLORS.textMuted} />
+                <Text style={styles.locationText}>{user?.city || 'India'}</Text>
+              </View>
             </View>
           </View>
           <TouchableOpacity
@@ -87,6 +111,43 @@ export default function HomeScreen({ navigation }: Props) {
               </View>
             )}
           </TouchableOpacity>
+        </View>
+
+        {/* Your Activities */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Activities</Text>
+          {myInterests.length > 0 ? (
+            <View style={styles.yourInterestsRow}>
+              {myInterests.map(id => {
+                const interest = INTERESTS.find(i => i.id === id);
+                return (
+                  <View key={id} style={styles.yourInterestChip}>
+                    <InterestIcon id={id} size={14} color={COLORS.textPrimary} />
+                    <Text style={styles.yourInterestChipText}>{interest?.label || id}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={styles.noActivitiesText}>No activities set yet.</Text>
+          )}
+        </View>
+
+        {/* People */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{myInterests.length > 0 ? 'Similar Interests' : 'People Near You'}</Text>
+            <Text style={styles.foundCount}>{peopleWithMatches.length} found</Text>
+          </View>
+          {peopleWithMatches.map(({ person, matches }) => (
+            <PersonCard
+              key={person.id}
+              person={person}
+              matchIds={matches}
+              myInterests={myInterests}
+              onConnect={() => connect(person)}
+            />
+          ))}
         </View>
 
         {/* Trial banner */}
@@ -115,7 +176,10 @@ export default function HomeScreen({ navigation }: Props) {
         {featuredActivities.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>⚡ Featured Today</Text>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="flash" size={13} color={COLORS.textMuted} />
+                <Text style={styles.sectionTitle}>Featured Today</Text>
+              </View>
               <Text style={styles.seeAll}>{featuredIndex + 1} / {featuredActivities.length}</Text>
             </View>
             <ScrollView
@@ -167,7 +231,7 @@ export default function HomeScreen({ navigation }: Props) {
                 activeOpacity={0.85}
               >
                 <View style={[styles.categoryIconWrap, { backgroundColor: cat.color + '25' }]}>
-                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                  <Ionicons name={cat.icon} size={22} color={cat.color} />
                 </View>
                 <Text style={[styles.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
                 <Text style={styles.categoryCount}>
@@ -261,7 +325,7 @@ function FeaturedCard({ activity, onPress }: { activity: Activity; onPress: () =
     <TouchableOpacity style={styles.featuredCard} onPress={onPress} activeOpacity={0.92}>
       <View style={styles.featuredTop}>
         <View style={styles.featuredEmojiWrap}>
-          <Text style={styles.featuredEmoji}>{interest?.emoji || '🎯'}</Text>
+          <InterestIcon id={interest?.id} size={24} color={COLORS.white} />
         </View>
         <View style={styles.featuredBadge}>
           <Text style={styles.featuredBadgeText}>{spotsLeft} spots left</Text>
@@ -306,7 +370,7 @@ function HorizontalCard({ activity, onPress }: { activity: Activity; onPress: ()
     <TouchableOpacity style={styles.hCard} onPress={onPress} activeOpacity={0.9}>
       <View style={styles.hCardTop}>
         <View style={styles.hCardEmoji}>
-          <Text style={{ fontSize: 22 }}>{interest?.emoji || '🎯'}</Text>
+          <InterestIcon id={interest?.id} size={20} color={COLORS.primary} />
         </View>
         <View style={[styles.hCardSpots, spotsLeft === 0 && styles.hCardSpotsFull]}>
           <Text style={[styles.hCardSpotsText, spotsLeft === 0 && styles.hCardSpotsTextFull]}>
@@ -328,15 +392,69 @@ function HorizontalCard({ activity, onPress }: { activity: Activity; onPress: ()
   );
 }
 
+function PersonCard({
+  person, matchIds, myInterests, onConnect,
+}: { person: DemoPerson; matchIds: string[]; myInterests: string[]; onConnect: () => void }) {
+  return (
+    <View style={styles.personCard}>
+      <View style={styles.personTop}>
+        <View style={styles.personAvatar}>
+          <Text style={styles.personAvatarText}>{initials(person.name)}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.personName}>{person.name}</Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location-sharp" size={11} color={COLORS.textMuted} />
+            <Text style={styles.personLocation}>
+              {person.city} · {person.distanceKm < 1 ? `${Math.round(person.distanceKm * 1000)} m` : `${person.distanceKm.toLocaleString('en-IN')} km`}
+            </Text>
+          </View>
+        </View>
+        {matchIds.length > 0 && (
+          <View style={styles.matchBadge}>
+            <Text style={styles.matchBadgeText}>{matchIds.length} match{matchIds.length > 1 ? 'es' : ''}</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.personChipRow}>
+        {person.interests.map(id => {
+          const interest = INTERESTS.find(i => i.id === id);
+          const isMatch = myInterests.includes(id);
+          return (
+            <View key={id} style={[styles.personChip, isMatch && styles.personChipActive]}>
+              <InterestIcon id={id} size={12} color={isMatch ? COLORS.white : COLORS.textSecondary} />
+              <Text style={[styles.personChipText, isMatch && styles.personChipTextActive]}>
+                {interest?.label || id}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <TouchableOpacity style={styles.connectBtn} onPress={onConnect} activeOpacity={0.8}>
+        <Text style={styles.connectBtnText}>Connect</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
 
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.md,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
   },
-  greeting: { fontSize: 22, fontWeight: '800', color: COLORS.textPrimary },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
+  avatar: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  greeting: { fontSize: 20, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
   locationText: { fontSize: 12, color: COLORS.textSecondary },
   notifBtn: {},
@@ -367,7 +485,8 @@ const styles = StyleSheet.create({
 
   section: { paddingHorizontal: SPACING.lg, marginTop: SPACING.xl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary },
+  sectionTitle: { fontSize: 12, fontWeight: '700', color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 1.2 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   seeAll: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
 
   // Featured carousel
@@ -384,7 +503,6 @@ const styles = StyleSheet.create({
   },
   featuredTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: SPACING.md },
   featuredEmojiWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  featuredEmoji: { fontSize: 26 },
   featuredBadge: { backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: SPACING.sm, paddingVertical: 4, borderRadius: RADIUS.full },
   featuredBadgeText: { color: COLORS.white, fontSize: 12, fontWeight: '700' },
   featuredTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white, marginBottom: 6 },
@@ -401,7 +519,6 @@ const styles = StyleSheet.create({
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   categoryCard: { width: '47.5%', borderRadius: RADIUS.lg, padding: SPACING.md, ...SHADOW.sm },
   categoryIconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.sm },
-  categoryEmoji: { fontSize: 22 },
   categoryLabel: { fontSize: 14, fontWeight: '700' },
   categoryCount: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
 
@@ -421,6 +538,49 @@ const styles = StyleSheet.create({
   hCardMeta: { flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 3 },
   hCardMetaText: { fontSize: 11, color: COLORS.textSecondary, flex: 1 },
   hCardCreator: { fontSize: 10, color: COLORS.textMuted, fontStyle: 'italic', marginTop: 4 },
+
+  // Your Activities
+  yourInterestsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
+  yourInterestChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: COLORS.surface, borderRadius: RADIUS.full,
+    borderWidth: 1.5, borderColor: COLORS.border,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
+  },
+  yourInterestChipText: { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary },
+  noActivitiesText: { fontSize: 13, color: COLORS.textMuted },
+
+  // People list
+  foundCount: { fontSize: 13, color: COLORS.textMuted },
+  personCard: {
+    backgroundColor: COLORS.surface, borderRadius: RADIUS.lg,
+    borderWidth: 1.5, borderColor: COLORS.border,
+    padding: SPACING.lg, marginBottom: SPACING.md,
+  },
+  personTop: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.md },
+  personAvatar: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center',
+  },
+  personAvatarText: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
+  personName: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
+  personLocation: { fontSize: 12, color: COLORS.textSecondary },
+  matchBadge: { backgroundColor: COLORS.surfaceSecondary, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderRadius: RADIUS.full },
+  matchBadgeText: { fontSize: 11, fontWeight: '700', color: COLORS.textSecondary },
+  personChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs, marginBottom: SPACING.md },
+  personChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.border,
+    paddingHorizontal: SPACING.sm, paddingVertical: 5,
+  },
+  personChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  personChipText: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary },
+  personChipTextActive: { color: COLORS.white },
+  connectBtn: {
+    borderWidth: 1.5, borderColor: COLORS.primary, borderRadius: RADIUS.full,
+    paddingVertical: SPACING.sm, alignItems: 'center',
+  },
+  connectBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
 
   // Quick actions
   quickActions: { flexDirection: 'row', justifyContent: 'space-between' },

@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { INTERESTS } from '../constants/interests';
+import InterestIcon from '../components/InterestIcon';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
@@ -146,7 +147,7 @@ export default function ProfileScreen({ navigation }: Props) {
             const interest = INTERESTS.find((i) => i.id === id);
             return (
               <View key={id} style={styles.interestChip}>
-                <Text style={styles.interestEmoji}>{interest?.emoji}</Text>
+                <InterestIcon id={id} size={14} color={COLORS.textPrimary} />
                 <Text style={styles.interestText}>{interest?.label || id}</Text>
               </View>
             );
@@ -228,8 +229,12 @@ export default function ProfileScreen({ navigation }: Props) {
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
                   <Text style={styles.progressLabel}>
+                    {progress === 0 && count > 0 && (
+                      <Ionicons name="trophy" size={13} color={COLORS.textPrimary} />
+                    )}
+                    {progress === 0 && count > 0 ? ' ' : ''}
                     {progress === 0 && count > 0
-                      ? `🏆 ${earned} free month${earned > 1 ? 's' : ''} earned!`
+                      ? `${earned} free month${earned > 1 ? 's' : ''} earned!`
                       : `${progress}/5 friends joined`}
                   </Text>
                   <Text style={styles.progressSub}>
@@ -441,7 +446,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6, paddingHorizontal: SPACING.md,
     borderWidth: 1, borderColor: COLORS.border,
   },
-  interestEmoji: { fontSize: 14 },
   interestText: { fontSize: 13, color: COLORS.textPrimary },
   noInterests: { fontSize: 13, color: COLORS.textMuted },
 

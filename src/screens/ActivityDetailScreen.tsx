@@ -14,6 +14,7 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, Activity } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { INTERESTS } from '../constants/interests';
+import InterestIcon from '../components/InterestIcon';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { DEMO_ACTIVITIES } from '../constants/demoData';
 import { db } from '../services/firebase';
@@ -248,7 +249,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
         </View>
-        <Text style={styles.heroEmoji}>{interest?.emoji || '🎯'}</Text>
+        <InterestIcon id={interest?.id} size={40} color={COLORS.white} style={styles.heroIcon} />
         <Text style={styles.heroTitle}>{activity.title}</Text>
         <Text style={styles.heroInterest}>{interest?.label || activity.interest}</Text>
       </View>
@@ -477,7 +478,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.35)',
   },
   editBtnText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
-  heroEmoji: { fontSize: 40, marginBottom: SPACING.sm },
+  heroIcon: { marginBottom: SPACING.sm },
   heroTitle: { fontSize: 22, fontWeight: '800', color: COLORS.white, lineHeight: 28 },
   heroInterest: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
   body: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },

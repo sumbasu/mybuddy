@@ -4,11 +4,13 @@ import {
   KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { INTERESTS } from '../constants/interests';
+import InterestIcon from '../components/InterestIcon';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { DEMO_ACTIVITIES, addActivity } from '../constants/demoData';
 import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
@@ -49,7 +51,10 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
   if (!isSubscribed()) {
     return (
       <View style={styles.gateContainer}>
-        <Text style={styles.gateEmoji}>🔒</Text>
+        <TouchableOpacity style={styles.gateClose} onPress={() => navigation.goBack()} hitSlop={12}>
+          <Ionicons name="close" size={18} color={COLORS.textPrimary} />
+        </TouchableOpacity>
+        <Ionicons name="lock-closed" size={48} color={COLORS.primary} style={styles.gateIcon} />
         <Text style={styles.gateTitle}>Subscribe to Post Activities</Text>
         <Text style={styles.gateSub}>
           Your free trial has ended. Upgrade to create and join unlimited activities.
@@ -172,7 +177,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
                 style={[styles.interestChip, interest === i.id && styles.interestChipActive]}
                 onPress={() => setInterest(i.id)}
               >
-                <Text style={styles.interestEmoji}>{i.emoji}</Text>
+                <InterestIcon id={i.id} size={22} color={interest === i.id ? COLORS.primary : COLORS.textSecondary} style={styles.interestIcon} />
                 <Text style={[styles.interestLabel, interest === i.id && styles.interestLabelActive]}>
                   {i.label}
                 </Text>
@@ -208,7 +213,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <View style={{ flex: 1, marginRight: SPACING.sm }}>
             <Section title="Date *">
               <TouchableOpacity style={styles.pickerBtn} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.pickerIcon}>📅</Text>
+                <Ionicons name="calendar-outline" size={16} color={COLORS.textSecondary} />
                 <Text style={styles.pickerText}>{formatDate(selectedDate)}</Text>
               </TouchableOpacity>
             </Section>
@@ -216,7 +221,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <View style={{ flex: 1 }}>
             <Section title="Time *">
               <TouchableOpacity style={styles.pickerBtn} onPress={() => setShowTimePicker(true)}>
-                <Text style={styles.pickerIcon}>⏰</Text>
+                <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
                 <Text style={styles.pickerText}>{formatTime(selectedDate)}</Text>
               </TouchableOpacity>
             </Section>
@@ -390,10 +395,10 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontWeight: '800', color: COLORS.textPrimary },
   interestRow: { gap: SPACING.sm, paddingBottom: SPACING.xs },
   interestChip: { alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: RADIUS.md, padding: SPACING.sm, width: 76, borderWidth: 1.5, borderColor: COLORS.border },
-  interestChipActive: { borderColor: COLORS.primary, backgroundColor: '#FFF5F0' },
-  interestEmoji: { fontSize: 24, marginBottom: 4 },
+  interestChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
+  interestIcon: { marginBottom: 4 },
   interestLabel: { fontSize: 11, color: COLORS.textSecondary, textAlign: 'center' },
-  interestLabelActive: { color: COLORS.primary, fontWeight: '700' },
+  interestLabelActive: { color: COLORS.white, fontWeight: '700' },
   input: { borderWidth: 1.5, borderColor: COLORS.border, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, paddingVertical: 12, fontSize: 14, color: COLORS.textPrimary, backgroundColor: COLORS.surface },
   textArea: { minHeight: 80 },
   row: { flexDirection: 'row' },
@@ -447,7 +452,8 @@ const styles = StyleSheet.create({
   submitBtnDisabled: { backgroundColor: COLORS.textMuted },
   submitBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
   gateContainer: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
-  gateEmoji: { fontSize: 56, marginBottom: SPACING.lg },
+  gateClose: { position: 'absolute', top: 56, right: SPACING.lg, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border },
+  gateIcon: { marginBottom: SPACING.lg },
   gateTitle: { fontSize: 22, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center', marginBottom: SPACING.sm },
   gateSub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xl },
   gateBtn: { backgroundColor: COLORS.primary, paddingVertical: SPACING.md, paddingHorizontal: SPACING.xxl, borderRadius: RADIUS.full },

@@ -11,7 +11,7 @@ import { RootStackParamList } from '../types';
 import { auth } from '../services/firebase';
 import app from '../services/firebase';
 import { setConfirmation } from '../services/phoneAuth';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'PhoneAuth'> };
 
@@ -68,11 +68,11 @@ export default function PhoneAuthScreen({ navigation }: Props) {
         <View style={styles.header}>
           <View style={styles.logoWrap}>
             <View style={styles.logoCircle}>
-              <Ionicons name="navigate" size={36} color={COLORS.primary} />
+              <Ionicons name="tennisball" size={40} color={COLORS.accent} />
             </View>
           </View>
-          <Text style={styles.title}>Welcome to MyBuddy</Text>
-          <Text style={styles.subtitle}>Enter your mobile number to get started</Text>
+          <Text style={styles.title}>Welcome</Text>
+          <Text style={styles.eyebrow}>YOUR GAME STARTS HERE</Text>
         </View>
 
         <View style={styles.card}>
@@ -132,16 +132,25 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', marginBottom: SPACING.xl },
   logoWrap: { alignItems: 'center', marginBottom: SPACING.lg },
   logoCircle: {
-    width: 80, height: 80, borderRadius: 24,
-    backgroundColor: COLORS.primary + '15',
-    borderWidth: 2, borderColor: COLORS.primary + '30',
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: COLORS.primary,
     alignItems: 'center', justifyContent: 'center',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 40,
+    fontFamily: FONTS.serif,
+    fontWeight: '700',
     color: COLORS.textPrimary,
     textAlign: 'center',
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
   },
   subtitle: {
     fontSize: 15,
@@ -150,31 +159,29 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
   },
   card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    ...SHADOW.md,
+    backgroundColor: 'transparent',
+    padding: 0,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textMuted,
     marginBottom: SPACING.sm,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 1.2,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.surfaceSecondary,
     overflow: 'hidden',
   },
   countryCode: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceSecondary,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
     gap: 6,

@@ -7,7 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import CityPicker from '../components/CityPicker';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'ProfileSetup'> };
 
@@ -46,8 +46,8 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Set Up Your Profile</Text>
-        <Text style={styles.subtitle}>Tell us a bit about yourself</Text>
+        <Text style={styles.title}>Create account</Text>
+        <Text style={styles.subtitle}>JOIN THE CLUB</Text>
 
         <View style={styles.form}>
           <View style={styles.field}>
@@ -127,33 +127,32 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: SPACING.xxl,
   },
-  title: { fontSize: 28, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.sm },
-  subtitle: { fontSize: 15, color: COLORS.textSecondary, marginBottom: SPACING.xl },
+  title: { fontSize: 34, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.sm },
+  subtitle: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted, marginBottom: SPACING.xl, textTransform: 'uppercase', letterSpacing: 1.5 },
   form: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
+    backgroundColor: 'transparent',
+    padding: 0,
     marginBottom: SPACING.xl,
-    ...SHADOW.sm,
   },
   field: { marginBottom: SPACING.md },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   label: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textMuted,
     marginBottom: SPACING.xs,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 1.2,
   },
   input: {
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
-    paddingVertical: 12,
+    paddingVertical: 14,
     fontSize: 15,
     color: COLORS.textPrimary,
+    backgroundColor: COLORS.surfaceSecondary,
   },
   genderRow: { flexDirection: 'row', gap: SPACING.xs },
   genderBtn: {
@@ -164,9 +163,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     alignItems: 'center',
   },
-  genderBtnActive: { borderColor: COLORS.primary, backgroundColor: '#FFF5F0' },
+  genderBtnActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
   genderBtnText: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500' },
-  genderBtnTextActive: { color: COLORS.primary, fontWeight: '700' },
+  genderBtnTextActive: { color: COLORS.white, fontWeight: '700' },
   dropdown: {
     position: 'absolute',
     top: 70,

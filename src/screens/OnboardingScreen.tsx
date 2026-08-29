@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -14,7 +14,7 @@ const SLIDES = [
   {
     id: '1',
     icon: 'tennisball-outline' as const,
-    iconBg: 'rgba(255,255,255,0.2)',
+    iconBg: 'rgba(255,255,255,0.14)',
     title: 'Find Your Game Partner',
     subtitle: 'Connect with people who love the same sports and activities as you — tennis, badminton, cricket and more.',
     bg: COLORS.primary,
@@ -22,18 +22,19 @@ const SLIDES = [
   {
     id: '2',
     icon: 'fitness-outline' as const,
-    iconBg: 'rgba(255,255,255,0.15)',
+    iconBg: 'rgba(255,255,255,0.14)',
     title: 'Stay Fit Together',
     subtitle: 'Find running partners, gym buddies, yoga companions or anyone who shares your fitness goals.',
-    bg: '#2D3142',
+    bg: COLORS.primaryLight,
   },
   {
     id: '3',
     icon: 'navigate-outline' as const,
-    iconBg: 'rgba(255,255,255,0.2)',
+    iconBg: 'rgba(42,31,22,0.14)',
     title: 'Find People Near You',
     subtitle: 'Discover activity partners in your city. Post an activity or join one that fits your schedule.',
-    bg: '#06D6A0',
+    bg: COLORS.accent,
+    dark: true,
   },
 ];
 
@@ -68,10 +69,10 @@ export default function OnboardingScreen({ navigation }: Props) {
         renderItem={({ item }) => (
           <View style={[styles.slide, { backgroundColor: item.bg }]}>
             <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
-              <Ionicons name={item.icon} size={56} color={COLORS.white} />
+              <Ionicons name={item.icon} size={56} color={item.dark ? COLORS.primary : COLORS.white} />
             </View>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
+            <Text style={[styles.title, item.dark && { color: COLORS.primary }]}>{item.title}</Text>
+            <Text style={[styles.subtitle, item.dark && { color: 'rgba(42,31,22,0.75)' }]}>{item.subtitle}</Text>
           </View>
         )}
       />
@@ -81,20 +82,28 @@ export default function OnboardingScreen({ navigation }: Props) {
           {SLIDES.map((_, i) => (
             <View
               key={i}
-              style={[styles.dot, i === current && styles.dotActive]}
+              style={[
+                styles.dot,
+                { backgroundColor: SLIDES[current].dark ? 'rgba(42,31,22,0.35)' : 'rgba(255,255,255,0.4)' },
+                i === current && [styles.dotActive, { backgroundColor: SLIDES[current].dark ? COLORS.primary : COLORS.white }],
+              ]}
             />
           ))}
         </View>
 
-        <TouchableOpacity style={styles.btn} onPress={next} activeOpacity={0.85}>
-          <Text style={styles.btnText}>
+        <TouchableOpacity
+          style={[styles.btn, SLIDES[current].dark && { backgroundColor: COLORS.primary }]}
+          onPress={next}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.btnText, SLIDES[current].dark && { color: COLORS.white }]}>
             {current === SLIDES.length - 1 ? 'Get Started' : 'Next'}
           </Text>
         </TouchableOpacity>
 
         {current < SLIDES.length - 1 && (
           <TouchableOpacity onPress={() => navigation.replace('PhoneAuth')} style={styles.skipBtn}>
-            <Text style={styles.skipText}>Skip</Text>
+            <Text style={[styles.skipText, SLIDES[current].dark && { color: 'rgba(42,31,22,0.7)' }]}>Skip</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -117,12 +126,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 30,
+    fontFamily: FONTS.serif,
+    fontWeight: '700',
     color: COLORS.white,
     textAlign: 'center',
     marginBottom: SPACING.md,
-    lineHeight: 36,
+    lineHeight: 38,
   },
   subtitle: {
     fontSize: 16,

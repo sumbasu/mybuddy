@@ -10,6 +10,7 @@ import { RootStackParamList, Activity } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { INTERESTS } from '../constants/interests';
+import InterestIcon from '../components/InterestIcon';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
@@ -188,7 +189,7 @@ function ActivityCard({
 
       <View style={styles.cardTop}>
         <View style={styles.interestBadge}>
-          <Text style={styles.interestEmoji}>{interest?.emoji || '🎯'}</Text>
+          <InterestIcon id={interest?.id} size={13} color={COLORS.primary} />
           <Text style={styles.interestLabel}>{interest?.label || activity.interest}</Text>
         </View>
         <View style={[styles.spotsBadge, spotsLeft === 0 && styles.spotsBadgeFull]}>
@@ -238,14 +239,14 @@ function MetaItem({ icon, text }: { icon: any; text: string }) {
 
 function EmptyState({ tab, onPress }: { tab: TabType; onPress: () => void }) {
   const config = {
-    'Discover':      { emoji: '🔍', title: 'No activities found',       sub: 'Check back soon or create your own!' },
-    'Created by Me': { emoji: '✏️',  title: 'No activities created yet', sub: 'Post your first activity and find a buddy.' },
-    'Joined':        { emoji: '🤝',  title: 'You haven\'t joined any',   sub: 'Browse Discover to find activities near you.' },
+    'Discover':      { icon: 'search-outline' as const,        title: 'No activities found',       sub: 'Check back soon or create your own!' },
+    'Created by Me': { icon: 'create-outline' as const,         title: 'No activities created yet', sub: 'Post your first activity and find a buddy.' },
+    'Joined':        { icon: 'people-outline' as const,         title: 'You haven\'t joined any',   sub: 'Browse Discover to find activities near you.' },
   };
   const c = config[tab];
   return (
     <View style={styles.empty}>
-      <Text style={styles.emptyEmoji}>{c.emoji}</Text>
+      <Ionicons name={c.icon} size={40} color={COLORS.textMuted} style={styles.emptyIcon} />
       <Text style={styles.emptyTitle}>{c.title}</Text>
       <Text style={styles.emptySub}>{c.sub}</Text>
       {tab === 'Created by Me' && (
@@ -338,7 +339,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary + '15', paddingHorizontal: SPACING.sm,
     paddingVertical: 4, borderRadius: RADIUS.full,
   },
-  interestEmoji: { fontSize: 13 },
   interestLabel: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
   spotsBadge: {
     backgroundColor: COLORS.success + '20', paddingHorizontal: SPACING.sm,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   },
   viewBtnText: { fontSize: 12, color: COLORS.white, fontWeight: '700' },
   empty: { alignItems: 'center', paddingTop: SPACING.xxl },
-  emptyEmoji: { fontSize: 52, marginBottom: SPACING.md },
+  emptyIcon: { marginBottom: SPACING.md },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.xs },
   emptySub: { fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: SPACING.lg },
   emptyBtn: {

@@ -7,7 +7,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { INTERESTS, INTEREST_CATEGORIES } from '../constants/interests';
 import { useAuth } from '../context/AuthContext';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import InterestIcon from '../components/InterestIcon';
+import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'InterestPicker'> };
 
@@ -61,11 +62,11 @@ export default function InterestPickerScreen({ navigation }: Props) {
                     onPress={() => toggle(interest.id)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.chipEmoji}>{interest.emoji}</Text>
+                    <InterestIcon id={interest.id} size={16} color={isSelected ? COLORS.white : COLORS.textPrimary} />
                     <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
                       {interest.label}
                     </Text>
-                    {isSelected && <Text style={styles.check}>✓</Text>}
+                    {isSelected && <Ionicons name="checkmark" size={14} color={COLORS.white} />}
                   </TouchableOpacity>
                 );
               })}
@@ -101,11 +102,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingTop: 56,
     paddingBottom: SPACING.lg,
-    backgroundColor: COLORS.surface,
-    ...SHADOW.sm,
+    backgroundColor: COLORS.background,
   },
   backBtn: { marginBottom: SPACING.md, alignSelf: 'flex-start', padding: 4 },
-  title: { fontSize: 26, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.xs },
+  title: { fontSize: 30, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.xs },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 20 },
   badge: {
     alignSelf: 'flex-start',
@@ -143,10 +143,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
-  chipEmoji: { fontSize: 16 },
   chipLabel: { fontSize: 13, fontWeight: '500', color: COLORS.textPrimary },
   chipLabelSelected: { color: COLORS.white, fontWeight: '700' },
-  check: { fontSize: 12, color: COLORS.white },
   footer: {
     position: 'absolute',
     bottom: 0,
