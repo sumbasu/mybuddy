@@ -103,7 +103,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       // 1. Add requester to pendingRequests + store their name
       await updateDoc(actRef, {
         pendingRequests: arrayUnion(currentUser.uid),
-        [`pendingRequestNames.${currentUser.uid}`]: user.name || user.phone || 'Anonymous',
+        [`pendingRequestNames.${currentUser.uid}`]: user.name || user.email || 'Anonymous',
       });
 
       // 2. Ensure chat document exists with both participants

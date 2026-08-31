@@ -73,16 +73,16 @@ export default function EditProfileScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        {/* Read-only: phone */}
+        {/* Read-only: email */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <Field
-              icon="call-outline"
-              label="Phone Number"
-              value={user?.phone || '—'}
+              icon="mail-outline"
+              label="Email"
+              value={user?.email || '—'}
               editable={false}
-              hint="Phone number cannot be changed"
+              hint="Email cannot be changed"
             />
           </View>
         </View>

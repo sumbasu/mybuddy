@@ -11,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { useUnreadCount } from '../hooks/useUnreadCount';
 import { INTERESTS } from '../constants/interests';
-import { DEMO_PEOPLE, DemoPerson } from '../constants/demoPeople';
+import { DEMO_PEOPLE, DemoPerson, DEMO_REQUESTS, DemoRequest } from '../constants/demoPeople';
 import InterestIcon from '../components/InterestIcon';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
@@ -65,13 +65,31 @@ export default function HomeScreen({ navigation }: Props) {
     .map(p => ({ person: p, matches: p.interests.filter(i => myInterests.includes(i)) }))
     .sort((a, b) => b.matches.length - a.matches.length || a.person.distanceKm - b.person.distanceKm);
 
+  const subscribed = isSubscribed();
+  const PEOPLE_FREE_LIMIT = 3;
+  const visiblePeople = subscribed ? peopleWithMatches : peopleWithMatches.slice(0, PEOPLE_FREE_LIMIT);
+  const hiddenPeopleCount = peopleWithMatches.length - visiblePeople.length;
+
   const connect = (person: DemoPerson) => {
     Alert.alert('Request Sent 👋', `Your connect request was sent to ${person.name}.`);
   };
 
+  const [requests, setRequests] = useState<DemoRequest[]>(DEMO_REQUESTS);
+  const REQUESTS_FREE_LIMIT = 2;
+  const visibleRequests = subscribed ? requests : requests.slice(0, REQUESTS_FREE_LIMIT);
+  const hiddenRequestsCount = requests.length - visibleRequests.length;
+
+  const acceptRequest = (req: DemoRequest) => {
+    setRequests(prev => prev.filter(r => r.id !== req.id));
+    Alert.alert('Connected! 🎉', `You and ${req.person.name} are now connected.`);
+  };
+  const declineRequest = (req: DemoRequest) => {
+    setRequests(prev => prev.filter(r => r.id !== req.id));
+  };
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
@@ -85,7 +103,7 @@ export default function HomeScreen({ navigation }: Props) {
             <View>
               <Text style={styles.greeting}>{user?.name || 'there'}</Text>
               <View style={styles.locationRow}>
-                <Ionicons name="location-sharp" size={12} color={COLORS.textMuted} />
+                <Ionicons name="location-sharp" size={12} color={COLORS.accent} />
                 <Text style={styles.locationText}>{user?.city || 'India'}</Text>
               </View>
             </View>
@@ -113,6 +131,28 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
 
+        {/* Club Pro upgrade banner */}
+        {!subscribed && (
+          <TouchableOpacity
+            style={styles.clubProBanner}
+            onPress={() => navigation.navigate('Subscription')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.clubProIconWrap}>
+              <Ionicons name="trending-up" size={18} color={COLORS.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.clubProTitle}>Upgrade to Club Pro</Text>
+              <Text style={styles.clubProSub}>
+                {isTrialActive()
+                  ? `Free trial — ${trialDaysLeft}d left · Unlimited connections`
+                  : 'Unlimited connections · from ₹99/mo'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        )}
+
         {/* Your Activities */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your Activities</Text>
@@ -139,7 +179,7 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={styles.sectionTitle}>{myInterests.length > 0 ? 'Similar Interests' : 'People Near You'}</Text>
             <Text style={styles.foundCount}>{peopleWithMatches.length} found</Text>
           </View>
-          {peopleWithMatches.map(({ person, matches }) => (
+          {visiblePeople.map(({ person, matches }) => (
             <PersonCard
               key={person.id}
               person={person}
@@ -148,17 +188,38 @@ export default function HomeScreen({ navigation }: Props) {
               onConnect={() => connect(person)}
             />
           ))}
+          {hiddenPeopleCount > 0 && (
+            <LockedTeaser
+              label={`+${hiddenPeopleCount} more profile${hiddenPeopleCount > 1 ? 's' : ''} hidden`}
+              onPress={() => navigation.navigate('Subscription')}
+            />
+          )}
         </View>
 
-        {/* Trial banner */}
-        {isTrialActive() && (
-          <TouchableOpacity style={styles.trialBanner} onPress={() => navigation.navigate('Subscription')} activeOpacity={0.9}>
-            <Ionicons name="star" size={14} color={COLORS.white} />
-            <Text style={styles.trialBannerText}>
-              Free trial — {trialDaysLeft} days left. Upgrade to keep access!
-            </Text>
-            <Text style={styles.trialBannerCta}>Upgrade →</Text>
-          </TouchableOpacity>
+        {/* Connection Requests */}
+        {requests.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Connection Requests</Text>
+              <View style={styles.newBadge}>
+                <Text style={styles.newBadgeText}>{requests.length} new</Text>
+              </View>
+            </View>
+            {visibleRequests.map((req) => (
+              <RequestCard
+                key={req.id}
+                request={req}
+                onAccept={() => acceptRequest(req)}
+                onDecline={() => declineRequest(req)}
+              />
+            ))}
+            {hiddenRequestsCount > 0 && (
+              <LockedTeaser
+                label={`+${hiddenRequestsCount} more request${hiddenRequestsCount > 1 ? 's' : ''} hidden`}
+                onPress={() => navigation.navigate('Subscription')}
+              />
+            )}
+          </View>
         )}
 
         {/* Stats strip */}
@@ -392,6 +453,67 @@ function HorizontalCard({ activity, onPress }: { activity: Activity; onPress: ()
   );
 }
 
+function LockedTeaser({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.lockedTeaser} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.lockedIconWrap}>
+        <Ionicons name="lock-closed" size={16} color={COLORS.textSecondary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.lockedLabel}>{label}</Text>
+        <Text style={styles.lockedSub}>Upgrade to Club Pro to see all</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={16} color={COLORS.textMuted} />
+    </TouchableOpacity>
+  );
+}
+
+function RequestCard({
+  request, onAccept, onDecline,
+}: { request: DemoRequest; onAccept: () => void; onDecline: () => void }) {
+  const { person, timeAgo } = request;
+  return (
+    <View style={styles.personCard}>
+      <View style={styles.personTop}>
+        <View style={styles.personAvatar}>
+          <Text style={styles.personAvatarText}>{initials(person.name)}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.personName}>{person.name}, {person.gender}</Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location-sharp" size={11} color={COLORS.accent} />
+            <Text style={styles.personLocation}>
+              {person.city} · {person.distanceKm < 1 ? `${Math.round(person.distanceKm * 1000)} m` : `${person.distanceKm.toLocaleString('en-IN')} km`}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.requestTime}>{timeAgo}</Text>
+      </View>
+
+      <View style={styles.personChipRow}>
+        {person.interests.map(id => {
+          const interest = INTERESTS.find(i => i.id === id);
+          return (
+            <View key={id} style={styles.personChip}>
+              <InterestIcon id={id} size={12} color={COLORS.textSecondary} />
+              <Text style={styles.personChipText}>{interest?.label || id}</Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={styles.requestActions}>
+        <TouchableOpacity style={styles.acceptBtn} onPress={onAccept} activeOpacity={0.85}>
+          <Text style={styles.acceptBtnText}>Accept</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.declineBtn} onPress={onDecline} activeOpacity={0.85}>
+          <Text style={styles.declineBtnText}>Decline</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 function PersonCard({
   person, matchIds, myInterests, onConnect,
 }: { person: DemoPerson; matchIds: string[]; myInterests: string[]; onConnect: () => void }) {
@@ -402,9 +524,9 @@ function PersonCard({
           <Text style={styles.personAvatarText}>{initials(person.name)}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.personName}>{person.name}</Text>
+          <Text style={styles.personName}>{person.name}, {person.gender}</Text>
           <View style={styles.locationRow}>
-            <Ionicons name="location-sharp" size={11} color={COLORS.textMuted} />
+            <Ionicons name="location-sharp" size={11} color={COLORS.accent} />
             <Text style={styles.personLocation}>
               {person.city} · {person.distanceKm < 1 ? `${Math.round(person.distanceKm * 1000)} m` : `${person.distanceKm.toLocaleString('en-IN')} km`}
             </Text>
@@ -450,10 +572,10 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   avatar: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.ctaBg,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  avatarText: { color: COLORS.ctaText, fontSize: 16, fontWeight: '700' },
   greeting: { fontSize: 20, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
   locationText: { fontSize: 12, color: COLORS.textSecondary },
@@ -465,12 +587,47 @@ const styles = StyleSheet.create({
   trialPill: { backgroundColor: COLORS.warning, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderRadius: RADIUS.full },
   trialPillText: { fontSize: 11, fontWeight: '700', color: '#000' },
 
-  trialBanner: {
+  clubProBanner: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: COLORS.primary, paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm,
+    marginHorizontal: SPACING.lg, marginTop: SPACING.lg,
+    backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border,
+    borderRadius: RADIUS.lg, paddingHorizontal: SPACING.md, paddingVertical: SPACING.md,
   },
-  trialBannerText: { fontSize: 12, color: COLORS.white, flex: 1 },
-  trialBannerCta: { fontSize: 12, color: COLORS.white, fontWeight: '700' },
+  clubProIconWrap: {
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: COLORS.surfaceSecondary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  clubProTitle: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary },
+  clubProSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 1 },
+
+  lockedTeaser: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    borderWidth: 1.5, borderColor: COLORS.border, borderStyle: 'dashed',
+    borderRadius: RADIUS.lg, padding: SPACING.md,
+  },
+  lockedIconWrap: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: COLORS.surfaceSecondary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  lockedLabel: { fontSize: 13, fontWeight: '700', color: COLORS.textPrimary },
+  lockedSub: { fontSize: 11, color: COLORS.textMuted, marginTop: 1 },
+
+  newBadge: { backgroundColor: COLORS.ctaBg, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderRadius: RADIUS.full },
+  newBadgeText: { fontSize: 11, fontWeight: '700', color: COLORS.ctaText },
+  requestTime: { fontSize: 11, color: COLORS.textMuted },
+  requestActions: { flexDirection: 'row', gap: SPACING.sm },
+  acceptBtn: {
+    flex: 1, backgroundColor: COLORS.ctaBg, borderRadius: RADIUS.full,
+    paddingVertical: SPACING.sm, alignItems: 'center',
+  },
+  acceptBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.ctaText },
+  declineBtn: {
+    flex: 1, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: RADIUS.full,
+    paddingVertical: SPACING.sm, alignItems: 'center',
+  },
+  declineBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary },
 
   statsStrip: {
     flexDirection: 'row', backgroundColor: COLORS.surface,
@@ -560,9 +717,9 @@ const styles = StyleSheet.create({
   personTop: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.md },
   personAvatar: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.ctaBg, alignItems: 'center', justifyContent: 'center',
   },
-  personAvatarText: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
+  personAvatarText: { color: COLORS.ctaText, fontSize: 14, fontWeight: '700' },
   personName: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
   personLocation: { fontSize: 12, color: COLORS.textSecondary },
   matchBadge: { backgroundColor: COLORS.surfaceSecondary, paddingHorizontal: SPACING.sm, paddingVertical: 4, borderRadius: RADIUS.full },
@@ -577,10 +734,10 @@ const styles = StyleSheet.create({
   personChipText: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary },
   personChipTextActive: { color: COLORS.white },
   connectBtn: {
-    borderWidth: 1.5, borderColor: COLORS.primary, borderRadius: RADIUS.full,
+    borderWidth: 1.5, borderColor: COLORS.border, borderRadius: RADIUS.full,
     paddingVertical: SPACING.sm, alignItems: 'center',
   },
-  connectBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  connectBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary },
 
   // Quick actions
   quickActions: { flexDirection: 'row', justifyContent: 'space-between' },

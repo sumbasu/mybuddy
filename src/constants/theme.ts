@@ -1,24 +1,32 @@
 import { Platform } from 'react-native';
 
 export const COLORS = {
-  primary: '#2A1F16',      // near-black espresso brown
-  primaryLight: '#4A3A28',
-  primaryDark: '#1A120B',
-  secondary: '#2A1F16',
-  accent: '#AACC33',       // tennis-ball green
+  primary: '#6C5CA6',      // mid violet — accent tints, chips, general CTAs
+  primaryLight: '#8779C2',
+  primaryDark: '#241B4D',
+  secondary: '#6C5CA6',
+  accent: '#9ACB3B',        // tennis-ball green
   success: '#06D6A0',
   warning: '#FFD60A',
   error: '#EF233C',
-  background: '#D6D6D6',
-  surface: '#F8F0DD',
-  surfaceSecondary: '#ECE0C2',
-  border: '#DCC9A0',
-  textPrimary: '#2A1F16',
-  textSecondary: '#8A7A61',
-  textMuted: '#B4A688',
+  background: 'transparent', // the purple gradient (GRADIENT below) shows through
+  surface: 'rgba(255,255,255,0.09)',
+  surfaceSecondary: 'rgba(255,255,255,0.16)',
+  border: 'rgba(255,255,255,0.22)',
+  textPrimary: '#FFFFFF',
+  textSecondary: 'rgba(255,255,255,0.72)',
+  textMuted: 'rgba(255,255,255,0.5)',
   white: '#FFFFFF',
   black: '#000000',
-  overlay: 'rgba(0,0,0,0.5)',
+  overlay: 'rgba(0,0,0,0.55)',
+  // Cream CTA pill — Sign Up / Log In / Continue buttons on the gradient
+  ctaBg: '#F4EEDF',
+  ctaText: '#2E2158',
+};
+
+export const GRADIENT = {
+  top: '#59498F',
+  bottom: '#221A47',
 };
 
 export const FONTS = {

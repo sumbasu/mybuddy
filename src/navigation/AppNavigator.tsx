@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
@@ -15,8 +15,9 @@ import { RootStackParamList, TabParamList } from '../types';
 
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
-import PhoneAuthScreen from '../screens/PhoneAuthScreen';
-import OTPVerifyScreen from '../screens/OTPVerifyScreen';
+import WelcomeScreen from '../screens/WelcomeScreen';
+import LoginScreen from '../screens/LoginScreen';
+import CreateAccountScreen from '../screens/CreateAccountScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import InterestPickerScreen from '../screens/InterestPickerScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -65,7 +66,7 @@ function MainTabs() {
           if (route.name === 'Create') {
             return (
               <View style={styles.createBtn}>
-                <Ionicons name="add" size={28} color="#fff" />
+                <Ionicons name="add" size={28} color={COLORS.ctaText} />
               </View>
             );
           }
@@ -112,40 +113,46 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.ctaBg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    shadowColor: COLORS.primary,
-    shadowOpacity: 0.45,
+    shadowColor: COLORS.black,
+    shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
 });
 
+const navTheme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: 'transparent', card: 'transparent' },
+};
+
 export default function AppNavigator() {
   const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primary }}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={COLORS.white} size="large" />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <NavigationContainer theme={navTheme}>
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }}>
         {!isAuthenticated ? (
           // Auth stack — shown when logged out
           <>
-            <Stack.Screen name="Onboarding"   component={OnboardingScreen} />
-            <Stack.Screen name="PhoneAuth"    component={PhoneAuthScreen} />
-            <Stack.Screen name="OTPVerify"    component={OTPVerifyScreen} />
+            <Stack.Screen name="Onboarding"     component={OnboardingScreen} />
+            <Stack.Screen name="Welcome"        component={WelcomeScreen} />
+            <Stack.Screen name="Login"          component={LoginScreen} />
+            <Stack.Screen name="CreateAccount"  component={CreateAccountScreen} />
           </>
-        ) : !user?.name ? (
+        ) : !user?.name || !user?.city ? (
           // Profile setup stack — logged in but profile incomplete
           <>
             <Stack.Screen name="ProfileSetup"   component={ProfileSetupScreen} />

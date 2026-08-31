@@ -34,7 +34,7 @@ export default function ProfileScreen({ navigation }: Props) {
   };
 
   const myInviteCode = user?.myInviteCode ||
-    ('MB' + (user?.phone || '').replace(/\D/g, '').slice(-4));
+    ('MB' + (user?.uid || '').slice(-4).toUpperCase());
 
   const tier = (() => {
     if (user?.subscription.plan === 'premium') return 'premium';
@@ -283,9 +283,9 @@ export default function ProfileScreen({ navigation }: Props) {
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.menuCard}>
           <MenuItem
-            icon="call-outline"
-            label="Phone Number"
-            value={user?.phone || '-'}
+            icon="mail-outline"
+            label="Email"
+            value={user?.email || '-'}
           />
           <MenuItem
             icon="business-outline"

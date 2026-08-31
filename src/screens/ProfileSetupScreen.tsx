@@ -3,23 +3,23 @@ import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import CityPicker from '../components/CityPicker';
-import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'ProfileSetup'> };
 
 export default function ProfileSetupScreen({ navigation }: Props) {
   const { user, setUser } = useAuth();
-  const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
   const [city, setCity] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isValid = name.trim().length >= 2 && age && parseInt(age) >= 16 && gender && city;
+  const isValid = age && parseInt(age) >= 16 && gender && city;
 
   const saveProfile = async () => {
     if (!isValid || !user) return;
@@ -27,7 +27,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
     try {
       await setUser({
         ...user,
-        name: name.trim(),
         age: parseInt(age),
         gender: gender as 'male' | 'female' | 'other',
         city,
@@ -46,61 +45,61 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Create account</Text>
-        <Text style={styles.subtitle}>JOIN THE CLUB</Text>
+        {navigation.canGoBack() && (
+          <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} hitSlop={12}>
+            <Ionicons name="chevron-back" size={20} color={COLORS.textPrimary} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
+        )}
+
+        <View style={styles.progressRow}>
+          <View style={[styles.progressSeg, styles.progressSegDone]} />
+          <View style={[styles.progressSeg, styles.progressSegDone]} />
+        </View>
+
+        <Text style={styles.title}>About you</Text>
+        <Text style={styles.subtitle}>STEP 2 OF 2</Text>
 
         <View style={styles.form}>
           <View style={styles.field}>
-            <Text style={styles.label}>Full Name *</Text>
+            <Text style={styles.label}>Age</Text>
             <TextInput
               style={styles.input}
-              placeholder="Your name"
+              placeholder="25"
               placeholderTextColor={COLORS.textMuted}
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
+              keyboardType="numeric"
+              maxLength={3}
+              value={age}
+              onChangeText={setAge}
             />
           </View>
 
-          <View style={styles.row}>
-            <View style={[styles.field, { flex: 1, marginRight: SPACING.sm }]}>
-              <Text style={styles.label}>Age *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="25"
-                placeholderTextColor={COLORS.textMuted}
-                keyboardType="numeric"
-                maxLength={3}
-                value={age}
-                onChangeText={setAge}
-              />
-            </View>
-
-            <View style={[styles.field, { flex: 2 }]}>
-              <Text style={styles.label}>Gender *</Text>
-              <View style={styles.genderRow}>
-                {(['male', 'female', 'other'] as const).map((g) => (
-                  <TouchableOpacity
-                    key={g}
-                    style={[styles.genderBtn, gender === g && styles.genderBtnActive]}
-                    onPress={() => setGender(g)}
-                  >
-                    <Text style={[styles.genderBtnText, gender === g && styles.genderBtnTextActive]}>
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </View>
-
           <CityPicker
-            label="City *"
+            label="Location"
             value={city}
             onChange={setCity}
-            placeholder="Type to search city..."
+            placeholder="London, UK"
           />
+
+          <View style={styles.field}>
+            <Text style={styles.label}>Sex</Text>
+            <View style={styles.genderRow}>
+              {(['male', 'female', 'other'] as const).map((g) => (
+                <TouchableOpacity
+                  key={g}
+                  style={[styles.genderBtn, gender === g && styles.genderBtnActive]}
+                  onPress={() => setGender(g)}
+                >
+                  <Text style={[styles.genderBtnText, gender === g && styles.genderBtnTextActive]}>
+                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         </View>
+
+        <View style={{ flex: 1 }} />
 
         <TouchableOpacity
           style={[styles.btn, (!isValid || loading) && styles.btnDisabled]}
@@ -109,9 +108,9 @@ export default function ProfileSetupScreen({ navigation }: Props) {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={COLORS.white} />
+            <ActivityIndicator color={COLORS.ctaText} />
           ) : (
-            <Text style={styles.btnText}>Continue →</Text>
+            <Text style={styles.btnText}>Continue</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -122,20 +121,19 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: COLORS.background,
     paddingHorizontal: SPACING.lg,
-    paddingTop: 60,
-    paddingBottom: SPACING.xxl,
+    paddingTop: 56,
+    paddingBottom: SPACING.xl,
   },
+  back: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, alignSelf: 'flex-start' },
+  backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },
+  progressRow: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.lg },
+  progressSeg: { flex: 1, height: 3, borderRadius: 2, backgroundColor: COLORS.border },
+  progressSegDone: { backgroundColor: COLORS.ctaBg },
   title: { fontSize: 34, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.sm },
   subtitle: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted, marginBottom: SPACING.xl, textTransform: 'uppercase', letterSpacing: 1.5 },
-  form: {
-    backgroundColor: 'transparent',
-    padding: 0,
-    marginBottom: SPACING.xl,
-  },
+  form: { marginBottom: SPACING.xl },
   field: { marginBottom: SPACING.md },
-  row: { flexDirection: 'row', alignItems: 'flex-start' },
   label: {
     fontSize: 11,
     fontWeight: '700',
@@ -157,36 +155,21 @@ const styles = StyleSheet.create({
   genderRow: { flexDirection: 'row', gap: SPACING.xs },
   genderBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     alignItems: 'center',
   },
-  genderBtnActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
-  genderBtnText: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500' },
-  genderBtnTextActive: { color: COLORS.white, fontWeight: '700' },
-  dropdown: {
-    position: 'absolute',
-    top: 70,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    maxHeight: 200,
-    zIndex: 999,
-    ...SHADOW.md,
-  },
-  dropdownItem: { paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm },
-  dropdownText: { fontSize: 14, color: COLORS.textPrimary },
+  genderBtnActive: { borderColor: COLORS.ctaBg, backgroundColor: COLORS.ctaBg },
+  genderBtnText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
+  genderBtnTextActive: { color: COLORS.ctaText, fontWeight: '700' },
   btn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.ctaBg,
     paddingVertical: SPACING.md,
     borderRadius: RADIUS.full,
     alignItems: 'center',
   },
-  btnDisabled: { backgroundColor: COLORS.textMuted },
-  btnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  btnDisabled: { opacity: 0.5 },
+  btnText: { color: COLORS.ctaText, fontSize: 16, fontWeight: '700' },
 });

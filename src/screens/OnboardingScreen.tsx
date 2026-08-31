@@ -50,7 +50,7 @@ export default function OnboardingScreen({ navigation }: Props) {
       flatListRef.current?.scrollToIndex({ index: current + 1 });
       setCurrent(current + 1);
     } else {
-      navigation.replace('PhoneAuth');
+      navigation.replace('Welcome');
     }
   };
 
@@ -102,7 +102,7 @@ export default function OnboardingScreen({ navigation }: Props) {
         </TouchableOpacity>
 
         {current < SLIDES.length - 1 && (
-          <TouchableOpacity onPress={() => navigation.replace('PhoneAuth')} style={styles.skipBtn}>
+          <TouchableOpacity onPress={() => navigation.replace('Welcome')} style={styles.skipBtn}>
             <Text style={[styles.skipText, SLIDES[current].dark && { color: 'rgba(42,31,22,0.7)' }]}>Skip</Text>
           </TouchableOpacity>
         )}

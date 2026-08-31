@@ -1,6 +1,7 @@
 export interface User {
   uid: string;
-  phone: string;
+  email: string;
+  phone?: string;
   name: string;
   age?: number;
   gender?: 'male' | 'female' | 'other';
@@ -76,8 +77,9 @@ export interface Chat {
 export type RootStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
-  PhoneAuth: undefined;
-  OTPVerify: { phone: string; verificationId: string };
+  Welcome: undefined;
+  Login: undefined;
+  CreateAccount: undefined;
   ProfileSetup: undefined;
   InterestPicker: undefined;
   EditProfile: undefined;

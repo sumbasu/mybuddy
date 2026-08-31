@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Active Firebase session — fetch fresh profile from Firestore
-        await loadFromFirestore(firebaseUser.uid, firebaseUser.phoneNumber || '');
+        await loadFromFirestore(firebaseUser.uid, firebaseUser.email || '');
       } else {
         // No active session — restore from local AsyncStorage cache (cold start)
         await loadFromCache();
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Called when Firebase session is active — reads/writes Firestore
-  const loadFromFirestore = async (uid: string, phone: string) => {
+  const loadFromFirestore = async (uid: string, email: string) => {
     try {
       const ref = doc(db, 'users', uid);
       const snap = await getDoc(ref);
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         trialEnd.setDate(trialEnd.getDate() + 7);
         const newUser: User = {
           uid,
-          phone,
+          email,
           name: '',
           city: '',
           state: '',
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription: { plan: 'free_trial' },
           trialEndsAt: trialEnd.toISOString(),
           createdAt: new Date().toISOString(),
-          myInviteCode: 'MB' + phone.replace(/\D/g, '').slice(-4),
+          myInviteCode: 'MB' + uid.slice(-4).toUpperCase(),
           referralCount: 0,
           freeMonthsEarned: 0,
           discountPct: 0,

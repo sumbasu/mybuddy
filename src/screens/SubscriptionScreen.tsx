@@ -77,7 +77,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
           currency: 'INR',
           name: 'MyBuddy',
           description: `MyBuddy ${selectedPlan === 'monthly' ? 'Monthly' : 'Quarterly'} Plan`,
-          prefill: { contact: user.phone },
+          prefill: { email: user.email },
           theme: { color: COLORS.primary },
         });
         razorpaySubscriptionId = data.razorpay_payment_id;
