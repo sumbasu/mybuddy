@@ -16,6 +16,12 @@ export const INTERESTS: Interest[] = [
   { id: 'cycling',     label: 'Cycling',        icon: 'bike',         category: 'sports' },
   { id: 'squash',      label: 'Squash',         icon: 'racquetball',  category: 'sports' },
   { id: 'tabletennis', label: 'Table Tennis',   icon: 'table-tennis', category: 'sports' },
+  { id: 'pickleball',  label: 'Pickleball',     icon: 'tennis-ball',  category: 'sports' },
+  { id: 'paddle',      label: 'Paddle',         icon: 'rowing',       category: 'sports' },
+  { id: 'horseriding', label: 'Horse Riding',   icon: 'horse-variant',category: 'sports' },
+  { id: 'hockey',      label: 'Hockey',         icon: 'hockey-sticks',category: 'sports' },
+  { id: 'surfing',     label: 'Surfing',        icon: 'surfing',      category: 'sports' },
+  { id: 'kayaking',    label: 'Kayaking',       icon: 'kayaking',     category: 'sports' },
 
   // Fitness
   { id: 'running',     label: 'Running',        icon: 'run',          category: 'fitness' },

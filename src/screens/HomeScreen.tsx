@@ -4,7 +4,7 @@ import {
   RefreshControl, StatusBar, Dimensions, Alert,
 } from 'react-native';
 
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Activity } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -139,7 +139,7 @@ export default function HomeScreen({ navigation }: Props) {
             activeOpacity={0.85}
           >
             <View style={styles.clubProIconWrap}>
-              <Ionicons name="trending-up" size={18} color={COLORS.accent} />
+              <MaterialCommunityIcons name="crown" size={18} color={COLORS.accent} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.clubProTitle}>Upgrade to Club Pro</Text>

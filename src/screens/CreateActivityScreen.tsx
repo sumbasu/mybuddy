@@ -169,7 +169,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <View style={{ width: 52 }} />
         </View>
 
-        <Section title="What activity?">
+        <Section title="Activity Type">
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.interestRow}>
             {INTERESTS.map((i) => (
               <TouchableOpacity
@@ -325,7 +325,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           </View>
         </Section>
 
-        <Section title="Skill Level">
+        <Section title="Level">
           <View style={styles.optionRow}>
             {['any', 'beginner', 'intermediate', 'advanced'].map((s) => (
               <TouchableOpacity

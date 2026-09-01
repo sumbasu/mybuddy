@@ -189,7 +189,7 @@ function ActivityCard({
 
       <View style={styles.cardTop}>
         <View style={styles.interestBadge}>
-          <InterestIcon id={interest?.id} size={13} color={COLORS.primary} />
+          <InterestIcon id={interest?.id} size={13} color={COLORS.textPrimary} />
           <Text style={styles.interestLabel}>{interest?.label || activity.interest}</Text>
         </View>
         <View style={[styles.spotsBadge, spotsLeft === 0 && styles.spotsBadgeFull]}>
@@ -336,10 +336,10 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.sm },
   interestBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: COLORS.primary + '15', paddingHorizontal: SPACING.sm,
+    backgroundColor: COLORS.surfaceSecondary, paddingHorizontal: SPACING.sm,
     paddingVertical: 4, borderRadius: RADIUS.full,
   },
-  interestLabel: { fontSize: 12, color: COLORS.primary, fontWeight: '600' },
+  interestLabel: { fontSize: 12, color: COLORS.textPrimary, fontWeight: '700' },
   spotsBadge: {
     backgroundColor: COLORS.success + '20', paddingHorizontal: SPACING.sm,
     paddingVertical: 4, borderRadius: RADIUS.full,
