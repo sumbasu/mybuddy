@@ -91,10 +91,13 @@ export default function InterestPickerScreen({ navigation }: Props) {
         >
           {loading ? (
             <ActivityIndicator color={COLORS.white} />
+          ) : selected.length < 2 ? (
+            <Text style={styles.btnText}>Pick at least 2</Text>
           ) : (
-            <Text style={styles.btnText}>
-              {selected.length < 2 ? 'Pick at least 2' : "Let's Go! 🚀"}
-            </Text>
+            <View style={styles.btnInner}>
+              <Text style={styles.btnText}>Continue</Text>
+              <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+            </View>
           )}
         </TouchableOpacity>
       </View>
@@ -168,5 +171,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btnDisabled: { backgroundColor: COLORS.textMuted },
+  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   btnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
 });

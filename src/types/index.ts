@@ -26,6 +26,7 @@ export interface User {
   courtPosition?: string;
   matchType?: string;
   preferredTime?: string;
+  buddyGenderPreference?: 'any' | 'same' | 'male' | 'female';
 }
 
 export interface SubscriptionStatus {

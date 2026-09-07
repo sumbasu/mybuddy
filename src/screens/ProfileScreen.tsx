@@ -6,6 +6,7 @@ import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { INTERESTS } from '../constants/interests';
+import StarRating from '../components/StarRating';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
@@ -74,6 +75,7 @@ export default function ProfileScreen({ navigation }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{user?.name || 'Your Name'}</Text>
+            <StarRating rating={user?.rating || 0} size={14} showLabel reviewCount={user?.reviewCount} />
             <View style={styles.locationRow}>
               <Ionicons name="location-sharp" size={9} color={COLORS.locationGreen} />
               <Text style={styles.locationText}>{user?.city || 'India'}</Text>

@@ -20,13 +20,17 @@ export default function EditProfileScreen({ navigation }: Props) {
   const [age, setAge] = useState(user?.age ? String(user.age) : '');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>(user?.gender || '');
   const [city, setCity] = useState(user?.city || '');
+  const [buddyPref, setBuddyPref] = useState<'any' | 'same' | 'male' | 'female'>(
+    user?.buddyGenderPreference || 'any'
+  );
   const [loading, setLoading] = useState(false);
 
   const hasChanges =
     name.trim() !== (user?.name || '') ||
     age !== (user?.age ? String(user.age) : '') ||
     gender !== (user?.gender || '') ||
-    city !== (user?.city || '');
+    city !== (user?.city || '') ||
+    buddyPref !== (user?.buddyGenderPreference || 'any');
 
   const save = async () => {
     if (!name.trim()) {
@@ -42,6 +46,7 @@ export default function EditProfileScreen({ navigation }: Props) {
         age: age ? parseInt(age) : user.age,
         gender: gender || user.gender,
         city: city || user.city,
+        buddyGenderPreference: buddyPref,
       });
       Alert.alert('Saved!', 'Your profile has been updated.', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -154,6 +159,46 @@ export default function EditProfileScreen({ navigation }: Props) {
           </View>
         </View>
 
+        {/* Buddy gender preference */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Buddy Preference</Text>
+          <View style={styles.card}>
+            <View style={styles.fieldWrap}>
+              <View style={styles.fieldHeader}>
+                <Ionicons name="people-outline" size={16} color={COLORS.primary} />
+                <Text style={styles.label}>Preferred Buddy Gender</Text>
+              </View>
+              <Text style={styles.prefHint}>
+                Who would you prefer to connect with for activities?
+              </Text>
+              <View style={styles.prefGrid}>
+                {([
+                  { value: 'any',    label: 'Anyone',      icon: 'people-outline' },
+                  { value: 'same',   label: 'Same as me',  icon: 'person-outline' },
+                  { value: 'male',   label: 'Male',        icon: 'man-outline' },
+                  { value: 'female', label: 'Female',      icon: 'woman-outline' },
+                ] as const).map((opt) => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.prefChip, buddyPref === opt.value && styles.prefChipActive]}
+                    onPress={() => setBuddyPref(opt.value)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={opt.icon}
+                      size={18}
+                      color={buddyPref === opt.value ? COLORS.white : COLORS.textSecondary}
+                    />
+                    <Text style={[styles.prefChipText, buddyPref === opt.value && styles.prefChipTextActive]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* Interests shortcut */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Interests</Text>
@@ -232,6 +277,17 @@ const styles = StyleSheet.create({
   readValue: { fontSize: 15, color: COLORS.textPrimary, fontWeight: '500' },
   readValueMuted: { color: COLORS.textSecondary },
   hint: { fontSize: 11, color: COLORS.textMuted, marginTop: 4 },
+  prefHint: { fontSize: 12, color: COLORS.textMuted, marginBottom: SPACING.sm },
+  prefGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
+  prefChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full, borderWidth: 1.5,
+    borderColor: COLORS.border, backgroundColor: COLORS.surface,
+  },
+  prefChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  prefChipText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
+  prefChipTextActive: { color: COLORS.white, fontWeight: '700' },
 
   genderRow: { flexDirection: 'row', gap: SPACING.sm },
   genderChip: {
