@@ -28,10 +28,18 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker",
-      ["expo-build-properties", {
-        "ios": { "useFrameworks": "static" },
-        "android": { "enableProguardInReleaseBuilds": false }
-      }] 
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          },
+          "android": {
+            "enableProguardInReleaseBuilds": false
+          }
+        }
+      ],
+      "expo-font"
     ]
   }
 }

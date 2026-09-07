@@ -32,7 +32,8 @@ export default function ProfileSetupScreen({ navigation }: Props) {
         city,
         state: '',
       });
-      navigation.replace('InterestPicker');
+      // AppNavigator watches `user` and swaps to the interests stack
+      // (then the main stack) automatically once name/city are set.
     } catch (err) {
       Alert.alert('Error', 'Could not save profile. Please try again.');
     }
@@ -98,9 +99,12 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             </View>
           </View>
         </View>
+      </ScrollView>
 
-        <View style={{ flex: 1 }} />
-
+      {/* Fixed footer, outside the ScrollView — keeps the button's touch
+          target from drifting when the city dropdown collapses and the
+          scroll content resizes underneath it. */}
+      <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.btn, (!isValid || loading) && styles.btnDisabled]}
           onPress={saveProfile}
@@ -113,24 +117,32 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             <Text style={styles.btnText}>Continue</Text>
           )}
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
     paddingHorizontal: SPACING.lg,
     paddingTop: 56,
-    paddingBottom: SPACING.xl,
+    paddingBottom: 120,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    paddingBottom: 36,
   },
   back: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, alignSelf: 'flex-start' },
   backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },
   progressRow: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.lg },
   progressSeg: { flex: 1, height: 3, borderRadius: 2, backgroundColor: COLORS.border },
   progressSegDone: { backgroundColor: COLORS.ctaBg },
-  title: { fontSize: 34, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.sm },
+  title: { fontSize: 34, fontFamily: FONTS.light, color: COLORS.textPrimary, marginBottom: SPACING.sm },
   subtitle: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted, marginBottom: SPACING.xl, textTransform: 'uppercase', letterSpacing: 1.5 },
   form: { marginBottom: SPACING.xl },
   field: { marginBottom: SPACING.md },

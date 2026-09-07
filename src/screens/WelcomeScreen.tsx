@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import TennisBall from '../components/TennisBall';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Welcome'> };
 
@@ -11,16 +11,16 @@ export default function WelcomeScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.ballWrap}>
-        <Ionicons name="tennisball" size={110} color={COLORS.accent} />
+        <TennisBall size={140} />
       </View>
 
       <View style={styles.footer}>
         <Text style={styles.title}>Welcome</Text>
-        <Text style={styles.eyebrow}>YOUR GAME STARTS HERE</Text>
+        <Text style={styles.eyebrow}>Let's find your game buddy</Text>
 
         <TouchableOpacity
           style={styles.ctaBtn}
-          onPress={() => navigation.navigate('CreateAccount')}
+          onPress={() => navigation.navigate('AuthChoice')}
           activeOpacity={0.88}
         >
           <Text style={styles.ctaBtnText}>Sign Up</Text>
@@ -28,7 +28,7 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={styles.outlineBtn}
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('AuthChoice')}
           activeOpacity={0.85}
         >
           <Text style={styles.outlineBtnText}>Log In</Text>
@@ -44,15 +44,15 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: SPACING.xl, paddingBottom: 56 },
   title: {
     fontSize: 44,
-    fontFamily: FONTS.serif,
-    fontWeight: '700',
+    fontFamily: FONTS.light,
     color: COLORS.textPrimary,
     textAlign: 'center',
+    letterSpacing: 1,
   },
   eyebrow: {
     fontSize: 11,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.light,
+    color: COLORS.textMuted,
     textAlign: 'center',
     marginTop: SPACING.sm,
     marginBottom: SPACING.xl,
@@ -66,13 +66,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.sm,
   },
-  ctaBtnText: { color: COLORS.ctaText, fontSize: 16, fontWeight: '700' },
+  ctaBtnText: { color: COLORS.ctaText, fontSize: 16, fontFamily: FONTS.regular, letterSpacing: 0.5 },
   outlineBtn: {
     borderWidth: 1.5,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(240,237,228,0.3)',
     paddingVertical: SPACING.md,
     borderRadius: RADIUS.full,
     alignItems: 'center',
   },
-  outlineBtnText: { color: COLORS.textPrimary, fontSize: 16, fontWeight: '700' },
+  outlineBtnText: { color: COLORS.textPrimary, fontSize: 16, fontFamily: FONTS.light, letterSpacing: 0.5 },
 });

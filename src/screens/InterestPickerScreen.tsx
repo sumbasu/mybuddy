@@ -27,7 +27,13 @@ export default function InterestPickerScreen({ navigation }: Props) {
     if (selected.length < 2 || !user) return;
     setLoading(true);
     await setUser({ ...user, interests: selected });
-    navigation.replace('MainTabs');
+    // Reached two ways: pushed from Profile/EditProfile inside the main stack
+    // (go back to it), or shown by AppNavigator during onboarding, in which
+    // case there's nothing to go back to — it swaps to the main stack itself
+    // once `user.interests` has 2+ entries.
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
     setLoading(false);
   };
 
@@ -105,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   backBtn: { marginBottom: SPACING.md, alignSelf: 'flex-start', padding: 4 },
-  title: { fontSize: 30, fontFamily: FONTS.serif, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.xs },
+  title: { fontSize: 30, fontFamily: FONTS.light, color: COLORS.textPrimary, marginBottom: SPACING.xs },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 20 },
   badge: {
     alignSelf: 'flex-start',

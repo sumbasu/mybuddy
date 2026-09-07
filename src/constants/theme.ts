@@ -1,39 +1,38 @@
-import { Platform } from 'react-native';
-
 export const COLORS = {
   primary: '#6C5CA6',      // mid violet — accent tints, chips, general CTAs
   primaryLight: '#8779C2',
   primaryDark: '#241B4D',
   secondary: '#6C5CA6',
-  accent: '#9ACB3B',        // tennis-ball green
+  accent: '#C5E637',        // Go Pro / highlight lime (Sweatbud)
+  locationGreen: '#4CAF72', // location text on dark screens
   success: '#06D6A0',
   warning: '#FFD60A',
   error: '#EF233C',
-  background: 'transparent', // the purple gradient (GRADIENT below) shows through
+  background: 'transparent', // GradientBackground (radial, from Figma) shows through
   surface: 'rgba(255,255,255,0.09)',
   surfaceSecondary: 'rgba(255,255,255,0.16)',
   border: 'rgba(255,255,255,0.22)',
-  textPrimary: '#FFFFFF',
-  textSecondary: 'rgba(255,255,255,0.72)',
-  textMuted: 'rgba(255,255,255,0.5)',
+  textPrimary: '#F0EDE4',
+  textSecondary: 'rgba(240,237,228,0.72)',
+  textMuted: 'rgba(240,237,228,0.5)',
   white: '#FFFFFF',
   black: '#000000',
   overlay: 'rgba(0,0,0,0.55)',
   // Cream CTA pill — Sign Up / Log In / Continue buttons on the gradient
-  ctaBg: '#F4EEDF',
-  ctaText: '#2E2158',
+  ctaBg: '#F0EDE4',
+  ctaText: '#4B3B8C',
 };
 
-export const GRADIENT = {
-  top: '#59498F',
-  bottom: '#221A47',
-};
-
+// Real typefaces from the Figma file, loaded via @expo-google-fonts/* in App.tsx.
 export const FONTS = {
-  regular: 'System',
-  medium: 'System',
-  bold: 'System',
-  serif: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+  light: 'Inter_300Light',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semiBold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  extraBold: 'Inter_800ExtraBold',
+  // Condensed display face used for screen-title eyebrows (e.g. "PROFILE")
+  display: 'BarlowCondensed_700Bold',
 };
 
 export const SPACING = {

@@ -127,8 +127,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },
   title: {
     fontSize: 34,
-    fontFamily: FONTS.serif,
-    fontWeight: '700',
+    fontFamily: FONTS.light,
     color: COLORS.textPrimary,
   },
   eyebrow: {

@@ -1,6 +1,6 @@
 export interface User {
   uid: string;
-  email: string;
+  email?: string;
   phone?: string;
   name: string;
   age?: number;
@@ -20,6 +20,12 @@ export interface User {
   discountPct?: number;
   referralCount?: number;
   freeMonthsEarned?: number;
+  followersCount?: number;
+  followingCount?: number;
+  bestHand?: string;
+  courtPosition?: string;
+  matchType?: string;
+  preferredTime?: string;
 }
 
 export interface SubscriptionStatus {
@@ -75,27 +81,34 @@ export interface Chat {
 }
 
 export type RootStackParamList = {
-  Splash: undefined;
-  Onboarding: undefined;
   Welcome: undefined;
+  AuthChoice: undefined;
+  PhoneNumber: undefined;
+  OTPVerify: { phone: string };
   Login: undefined;
-  CreateAccount: undefined;
+  CreateAccount: { phone?: string } | undefined;
   ProfileSetup: undefined;
   InterestPicker: undefined;
   EditProfile: undefined;
+  Settings: undefined;
+  YourActivity: undefined;
+  YourMatches: undefined;
+  YourClasses: undefined;
+  YourEvents: undefined;
+  YourFavourites: undefined;
+  YourGroups: undefined;
   LocationSetup: undefined;
   MainTabs: undefined;
   ActivityDetail: { activityId: string };
   CreateActivity: { activityId?: string } | undefined;
   UserProfile: { userId: string };
+  Chats: undefined;
   Chat: { chatId: string; activityTitle?: string; participantName?: string; recipientId?: string };
   Subscription: undefined;
 };
 
 export type TabParamList = {
   Home: undefined;
-  Activities: { category?: string } | undefined;
-  Create: undefined;
-  Chats: undefined;
+  Community: undefined;
   Profile: undefined;
 };

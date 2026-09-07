@@ -7,13 +7,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, User } from '../types';
 import { auth, db } from '../services/firebase';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 
-type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'CreateAccount'> };
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'CreateAccount'>;
+  route: RouteProp<RootStackParamList, 'CreateAccount'>;
+};
 
-export default function CreateAccountScreen({ navigation }: Props) {
+export default function CreateAccountScreen({ navigation, route }: Props) {
+  const phone = route.params?.phone;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +38,7 @@ export default function CreateAccountScreen({ navigation }: Props) {
       const newUser: User = {
         uid: result.user.uid,
         email: email.trim(),
+        ...(phone ? { phone } : {}),
         name: name.trim(),
         city: '',
         state: '',
@@ -144,8 +150,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },
   title: {
     fontSize: 34,
-    fontFamily: FONTS.serif,
-    fontWeight: '700',
+    fontFamily: FONTS.light,
     color: COLORS.textPrimary,
   },
   eyebrow: {
