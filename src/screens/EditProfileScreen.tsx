@@ -43,6 +43,7 @@ export default function EditProfileScreen({ navigation }: Props) {
       await setUser({
         ...user,
         name: name.trim(),
+        nameLower: name.trim().toLowerCase(),
         age: age ? parseInt(age) : user.age,
         gender: gender || user.gender,
         city: city || user.city,

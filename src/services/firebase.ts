@@ -1,5 +1,13 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { initializeAuth, inMemoryPersistence, getAuth } from 'firebase/auth';
+import { initializeAuth, getAuth } from 'firebase/auth';
+// firebase/auth's package.json has no "react-native" export condition, so
+// Metro resolves it to the browser build — which has no persistent storage
+// option for RN. @firebase/auth (the underlying engine) does declare one.
+// @ts-ignore — tsc resolves this package without the "react-native" export
+// condition Metro uses at runtime, so it can't see this type; the function
+// is genuinely there in the RN build.
+import { getReactNativePersistence } from '@firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -15,12 +23,16 @@ export const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// inMemoryPersistence silences the AsyncStorage warning.
-// Cross-session persistence is handled in AuthContext via onAuthStateChanged + Firestore.
+// Persists the Firebase Auth session across app restarts — without this,
+// auth.currentUser is null on every cold start (even though AuthContext's
+// AsyncStorage-cached profile makes the UI look logged in), which silently
+// breaks any Firestore write gated on request.auth != null.
 let auth: ReturnType<typeof getAuth>;
 try {
-  auth = initializeAuth(app, { persistence: inMemoryPersistence });
-} catch {
+  auth = initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
+  console.log('[firebase] initializeAuth with RN persistence succeeded');
+} catch (err) {
+  console.log('[firebase] initializeAuth threw, falling back to getAuth:', err);
   auth = getAuth(app);
 }
 

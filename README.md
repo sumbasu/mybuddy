@@ -122,7 +122,21 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+      allow create, update: if request.auth.uid == userId;
+      // Following/unfollowing bumps the OTHER user's followersCount — allow
+      // any signed-in user to touch only that one field on someone else's doc.
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount']);
+    }
+    match /follows/{followId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.followerId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.followerId;
+    }
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
     }
     match /activities/{activityId} {
       allow read: if true;
@@ -176,10 +190,17 @@ npx expo start
 
 ```
 users/{uid}
-  name, phone, city, interests[], photoURL,
+  name, nameLower, phone, city, interests[], photoURL,
   subscription{ plan, expiresAt },
   trialEndsAt, myInviteCode, referralCount,
-  freeMonthsEarned, discountPct, createdAt
+  freeMonthsEarned, discountPct, createdAt,
+  followersCount, followingCount
+
+follows/{followerId}_{followingId}
+  followerId, followingId, createdAt
+
+posts/{postId}
+  authorId, authorName, text, createdAt
 
 activities/{activityId}
   creatorId, creatorName, title, interest,

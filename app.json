@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "MyBuddy",
+    "name": "SweatBud",
     "slug": "MyBuddy",
+    "scheme": "mybuddy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sumbasu.MyBuddy"
+      "bundleIdentifier": "com.pium.sweatbud"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sumbasu.MyBuddy"
+      "package": "com.pium.sweatbud"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,7 +43,8 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ]
   }
 }

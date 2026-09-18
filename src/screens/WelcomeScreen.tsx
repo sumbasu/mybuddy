@@ -23,15 +23,7 @@ export default function WelcomeScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('AuthChoice')}
           activeOpacity={0.88}
         >
-          <Text style={styles.ctaBtnText}>Sign Up</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.outlineBtn}
-          onPress={() => navigation.navigate('AuthChoice')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.outlineBtnText}>Log In</Text>
+          <Text style={styles.ctaBtnText}>Get Started</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -67,12 +59,4 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   ctaBtnText: { color: COLORS.ctaText, fontSize: 16, fontFamily: FONTS.regular, letterSpacing: 0.5 },
-  outlineBtn: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(240,237,228,0.3)',
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
-    alignItems: 'center',
-  },
-  outlineBtnText: { color: COLORS.textPrimary, fontSize: 16, fontFamily: FONTS.light, letterSpacing: 0.5 },
 });

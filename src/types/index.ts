@@ -3,6 +3,7 @@ export interface User {
   email?: string;
   phone?: string;
   name: string;
+  nameLower?: string;
   age?: number;
   gender?: 'male' | 'female' | 'other';
   city: string;
@@ -84,10 +85,7 @@ export interface Chat {
 export type RootStackParamList = {
   Welcome: undefined;
   AuthChoice: undefined;
-  PhoneNumber: undefined;
   OTPVerify: { phone: string };
-  Login: undefined;
-  CreateAccount: { phone?: string } | undefined;
   ProfileSetup: undefined;
   InterestPicker: undefined;
   EditProfile: undefined;

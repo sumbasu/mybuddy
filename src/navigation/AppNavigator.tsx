@@ -11,10 +11,7 @@ import { RootStackParamList, TabParamList } from '../types';
 
 import WelcomeScreen from '../screens/WelcomeScreen';
 import AuthChoiceScreen from '../screens/AuthChoiceScreen';
-import PhoneNumberScreen from '../screens/PhoneNumberScreen';
 import OTPVerifyScreen from '../screens/OTPVerifyScreen';
-import LoginScreen from '../screens/LoginScreen';
-import CreateAccountScreen from '../screens/CreateAccountScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import InterestPickerScreen from '../screens/InterestPickerScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -98,10 +95,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Welcome"        component={WelcomeScreen} />
             <Stack.Screen name="AuthChoice"      component={AuthChoiceScreen} />
-            <Stack.Screen name="PhoneNumber"    component={PhoneNumberScreen} />
             <Stack.Screen name="OTPVerify"      component={OTPVerifyScreen} />
-            <Stack.Screen name="Login"          component={LoginScreen} />
-            <Stack.Screen name="CreateAccount"  component={CreateAccountScreen} />
           </>
         ) : !user?.name || !user?.city ? (
           // Profile setup stack — logged in but profile incomplete
