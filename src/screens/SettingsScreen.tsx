@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import Svg, { Defs, LinearGradient as SvgLinearGradient, Stop, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -9,37 +8,20 @@ import { FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'> };
 
-// Colors specific to this screen's light theme (distinct from the app's dark gradient elsewhere).
+// White sheet between a purple header and the rest of the app — matches the Profile screen.
 const C = {
-  textPrimary: '#2E2260',
-  textSecondary: 'rgba(75,59,140,0.55)',
-  textMuted: 'rgba(75,59,140,0.5)',
-  label: 'rgba(75,59,140,0.45)',
-  border: 'rgba(75,59,140,0.12)',
-  cardBg: 'rgba(255,255,255,0.6)',
-  purple: '#4B3B8C',
-  lime: '#C5E637',
-  cream: '#F0EDE4',
-  danger: 'rgba(220,60,60,0.9)',
+  page: '#FFFFFF',
+  purple: '#3F2F86',
+  purpleBorder: 'rgba(255,255,255,0.15)',
+  label: 'rgba(63,47,134,0.45)',
+  sub: '#767683',
+  heading: '#16213E',
+  gold: '#E8B84B',
+  danger: '#FF6B6B',
 };
 
 const initials = (name?: string) =>
   (name || '?').trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
-
-function GradientBg() {
-  return (
-    <Svg style={StyleSheet.absoluteFillObject} pointerEvents="none">
-      <Defs>
-        <SvgLinearGradient id="settingsGrad" x1="5%" y1="0%" x2="95%" y2="100%">
-          <Stop offset="0.0849" stopColor="#D4CEF0" />
-          <Stop offset="0.5" stopColor="#C8C0EC" />
-          <Stop offset="0.9151" stopColor="#BEB5E8" />
-        </SvgLinearGradient>
-      </Defs>
-      <Rect x={0} y={0} width="100%" height="100%" fill="url(#settingsGrad)" />
-    </Svg>
-  );
-}
 
 function Row({
   icon, label, sub, danger, onPress,
@@ -47,13 +29,13 @@ function Row({
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.rowIconWrap}>
-        <Ionicons name={icon} size={16} color={danger ? C.danger : C.purple} />
+        <Ionicons name={icon} size={16} color={danger ? C.danger : '#FFFFFF'} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.rowLabel, danger && { color: C.danger }]}>{label}</Text>
         {sub ? <Text style={styles.rowSub} numberOfLines={1}>{sub}</Text> : null}
       </View>
-      {!danger && <Ionicons name="chevron-forward" size={13} color={C.purple} />}
+      {!danger && <Ionicons name="chevron-forward" size={13} color="#FFFFFF" />}
     </TouchableOpacity>
   );
 }
@@ -83,35 +65,37 @@ export default function SettingsScreen({ navigation }: Props) {
     : 0;
 
   return (
-    <View style={{ flex: 1 }}>
-      <GradientBg />
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10}>
-            <Ionicons name="close" size={20} color={C.textPrimary} />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.container}>
+      {/* Purple header — minimal, matches the app's purple */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
+          <Ionicons name="close" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleLogout} style={styles.headerLogoutBtn}>
+          <Ionicons name="power" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.identityRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{user?.name || 'Your Name'}</Text>
-            <Text style={styles.trial}>
-              {trialDaysLeft > 0 ? `Free trial · ${trialDaysLeft}d left` : 'Free trial'}
-            </Text>
-          </View>
+      {/* White sheet — all identity content and text lives here */}
+      <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.identityBlock}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials(user?.name)}</Text>
           </View>
-        </View>
+          <Text style={styles.name}>{user?.name || 'Your Name'}</Text>
+          <Text style={styles.trial}>
+            {trialDaysLeft > 0 ? `Free trial · ${trialDaysLeft}d left` : 'Free trial'}
+          </Text>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity style={styles.goProBtn} onPress={() => navigation.navigate('Subscription')} activeOpacity={0.85}>
-            <Text style={styles.goProBtnText}>Go Pro ✦</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85} onPress={soon}>
-            <Ionicons name="share-outline" size={13} color={C.purple} />
-            <Text style={styles.shareBtnText}>Share profile</Text>
-          </TouchableOpacity>
+          <View style={styles.actionsRow}>
+            <TouchableOpacity style={styles.goProBtn} onPress={() => navigation.navigate('Subscription')} activeOpacity={0.85}>
+              <Text style={styles.goProBtnText}>Premium ✦</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85} onPress={soon}>
+              <Ionicons name="share-outline" size={13} color={C.purple} />
+              <Text style={styles.shareBtnText}>Share profile</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <Section label="Your account">
@@ -135,53 +119,68 @@ export default function SettingsScreen({ navigation }: Props) {
           <Row icon="log-out-outline" label="Log out" danger onPress={handleLogout} />
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 24 }} />
       </ScrollView>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.xxl },
-  header: { paddingTop: 56, paddingBottom: SPACING.sm },
-  identityRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  name: { fontFamily: FONTS.bold, fontSize: 16, color: C.textPrimary },
-  trial: { fontFamily: FONTS.regular, fontSize: 10.5, color: C.textSecondary, marginTop: 2 },
+  container: { flex: 1, backgroundColor: C.purple },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: C.purple,
+    paddingHorizontal: SPACING.md, paddingTop: 56, paddingBottom: SPACING.md,
+  },
+  headerIconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  headerLogoutBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+
+  sheet: {
+    flex: 1, backgroundColor: C.page,
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+  },
+  sheetContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, paddingBottom: SPACING.xxl },
+
+  identityBlock: { alignItems: 'center', marginBottom: SPACING.lg },
   avatar: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: C.purple, borderWidth: 1.6, borderColor: 'rgba(75,59,140,0.3)',
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: C.heading,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontFamily: FONTS.extraBold, fontSize: 13.7, color: C.cream, letterSpacing: 0.5 },
+  avatarText: { fontFamily: FONTS.extraBold, fontSize: 19, color: '#FFFFFF', letterSpacing: 0.5 },
+  name: { fontFamily: FONTS.bold, fontSize: 18, color: C.heading, marginTop: SPACING.sm, textAlign: 'center' },
+  trial: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, marginTop: 2, textAlign: 'center' },
 
   actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.md },
   goProBtn: {
-    height: 29, paddingHorizontal: SPACING.md, borderRadius: RADIUS.lg,
-    backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center',
+    width: 136, height: 44, borderRadius: RADIUS.lg,
+    backgroundColor: C.heading, alignItems: 'center', justifyContent: 'center',
   },
-  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 10.5, color: C.lime },
+  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 11.3, color: C.gold },
   shareBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    height: 29, paddingHorizontal: SPACING.md, borderRadius: RADIUS.lg,
-    borderWidth: 1.2, borderColor: 'rgba(75,59,140,0.4)',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+    width: 136, height: 44, borderRadius: RADIUS.lg,
+    borderWidth: 1.2, borderColor: C.purple,
   },
-  shareBtnText: { fontFamily: FONTS.semiBold, fontSize: 10.5, color: C.purple },
+  shareBtnText: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.purple },
 
-  section: { marginTop: SPACING.lg },
+  section: { marginBottom: SPACING.lg },
   sectionLabel: {
     fontFamily: FONTS.bold, fontSize: 9.7, color: C.label,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: SPACING.sm,
   },
   card: {
-    backgroundColor: C.cardBg, borderWidth: 0.8, borderColor: C.border,
+    backgroundColor: C.purple,
     borderRadius: RADIUS.md, overflow: 'hidden', marginTop: SPACING.lg,
   },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+    minHeight: 64,
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    borderBottomWidth: 0.8, borderBottomColor: 'rgba(75,59,140,0.1)',
+    borderBottomWidth: 0.8, borderBottomColor: C.purpleBorder,
   },
   rowIconWrap: { width: 26, alignItems: 'center' },
-  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.textPrimary },
-  rowSub: { fontFamily: FONTS.regular, fontSize: 8.9, color: C.textMuted, marginTop: 2 },
+  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: '#FFFFFF' },
+  rowSub: { fontFamily: FONTS.regular, fontSize: 8.9, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
 });

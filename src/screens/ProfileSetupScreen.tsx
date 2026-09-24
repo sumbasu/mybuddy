@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.md,
     paddingBottom: 36,
   },
-  back: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, alignSelf: 'flex-start' },
+  back: { flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: SPACING.lg, alignSelf: 'flex-start' },
   backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },
   progressRow: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.lg },
   progressSeg: { flex: 1, height: 3, borderRadius: 2, backgroundColor: COLORS.border },
@@ -167,7 +167,8 @@ const styles = StyleSheet.create({
   genderRow: { flexDirection: 'row', gap: SPACING.xs },
   genderBtn: {
     flex: 1,
-    paddingVertical: 12,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: COLORS.border,

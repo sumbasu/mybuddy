@@ -6,9 +6,23 @@ import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { INTERESTS } from '../constants/interests';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
+
+// White-body layout matching the Playtomic reference — purple header, white sheet below.
+const C = {
+  headerBg: '#3F2F86',
+  page: '#FFFFFF',
+  card: '#FFFFFF',
+  heading: '#16213E',
+  sub: '#767683',
+  muted: '#9A9AA6',
+  border: '#ECEBF2',
+  purple: '#3F2F86',
+  gold: '#E8B84B',
+  error: '#EF233C',
+};
 
 const initials = (name?: string) =>
   (name || '?')
@@ -28,10 +42,11 @@ const PREFERENCES: { key: 'bestHand' | 'courtPosition' | 'matchType' | 'preferre
 ];
 
 export default function ProfileScreen({ navigation }: Props) {
-  const { user, logout } = useAuth();
+  const { user, logout, isSubscribed } = useAuth();
   const { activities } = useActivities();
   const [resultFilter, setResultFilter] = useState(RESULT_FILTERS[0]);
 
+  const subscribed = isSubscribed();
   const myUid = user?.uid || 'demo_user';
   const matches = activities.filter(
     (a) => a.creatorId === myUid || a.participants.includes(myUid)
@@ -52,20 +67,22 @@ export default function ProfileScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      {/* Header — stays on the app's purple */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('Chats')} hitSlop={8}>
-              <Ionicons name="notifications-outline" size={18} color={COLORS.textPrimary} />
+            <TouchableOpacity style={styles.headerIconBtn} onPress={() => (navigation as any).navigate('Chats')}>
+              <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Settings')} hitSlop={8}>
-              <Ionicons name="settings-outline" size={18} color={COLORS.textPrimary} />
+            <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Settings')}>
+              <Ionicons name="menu-outline" size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
+      {/* Body — white sheet */}
       <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
         {/* Identity */}
         <View style={styles.identityRow}>
@@ -74,10 +91,16 @@ export default function ProfileScreen({ navigation }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{user?.name || 'Your Name'}</Text>
-            <View style={styles.locationRow}>
-              <Ionicons name="location-sharp" size={9} color={COLORS.locationGreen} />
-              <Text style={styles.locationText}>{user?.city || 'India'}</Text>
-            </View>
+            {user?.city ? (
+              <View style={styles.locationRow}>
+                <Ionicons name="location-sharp" size={10} color={C.sub} />
+                <Text style={styles.locationText}>{user.city}</Text>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.7}>
+                <Text style={styles.addLocationText}>Add my location</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -105,7 +128,7 @@ export default function ProfileScreen({ navigation }: Props) {
             <Text style={styles.editBtnText}>Edit profile</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.goProBtn} onPress={() => navigation.navigate('Subscription')} activeOpacity={0.85}>
-            <Text style={styles.goProBtnText}>Go Pro ✦</Text>
+            <Text style={styles.goProBtnText}>Go Premium</Text>
           </TouchableOpacity>
         </View>
 
@@ -134,8 +157,9 @@ export default function ProfileScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Level progression</Text>
           <View style={styles.filterRow}>
-            {RESULT_FILTERS.map((f) => {
+            {RESULT_FILTERS.map((f, i) => {
               const active = f === resultFilter;
+              const locked = i > 0 && !subscribed;
               return (
                 <TouchableOpacity
                   key={f}
@@ -144,12 +168,13 @@ export default function ProfileScreen({ navigation }: Props) {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>{f}</Text>
+                  {locked && <Ionicons name="lock-closed" size={10} color={C.muted} />}
                 </TouchableOpacity>
               );
             })}
           </View>
           <View style={styles.progressCard}>
-            <Ionicons name="stats-chart" size={40} color="rgba(240,237,228,0.35)" />
+            <Ionicons name="stats-chart" size={40} color={C.border} />
             <Text style={styles.progressTitle}>Track your progress</Text>
             <Text style={styles.progressSub}>Play more games to level up your ranking</Text>
           </View>
@@ -187,116 +212,118 @@ export default function ProfileScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: C.headerBg },
   header: {
-    backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: C.headerBg,
     paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.md,
   },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: {
     fontFamily: FONTS.display,
-    fontSize: 21,
-    color: COLORS.textPrimary,
-    textTransform: 'uppercase',
-    letterSpacing: 1.7,
+    fontSize: 26,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
   headerIcons: { flexDirection: 'row', gap: SPACING.md },
+  headerIconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 
-  sheet: { flex: 1 },
-  sheetContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.md, paddingBottom: SPACING.xxl },
+  sheet: {
+    flex: 1, backgroundColor: C.page,
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+  },
+  sheetContent: { paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, paddingBottom: SPACING.xxl },
 
-  identityRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.md },
+  identityRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.lg },
   avatar: {
-    width: 58, height: 58, borderRadius: 29,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1.5, borderColor: 'rgba(240,237,228,0.3)',
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: C.heading,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontFamily: FONTS.bold, fontSize: 18, color: COLORS.textPrimary, letterSpacing: 0.7 },
-  name: { fontFamily: FONTS.extraBold, fontSize: 16, color: COLORS.textPrimary },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
-  locationText: { fontSize: 10.5, fontFamily: FONTS.medium, color: COLORS.locationGreen },
+  avatarText: { fontFamily: FONTS.bold, fontSize: 20, color: '#FFFFFF', letterSpacing: 0.7 },
+  name: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
+  locationText: { fontSize: 12, fontFamily: FONTS.medium, color: C.sub },
+  addLocationText: { fontSize: 13.5, fontFamily: FONTS.semiBold, color: C.purple, marginTop: 4 },
 
   statsCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 0.8, borderColor: 'rgba(240,237,228,0.14)',
-    borderRadius: RADIUS.md, paddingVertical: SPACING.sm, marginBottom: SPACING.md,
+    paddingVertical: SPACING.sm, marginBottom: SPACING.lg,
   },
   statCol: { flex: 1, alignItems: 'center' },
-  statValue: { fontFamily: FONTS.extraBold, fontSize: 17, color: COLORS.textPrimary },
-  statLabel: { fontFamily: FONTS.regular, fontSize: 8.5, color: 'rgba(240,237,228,0.55)', marginTop: 2 },
-  statDivider: { width: 0.8, height: '70%', backgroundColor: 'rgba(240,237,228,0.15)' },
+  statValue: { fontFamily: FONTS.extraBold, fontSize: 22, color: C.heading },
+  statLabel: { fontFamily: FONTS.regular, fontSize: 11, color: C.sub, marginTop: 2 },
+  statDivider: { width: 1, height: '70%', backgroundColor: C.border },
 
-  actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md },
+  actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.lg },
   editBtn: {
-    flex: 1, height: 32, borderRadius: RADIUS.lg,
-    borderWidth: 1.2, borderColor: 'rgba(240,237,228,0.4)',
+    flex: 1, height: 44, borderRadius: RADIUS.lg,
+    borderWidth: 1.4, borderColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
-  editBtnText: { fontFamily: FONTS.bold, fontSize: 10.5, color: COLORS.textPrimary },
+  editBtnText: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.purple },
   goProBtn: {
-    flex: 1, height: 32, borderRadius: RADIUS.lg,
-    backgroundColor: 'rgba(197,230,55,0.18)',
-    borderWidth: 1.2, borderColor: 'rgba(197,230,55,0.5)',
+    flex: 1, height: 44, borderRadius: RADIUS.lg,
+    backgroundColor: C.heading,
     alignItems: 'center', justifyContent: 'center',
   },
-  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 10.5, color: COLORS.accent },
+  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 13.5, color: C.gold },
 
   interestsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs, marginBottom: SPACING.lg },
   interestChip: {
-    borderRadius: RADIUS.lg, paddingVertical: 5, paddingHorizontal: SPACING.md,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1.2, borderColor: 'rgba(240,237,228,0.3)',
+    borderRadius: RADIUS.lg, paddingVertical: 7, paddingHorizontal: SPACING.md,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2, borderColor: C.border,
   },
-  interestChipActive: { backgroundColor: COLORS.ctaBg, borderColor: COLORS.ctaBg },
-  interestChipText: { fontFamily: FONTS.bold, fontSize: 9.7, color: COLORS.textPrimary },
-  interestChipTextActive: { color: COLORS.ctaText },
+  interestChipActive: { backgroundColor: C.heading, borderColor: C.heading },
+  interestChipText: { fontFamily: FONTS.bold, fontSize: 12, color: C.sub },
+  interestChipTextActive: { color: '#FFFFFF' },
   addChip: {
-    borderRadius: RADIUS.lg, paddingVertical: 5, paddingHorizontal: SPACING.md,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1.2, borderColor: 'rgba(240,237,228,0.3)',
+    borderRadius: RADIUS.lg, minHeight: 44, paddingHorizontal: SPACING.md,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2, borderColor: C.border,
   },
-  addChipText: { fontFamily: FONTS.bold, fontSize: 9.7, color: COLORS.textPrimary },
+  addChipText: { fontFamily: FONTS.bold, fontSize: 12, color: C.sub },
 
   section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontFamily: FONTS.semiBold, fontSize: 13, color: COLORS.textPrimary },
+  sectionTitle: { fontFamily: FONTS.bold, fontSize: 15.5, color: C.heading },
   filterRow: { flexDirection: 'row', gap: SPACING.xs, marginTop: SPACING.sm, marginBottom: SPACING.sm },
   filterChip: {
-    height: 26, paddingHorizontal: SPACING.md, borderRadius: RADIUS.lg,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 0.8, borderColor: 'rgba(240,237,228,0.25)',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    height: 44, paddingHorizontal: SPACING.md, borderRadius: RADIUS.lg,
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2, borderColor: C.border,
   },
-  filterChipActive: { backgroundColor: COLORS.ctaBg, borderColor: COLORS.ctaBg },
-  filterChipText: { fontFamily: FONTS.bold, fontSize: 8.9, color: 'rgba(240,237,228,0.6)' },
-  filterChipTextActive: { color: COLORS.ctaText },
+  filterChipActive: { backgroundColor: C.border, borderColor: C.border },
+  filterChipText: { fontFamily: FONTS.semiBold, fontSize: 11, color: C.sub },
+  filterChipTextActive: { color: C.heading },
   progressCard: {
     alignItems: 'center', gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 0.8, borderColor: 'rgba(240,237,228,0.14)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1, borderColor: C.border,
     borderRadius: RADIUS.lg, paddingVertical: SPACING.xl, paddingHorizontal: SPACING.md,
   },
-  progressTitle: { fontFamily: FONTS.bold, fontSize: 11.3, color: COLORS.textPrimary, marginTop: 6 },
-  progressSub: { fontFamily: FONTS.regular, fontSize: 8.9, color: 'rgba(240,237,228,0.5)', textAlign: 'center' },
+  progressTitle: { fontFamily: FONTS.bold, fontSize: 13, color: C.heading, marginTop: 6 },
+  progressSub: { fontFamily: FONTS.regular, fontSize: 10.5, color: C.sub, textAlign: 'center' },
 
   prefsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
-  prefsEdit: { fontFamily: FONTS.semiBold, fontSize: 10.5, color: COLORS.locationGreen },
+  prefsEdit: { fontFamily: FONTS.semiBold, fontSize: 12, color: C.purple },
   prefRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 0.8, borderColor: 'rgba(240,237,228,0.13)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1, borderColor: C.border,
     borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
   },
   prefEmoji: { fontSize: 19 },
-  prefLabel: { fontFamily: FONTS.medium, fontSize: 10.5, color: 'rgba(240,237,228,0.75)' },
-  prefValue: { fontFamily: FONTS.bold, fontSize: 10.5, color: COLORS.accent, marginTop: 2 },
+  prefLabel: { fontFamily: FONTS.medium, fontSize: 11.5, color: C.sub },
+  prefValue: { fontFamily: FONTS.bold, fontSize: 11.5, color: C.heading, marginTop: 2 },
 
   logoutBtn: {
-    height: 39, borderRadius: RADIUS.xl,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1.2, borderColor: 'rgba(240,237,228,0.18)',
+    height: 44, borderRadius: RADIUS.xl,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2, borderColor: C.border,
     alignItems: 'center', justifyContent: 'center',
   },
-  logoutBtnText: { fontFamily: FONTS.bold, fontSize: 11.3, color: 'rgba(240,237,228,0.55)', letterSpacing: 0.3 },
+  logoutBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: C.error, letterSpacing: 0.3 },
 });

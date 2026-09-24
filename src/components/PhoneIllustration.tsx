@@ -9,8 +9,8 @@ export default function PhoneIllustration({ size = 140 }: { size?: number }) {
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} viewBox="0 0 140 140" style={{ position: 'absolute' }}>
-        <Rect x={6} y={58} width={68} height={20} rx={9} fill="#C5E637" transform="rotate(-16 40 68)" />
-        <Rect x={66} y={54} width={66} height={18} rx={9} fill="#C5E637" transform="rotate(16 99 63)" />
+        <Rect x={6} y={58} width={68} height={20} rx={9} fill="#C8DB2E" transform="rotate(-16 40 68)" />
+        <Rect x={66} y={54} width={66} height={18} rx={9} fill="#C8DB2E" transform="rotate(16 99 63)" />
         <Rect
           x={42} y={20} width={56} height={100} rx={15}
           fill="#BFE3FA" stroke="#16213E" strokeWidth={3}

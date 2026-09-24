@@ -76,7 +76,7 @@ export default function CityPicker({ value, onChange, label = 'City', placeholde
           <Ionicons name="alert-circle" size={18} color={COLORS.error} />
         )}
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => { setQuery(''); onChange(''); setSuggestions([]); }}>
+          <TouchableOpacity onPress={() => { setQuery(''); onChange(''); setSuggestions([]); }} hitSlop={12}>
             <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
           </TouchableOpacity>
         )}
@@ -137,7 +137,8 @@ const styles = StyleSheet.create({
   },
   suggestion: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    paddingHorizontal: SPACING.md, paddingVertical: 12,
+    minHeight: 44,
+    paddingHorizontal: SPACING.md,
     borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
   suggestionText: { fontSize: 14, color: COLORS.textPrimary },

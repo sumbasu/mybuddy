@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: COLORS.border,
     gap: SPACING.md,
   },
-  backBtn: { padding: 4 },
+  backBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   headerInfo: { flex: 1 },
   headerName: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
   headerSub: { fontSize: 12, color: COLORS.textMuted },

@@ -15,7 +15,7 @@ const C = {
   border: '#ECECEF',
   pillBg: '#181824',
   pillText: '#FFFFFF',
-  purple: '#4B3B8C',
+  purple: '#3F2F86',
 };
 
 export default function YourMatchesScreen({ navigation }: Props) {
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   todayPill: {
     backgroundColor: C.pillBg, borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.md, paddingVertical: 8,
+    paddingHorizontal: SPACING.md, minHeight: 44, justifyContent: 'center',
   },
   todayPillText: { fontFamily: FONTS.extraBold, fontSize: 12, color: C.pillText, letterSpacing: 0.5 },
   filterLabel: { flex: 1, fontFamily: FONTS.regular, fontSize: 14, color: C.text },

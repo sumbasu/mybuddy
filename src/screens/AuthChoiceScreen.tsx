@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -7,55 +7,45 @@ import { FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'AuthChoice'> };
 
-// This screen matches the Figma "Log in or sign up" frame, which uses a white
-// background — a deliberate departure from the app's purple gradient theme.
+// Plain white sign-up entry point — no purple hero, just the back chevron and the choices.
 const C = {
   bg: '#FFFFFF',
-  heading: '#1A1A1A',
-  sub: '#888888',
-  pillBg: '#F2F2F2',
+  heading: '#16213E',
+  sub: '#767683',
+  pillBorder: '#E5E5E5',
   divider: '#E5E5E5',
   dividerText: '#999999',
   legal: '#999999',
-  link: '#4B3B8C',
-  purple: '#4B3B8C',
+  link: '#3F2F86',
+  purple: '#3F2F86',
 };
-
-const SOCIAL_PROVIDERS: { key: string; label: string; icon: any; color: string }[] = [
-  { key: 'apple', label: 'Continue with Apple', icon: 'logo-apple', color: '#1A1A1A' },
-  { key: 'google', label: 'Continue with Google', icon: 'logo-google', color: '#4285F4' },
-  { key: 'facebook', label: 'Continue with Facebook', icon: 'logo-facebook', color: '#1877F2' },
-  { key: 'instagram', label: 'Continue with Instagram', icon: 'logo-instagram', color: '#E4405F' },
-];
 
 export default function AuthChoiceScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()} hitSlop={12}>
-        <Ionicons name="chevron-back" size={20} color={C.heading} />
+      <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+        <Ionicons name="chevron-back" size={22} color={C.heading} />
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.hero}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="person" size={30} color="#FFFFFF" />
-          </View>
-          <Text style={styles.title}>Log in or sign up</Text>
-          <Text style={styles.subtitle}>Let's find your game buddy</Text>
-        </View>
+        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.subtitle}>Pick how you'd like to sign up. It takes less than a minute.</Text>
 
-        <View style={styles.socialList}>
-          {SOCIAL_PROVIDERS.map((p) => (
-            <TouchableOpacity
-              key={p.key}
-              style={styles.pillBtn}
-              onPress={() => navigation.navigate('PhoneNumber')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name={p.icon} size={16} color={p.color} style={styles.pillIcon} />
-              <Text style={styles.pillText}>{p.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.providerList}>
+          <TouchableOpacity style={styles.appleBtn} onPress={() => navigation.navigate('PhoneNumber')} activeOpacity={0.85}>
+            <Ionicons name="logo-apple" size={18} color="#FFFFFF" style={styles.providerIcon} />
+            <Text style={styles.appleBtnText}>Continue with Apple</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.outlineBtn} onPress={() => navigation.navigate('PhoneNumber')} activeOpacity={0.85}>
+            <Ionicons name="logo-google" size={18} color="#4285F4" style={styles.providerIcon} />
+            <Text style={styles.outlineBtnText}>Continue with Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.outlineBtn} onPress={() => navigation.navigate('PhoneNumber')} activeOpacity={0.85}>
+            <Ionicons name="call-outline" size={18} color={C.purple} style={styles.providerIcon} />
+            <Text style={styles.outlineBtnText}>Continue with phone number</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.dividerRow}>
@@ -64,21 +54,21 @@ export default function AuthChoiceScreen({ navigation }: Props) {
           <View style={styles.dividerLine} />
         </View>
 
-        <TouchableOpacity
-          style={styles.pillBtn}
-          onPress={() => navigation.navigate('PhoneNumber')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="mail-outline" size={16} color={C.heading} style={styles.pillIcon} />
-          <Text style={styles.pillText}>Continue with email</Text>
+        <TouchableOpacity style={styles.emailLinkWrap} onPress={() => navigation.navigate('CreateAccount')} activeOpacity={0.7}>
+          <Text style={styles.emailLink}>Sign up with email</Text>
         </TouchableOpacity>
 
         <View style={{ flex: 1, minHeight: SPACING.xl }} />
 
         <Text style={styles.legal}>
-          By registering you are accepting our{' '}
-          <Text style={styles.legalLink}>terms of use</Text> and{' '}
-          <Text style={styles.legalLink}>privacy policy</Text>
+          By continuing you agree to our{' '}
+          <Text style={styles.legalLink} onPress={() => Linking.openURL('https://sweatbud.app/terms')}>
+            Terms of use
+          </Text>{' '}
+          and{' '}
+          <Text style={styles.legalLink} onPress={() => Linking.openURL('https://sweatbud.app/privacy')}>
+            Privacy policy
+          </Text>
         </Text>
       </ScrollView>
     </View>
@@ -87,32 +77,36 @@ export default function AuthChoiceScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
-  back: { paddingTop: 56, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm, alignSelf: 'flex-start' },
-  content: { flexGrow: 1, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
+  back: { paddingTop: 56, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm, minWidth: 44, minHeight: 44, alignSelf: 'flex-start' },
 
-  hero: { alignItems: 'center', paddingVertical: SPACING.lg },
-  iconCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center',
-    marginBottom: SPACING.md,
-    shadowColor: C.purple, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
-  },
-  title: { fontFamily: FONTS.bold, fontSize: 24, color: C.heading, marginBottom: 6 },
-  subtitle: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub },
+  content: { flexGrow: 1, paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: SPACING.xl },
 
-  socialList: { gap: SPACING.sm, marginBottom: SPACING.md },
-  pillBtn: {
+  title: { fontFamily: FONTS.extraBold, fontSize: 26, color: C.heading, marginBottom: 6 },
+  subtitle: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, lineHeight: 20, marginBottom: SPACING.xl },
+
+  providerList: { gap: SPACING.sm, marginBottom: SPACING.md },
+  appleBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    height: 45, borderRadius: RADIUS.lg, backgroundColor: C.pillBg,
+    height: 54, borderRadius: RADIUS.lg, backgroundColor: C.heading,
     paddingHorizontal: SPACING.md,
   },
-  pillIcon: { position: 'absolute', left: SPACING.md },
-  pillText: { fontFamily: FONTS.semiBold, fontSize: 12, color: C.heading, textAlign: 'center' },
+  appleBtnText: { fontFamily: FONTS.bold, fontSize: 14.5, color: '#FFFFFF' },
+  outlineBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    height: 54, borderRadius: RADIUS.lg, backgroundColor: '#FFFFFF',
+    borderWidth: 1.5, borderColor: C.pillBorder,
+    paddingHorizontal: SPACING.md,
+  },
+  outlineBtnText: { fontFamily: FONTS.bold, fontSize: 14.5, color: C.heading },
+  providerIcon: { position: 'absolute', left: SPACING.lg },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md },
   dividerLine: { flex: 1, height: 0.8, backgroundColor: C.divider },
-  dividerText: { fontFamily: FONTS.regular, fontSize: 10.5, color: C.dividerText },
+  dividerText: { fontFamily: FONTS.regular, fontSize: 12, color: C.dividerText },
 
-  legal: { fontFamily: FONTS.regular, fontSize: 9.7, color: C.legal, textAlign: 'center', lineHeight: 15.5 },
-  legalLink: { fontFamily: FONTS.medium, color: C.link },
+  emailLinkWrap: { alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+  emailLink: { fontFamily: FONTS.bold, fontSize: 14.5, color: C.link },
+
+  legal: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.legal, textAlign: 'center', lineHeight: 17 },
+  legalLink: { fontFamily: FONTS.medium, color: C.heading, textDecorationLine: 'underline' },
 });

@@ -8,9 +8,18 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import CityPicker from '../components/CityPicker';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOW, FONTS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'> };
+
+// White page with a purple header and purple cards — matches Settings/Profile.
+const C = {
+  page: '#FFFFFF',
+  purple: '#3F2F86',
+  label: 'rgba(63,47,134,0.45)',
+  heading: '#16213E',
+  gold: '#E8B84B',
+};
 
 
 export default function EditProfileScreen({ navigation }: Props) {
@@ -59,7 +68,7 @@ export default function EditProfileScreen({ navigation }: Props) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.textPrimary} />
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <TouchableOpacity
@@ -68,7 +77,7 @@ export default function EditProfileScreen({ navigation }: Props) {
             disabled={!hasChanges || loading}
           >
             {loading
-              ? <ActivityIndicator size="small" color={COLORS.white} />
+              ? <ActivityIndicator size="small" color={C.gold} />
               : <Text style={styles.saveBtnText}>Save</Text>}
           </TouchableOpacity>
         </View>
@@ -94,7 +103,7 @@ export default function EditProfileScreen({ navigation }: Props) {
 
             <View style={styles.fieldWrap}>
               <View style={styles.fieldHeader}>
-                <Ionicons name="person-outline" size={16} color={COLORS.primary} />
+                <Ionicons name="person-outline" size={16} color="#FFFFFF" />
                 <Text style={styles.label}>Full Name</Text>
               </View>
               <TextInput
@@ -102,7 +111,7 @@ export default function EditProfileScreen({ navigation }: Props) {
                 value={name}
                 onChangeText={setName}
                 placeholder="Your full name"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="rgba(255,255,255,0.5)"
                 autoCapitalize="words"
               />
             </View>
@@ -111,7 +120,7 @@ export default function EditProfileScreen({ navigation }: Props) {
 
             <View style={styles.fieldWrap}>
               <View style={styles.fieldHeader}>
-                <Ionicons name="calendar-outline" size={16} color={COLORS.primary} />
+                <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
                 <Text style={styles.label}>Age</Text>
               </View>
               <TextInput
@@ -119,7 +128,7 @@ export default function EditProfileScreen({ navigation }: Props) {
                 value={age}
                 onChangeText={setAge}
                 placeholder="Your age"
-                placeholderTextColor={COLORS.textMuted}
+                placeholderTextColor="rgba(255,255,255,0.5)"
                 keyboardType="numeric"
                 maxLength={3}
               />
@@ -129,7 +138,7 @@ export default function EditProfileScreen({ navigation }: Props) {
 
             <View style={styles.fieldWrap}>
               <View style={styles.fieldHeader}>
-                <Ionicons name="transgender-outline" size={16} color={COLORS.primary} />
+                <Ionicons name="transgender-outline" size={16} color="#FFFFFF" />
                 <Text style={styles.label}>Gender</Text>
               </View>
               <View style={styles.genderRow}>
@@ -147,10 +156,12 @@ export default function EditProfileScreen({ navigation }: Props) {
               </View>
             </View>
 
-          </View>
+            <View style={styles.divider} />
 
-          <View style={{ paddingHorizontal: SPACING.lg, paddingBottom: SPACING.md }}>
-            <CityPicker label="City" value={city} onChange={setCity} placeholder="Search your city..." />
+            <View style={styles.fieldWrap}>
+              <CityPicker label="City" value={city} onChange={setCity} placeholder="Search your city..." />
+            </View>
+
           </View>
         </View>
 
@@ -163,7 +174,7 @@ export default function EditProfileScreen({ navigation }: Props) {
             activeOpacity={0.85}
           >
             <View style={styles.interestsLeft}>
-              <Ionicons name="heart-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="heart-outline" size={18} color="#FFFFFF" />
               <View>
                 <Text style={styles.interestsLabel}>My Interests</Text>
                 <Text style={styles.interestsSub}>
@@ -173,7 +184,7 @@ export default function EditProfileScreen({ navigation }: Props) {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
+            <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -188,7 +199,7 @@ function Field({ icon, label, value, editable = true, hint }: {
   return (
     <View style={styles.fieldWrap}>
       <View style={styles.fieldHeader}>
-        <Ionicons name={icon} size={16} color={editable ? COLORS.primary : COLORS.textMuted} />
+        <Ionicons name={icon} size={16} color={editable ? '#FFFFFF' : 'rgba(255,255,255,0.5)'} />
         <Text style={styles.label}>{label}</Text>
       </View>
       <Text style={[styles.readValue, !editable && styles.readValueMuted]}>{value}</Text>
@@ -198,50 +209,50 @@ function Field({ icon, label, value, editable = true, hint }: {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: COLORS.background, paddingBottom: 40 },
+  container: { flexGrow: 1, backgroundColor: C.page, paddingBottom: 40 },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.md,
-    backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: C.purple,
   },
-  backBtn: { padding: 4 },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: COLORS.textPrimary },
+  backBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '800', color: '#FFFFFF' },
   saveBtn: {
-    backgroundColor: COLORS.primary, paddingHorizontal: SPACING.md,
-    paddingVertical: 6, borderRadius: RADIUS.full,
+    backgroundColor: C.heading, paddingHorizontal: SPACING.md,
+    minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: RADIUS.full,
   },
-  saveBtnDisabled: { backgroundColor: COLORS.textMuted },
-  saveBtnText: { color: COLORS.white, fontWeight: '700', fontSize: 14 },
+  saveBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.25)' },
+  saveBtnText: { color: C.gold, fontWeight: '700', fontSize: 14 },
 
   section: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
-  sectionTitle: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: C.label, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm },
 
-  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, paddingHorizontal: SPACING.lg, ...SHADOW.sm },
-  divider: { height: 1, backgroundColor: COLORS.border },
+  card: { backgroundColor: C.purple, borderRadius: RADIUS.lg, paddingHorizontal: SPACING.lg },
+  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
 
   fieldWrap: { paddingVertical: SPACING.md },
   fieldHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  label: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
-    fontSize: 15, color: COLORS.textPrimary,
-    borderWidth: 1.5, borderColor: COLORS.border,
+    fontSize: 15, color: '#FFFFFF',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
     borderRadius: RADIUS.md, paddingHorizontal: SPACING.md,
     paddingVertical: 10,
   },
-  readValue: { fontSize: 15, color: COLORS.textPrimary, fontWeight: '500' },
-  readValueMuted: { color: COLORS.textSecondary },
-  hint: { fontSize: 11, color: COLORS.textMuted, marginTop: 4 },
+  readValue: { fontSize: 15, color: '#FFFFFF', fontWeight: '500' },
+  readValueMuted: { color: 'rgba(255,255,255,0.6)' },
+  hint: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
 
   genderRow: { flexDirection: 'row', gap: SPACING.sm },
   genderChip: {
-    flex: 1, paddingVertical: 10, borderRadius: RADIUS.md,
-    borderWidth: 1.5, borderColor: COLORS.border,
-    alignItems: 'center', backgroundColor: COLORS.surface,
+    flex: 1, minHeight: 44, borderRadius: RADIUS.md,
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
   },
-  genderChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '15' },
-  genderChipText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
-  genderChipTextActive: { color: COLORS.primary, fontWeight: '700' },
+  genderChipActive: { borderColor: C.gold, backgroundColor: 'rgba(232,184,75,0.18)' },
+  genderChipText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
+  genderChipTextActive: { color: C.gold, fontWeight: '700' },
 
   dropdown: {
     backgroundColor: COLORS.surface, borderRadius: RADIUS.md,
@@ -253,10 +264,10 @@ const styles = StyleSheet.create({
 
   interestsRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.surface, borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md, ...SHADOW.sm,
+    backgroundColor: C.purple, borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
   },
   interestsLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  interestsLabel: { fontSize: 15, fontWeight: '600', color: COLORS.textPrimary },
-  interestsSub: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  interestsLabel: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
+  interestsSub: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
 });

@@ -162,7 +162,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity style={styles.headerCancelBtn} onPress={() => navigation.goBack()}>
             <Text style={styles.cancel}>Cancel</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{isEditing ? 'Edit Activity' : 'New Activity'}</Text>
@@ -391,6 +391,7 @@ const sectionStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: { backgroundColor: COLORS.background, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: SPACING.lg },
+  headerCancelBtn: { minHeight: 44, justifyContent: 'center' },
   cancel: { color: COLORS.primary, fontSize: 15, fontWeight: '600' },
   headerTitle: { fontSize: 17, fontWeight: '800', color: COLORS.textPrimary },
   interestRow: { gap: SPACING.sm, paddingBottom: SPACING.xs },
@@ -403,23 +404,23 @@ const styles = StyleSheet.create({
   textArea: { minHeight: 80 },
   row: { flexDirection: 'row' },
   slotsRow: { flexDirection: 'row', gap: SPACING.sm },
-  slotChip: { width: 40, height: 40, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface },
+  slotChip: { width: 44, height: 44, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface },
   slotChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
   slotText: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary },
   slotTextActive: { color: COLORS.white },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  optionChip: { paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.surface },
+  optionChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: SPACING.md, borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.surface },
   optionChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
   optionText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
   optionTextActive: { color: COLORS.white, fontWeight: '700' },
   pickerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 44,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
-    paddingVertical: 12,
     backgroundColor: COLORS.surface,
     gap: SPACING.sm,
   },
@@ -452,7 +453,7 @@ const styles = StyleSheet.create({
   submitBtnDisabled: { backgroundColor: COLORS.textMuted },
   submitBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
   gateContainer: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
-  gateClose: { position: 'absolute', top: 56, right: SPACING.lg, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border },
+  gateClose: { position: 'absolute', top: 56, right: SPACING.lg, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border },
   gateIcon: { marginBottom: SPACING.lg },
   gateTitle: { fontSize: 22, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center', marginBottom: SPACING.sm },
   gateSub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xl },

@@ -3,7 +3,11 @@ export const COLORS = {
   primaryLight: '#8779C2',
   primaryDark: '#241B4D',
   secondary: '#6C5CA6',
-  accent: '#C5E637',        // Go Pro / highlight lime (Sweatbud)
+  accent: '#C8DB2E',        // Go Pro / highlight lime (Sweatbud)
+  // Brand palette — headers, main buttons, links, active tab
+  brandPurple: '#3F2F86',
+  brandPurplePressed: '#2A1F5E',
+  brandPurpleLight: '#52449A', // bell button on the Home header
   locationGreen: '#4CAF72', // location text on dark screens
   success: '#06D6A0',
   warning: '#FFD60A',
@@ -20,19 +24,19 @@ export const COLORS = {
   overlay: 'rgba(0,0,0,0.55)',
   // Cream CTA pill — Sign Up / Log In / Continue buttons on the gradient
   ctaBg: '#F0EDE4',
-  ctaText: '#4B3B8C',
+  ctaText: '#3F2F86',
 };
 
-// Real typefaces from the Figma file, loaded via @expo-google-fonts/* in App.tsx.
+// Poppins, loaded via @expo-google-fonts/poppins in App.tsx.
 export const FONTS = {
-  light: 'Inter_300Light',
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  semiBold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
-  extraBold: 'Inter_800ExtraBold',
-  // Condensed display face used for screen-title eyebrows (e.g. "PROFILE")
-  display: 'BarlowCondensed_700Bold',
+  light: 'Poppins_300Light',
+  regular: 'Poppins_400Regular',
+  medium: 'Poppins_500Medium',
+  semiBold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
+  extraBold: 'Poppins_800ExtraBold',
+  // Display face used for screen-title eyebrows (e.g. "PROFILE")
+  display: 'Poppins_800ExtraBold',
 };
 
 export const SPACING = {

@@ -12,7 +12,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'YourFa
 const C = {
   text: '#111111',
   sub: '#8A8A93',
-  purple: '#4B3B8C',
+  purple: '#3F2F86',
 };
 
 export default function YourFavouritesScreen({ navigation }: Props) {

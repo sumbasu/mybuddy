@@ -12,7 +12,7 @@ export default function NoPostsIllustration({ size = 200 }: { size?: number }) {
         {/* Lime arch */}
         <Path
           d="M 8 264 L 8 130 A 92 92 0 0 1 192 130 L 192 264 Z"
-          fill="#C5E637"
+          fill="#C8DB2E"
         />
         {/* Phone body */}
         <Rect x="62" y="30" width="76" height="220" rx="16" fill="#FFFFFF" stroke="#3D2E7C" strokeWidth="5" />
@@ -23,7 +23,7 @@ export default function NoPostsIllustration({ size = 200 }: { size?: number }) {
         {/* Avatar dots */}
         <Circle cx="82" cy="86" r="7" fill="#4B3B8C" />
         <Circle cx="97" cy="86" r="7" fill="#6C5CA6" />
-        <Circle cx="112" cy="86" r="7" fill="#C5E637" />
+        <Circle cx="112" cy="86" r="7" fill="#C8DB2E" />
         {/* Text line */}
         <Rect x="76" y="102" width="48" height="6" rx="3" fill="#E3E1EC" />
         {/* Second row */}

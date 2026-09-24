@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.lg,
     backgroundColor: COLORS.background,
   },
-  backBtn: { marginBottom: SPACING.md, alignSelf: 'flex-start', padding: 4 },
+  backBtn: { marginBottom: SPACING.md, alignSelf: 'flex-start', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 30, fontFamily: FONTS.light, color: COLORS.textPrimary, marginBottom: SPACING.xs },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 20 },
   badge: {
@@ -136,9 +136,9 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 44,
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.full,
-    paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
     borderWidth: 1.5,
     borderColor: COLORS.border,

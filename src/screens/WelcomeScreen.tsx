@@ -1,78 +1,95 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
-import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
-import TennisBall from '../components/TennisBall';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
+import BrandLogo from '../components/BrandLogo';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Welcome'> };
 
+const C = {
+  purple: '#3F2F86',
+  page: '#FFFFFF',
+  heading: '#16213E',
+  sub: '#767683',
+  link: '#3F2F86',
+};
+
 export default function WelcomeScreen({ navigation }: Props) {
+  const goToSignUp = () => navigation.navigate('AuthChoice');
+  const goToLogin = () => navigation.navigate('Login');
+
   return (
     <View style={styles.container}>
-      <View style={styles.ballWrap}>
-        <TennisBall size={140} />
+      <View style={styles.hero}>
+        <BrandLogo size={190} />
+        <Text style={styles.brand}>sweatbud</Text>
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.title}>Welcome</Text>
-        <Text style={styles.eyebrow}>Let's find your game buddy</Text>
+      <View style={styles.sheet}>
+        <Text style={styles.headline}>Find your game buddy and more</Text>
+        <Text style={styles.subtext}>
+          Join games, book courts and meet players at your level, from tennis to cricket.
+        </Text>
 
-        <TouchableOpacity
-          style={styles.ctaBtn}
-          onPress={() => navigation.navigate('AuthChoice')}
-          activeOpacity={0.88}
-        >
-          <Text style={styles.ctaBtnText}>Sign Up</Text>
+        <TouchableOpacity style={styles.ctaBtn} onPress={goToSignUp} activeOpacity={0.88}>
+          <Text style={styles.ctaBtnText}>Get started</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.outlineBtn}
-          onPress={() => navigation.navigate('AuthChoice')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.outlineBtnText}>Log In</Text>
+        <TouchableOpacity style={styles.loginRow} onPress={goToLogin} activeOpacity={0.7}>
+          <Text style={styles.loginText}>
+            Already have an account? <Text style={styles.loginLink}>Log in</Text>
+          </Text>
         </TouchableOpacity>
+
+        <Text style={styles.terms}>
+          By continuing you agree to our{' '}
+          <Text style={styles.termsLink} onPress={() => Linking.openURL('https://sweatbud.app/terms')}>
+            Terms of use
+          </Text>{' '}
+          and{' '}
+          <Text style={styles.termsLink} onPress={() => Linking.openURL('https://sweatbud.app/privacy')}>
+            Privacy policy
+          </Text>
+        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'space-between' },
-  ballWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  footer: { paddingHorizontal: SPACING.xl, paddingBottom: 56 },
-  title: {
-    fontSize: 44,
-    fontFamily: FONTS.light,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-    letterSpacing: 1,
+  container: { flex: 1, backgroundColor: C.purple },
+  hero: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 56, gap: SPACING.md },
+  brand: {
+    fontFamily: FONTS.extraBold, fontSize: 30, color: '#FFFFFF', letterSpacing: 0.5,
   },
-  eyebrow: {
-    fontSize: 11,
-    fontFamily: FONTS.light,
-    color: COLORS.textMuted,
-    textAlign: 'center',
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.xl,
-    textTransform: 'uppercase',
-    letterSpacing: 1.6,
+
+  sheet: {
+    backgroundColor: C.page,
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    paddingHorizontal: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 40,
   },
+  headline: {
+    fontFamily: FONTS.extraBold, fontSize: 30, color: C.heading, lineHeight: 36,
+  },
+  subtext: {
+    fontFamily: FONTS.regular, fontSize: 15, color: C.sub, lineHeight: 21,
+    marginTop: SPACING.sm, marginBottom: SPACING.xl,
+  },
+
   ctaBtn: {
-    backgroundColor: COLORS.ctaBg,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
-    alignItems: 'center',
-    marginBottom: SPACING.sm,
+    backgroundColor: C.purple, minHeight: 54, borderRadius: RADIUS.full,
+    alignItems: 'center', justifyContent: 'center',
   },
-  ctaBtnText: { color: COLORS.ctaText, fontSize: 16, fontFamily: FONTS.regular, letterSpacing: 0.5 },
-  outlineBtn: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(240,237,228,0.3)',
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
-    alignItems: 'center',
+  ctaBtnText: { fontFamily: FONTS.bold, fontSize: 16, color: '#FFFFFF' },
+
+  loginRow: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: SPACING.xs },
+  loginText: { fontFamily: FONTS.regular, fontSize: 14, color: C.heading },
+  loginLink: { fontFamily: FONTS.bold, color: C.link },
+
+  terms: {
+    fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, textAlign: 'center',
+    lineHeight: 17, marginTop: SPACING.sm,
   },
-  outlineBtnText: { color: COLORS.textPrimary, fontSize: 16, fontFamily: FONTS.light, letterSpacing: 0.5 },
+  termsLink: { fontFamily: FONTS.medium, color: C.heading, textDecorationLine: 'underline' },
 });

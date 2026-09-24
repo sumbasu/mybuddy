@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     paddingTop: 56,
     paddingBottom: SPACING.xl,
   },
-  back: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.xl, alignSelf: 'flex-start' },
+  back: { flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: SPACING.xl, alignSelf: 'flex-start' },
   backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },
   title: {
     fontSize: 34,

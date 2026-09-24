@@ -77,7 +77,7 @@ export default function PhoneNumberScreen({ navigation }: Props) {
         </View>
 
         <Text style={styles.title}>Enter your phone number</Text>
-        <Text style={styles.subtitle}>Add your phone to validate your account</Text>
+        <Text style={styles.subtitle}>Members may reach out to you on this number</Text>
 
         <View style={styles.row}>
           <TouchableOpacity style={styles.codeBox} activeOpacity={0.8}>
@@ -117,7 +117,7 @@ export default function PhoneNumberScreen({ navigation }: Props) {
           disabled={!isValid || loading}
           activeOpacity={0.85}
         >
-          {loading ? <ActivityIndicator color={C.btnText} /> : <Text style={styles.signUpText}>Verify</Text>}
+          {loading ? <ActivityIndicator color={C.btnText} /> : <Text style={styles.signUpText}>Send code</Text>}
         </TouchableOpacity>
       </View>
     </View>

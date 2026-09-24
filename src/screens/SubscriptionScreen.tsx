@@ -23,8 +23,8 @@ const PLANS = [
   {
     id: 'monthly',
     label: 'Monthly',
-    price: '₹99',
-    perMonth: '₹99/month',
+    price: '₹199',
+    perMonth: '₹199/month',
     billing: 'Billed monthly',
     badge: null,
     features: ['Unlimited activity joins', 'In-app messaging', 'See all participants', 'Request to join'],
@@ -32,9 +32,9 @@ const PLANS = [
   {
     id: 'quarterly',
     label: 'Quarterly',
-    price: '₹249',
-    perMonth: '₹83/month',
-    billing: 'Billed every 3 months · Save 16%',
+    price: '₹399',
+    perMonth: '₹133/month',
+    billing: 'Billed every 3 months · Save 33%',
     badge: 'Best Value',
     features: ['Everything in Monthly', 'Priority in activity feed', 'Profile badge', 'Early access to new features'],
   },
@@ -45,8 +45,8 @@ export default function SubscriptionScreen({ navigation }: Props) {
   const [selectedPlan, setSelectedPlan] = useState('quarterly');
   const discount = user?.discountPct || 0;
   const applyDiscount = (amount: number) => Math.round(amount * (1 - discount / 100));
-  const monthlyPrice = applyDiscount(99);
-  const quarterlyPrice = applyDiscount(249);
+  const monthlyPrice = applyDiscount(199);
+  const quarterlyPrice = applyDiscount(399);
   const [loading, setLoading] = useState(false);
 
   const trialDaysLeft = user?.trialEndsAt
@@ -112,7 +112,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color={COLORS.primary} />
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
@@ -149,7 +149,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
         ].map((f) => (
           <View key={f.text} style={styles.featureRow}>
             <View style={styles.featureIconWrap}>
-              <Ionicons name={f.icon as any} size={16} color={COLORS.primary} />
+              <Ionicons name={f.icon as any} size={16} color={COLORS.accent} />
             </View>
             <Text style={styles.feature}>{f.text}</Text>
           </View>
@@ -167,7 +167,7 @@ export default function SubscriptionScreen({ navigation }: Props) {
 
       {PLANS.map((plan) => {
         const finalPrice = plan.id === 'monthly' ? monthlyPrice : quarterlyPrice;
-        const originalPrice = plan.id === 'monthly' ? 99 : 249;
+        const originalPrice = plan.id === 'monthly' ? 199 : 399;
         const perMonthFinal = plan.id === 'monthly' ? finalPrice : Math.round(finalPrice / 3);
         return (
         <TouchableOpacity
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xxl },
   header: { paddingTop: 56, paddingBottom: SPACING.md },
   back: { color: COLORS.primary, fontSize: 15, fontWeight: '600' },
-  backBtn: { alignSelf: 'flex-start', padding: 4 },
+  backBtn: { alignSelf: 'flex-start', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 28, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.lg },
   trialBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm, backgroundColor: COLORS.warning + '30', borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: COLORS.warning + '50' },
   trialExpired: { backgroundColor: COLORS.error + '15', borderColor: COLORS.error + '40' },
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   featuresBox: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg, ...SHADOW.sm },
   featuresTitle: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.md },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm },
-  featureIconWrap: { width: 28, height: 28, borderRadius: 8, backgroundColor: COLORS.primary + '15', alignItems: 'center', justifyContent: 'center' },
+  featureIconWrap: { width: 28, height: 28, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
   feature: { fontSize: 14, color: COLORS.textSecondary, flex: 1, lineHeight: 20 },
   plansTitle: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.sm },
   planCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.md, borderWidth: 2, borderColor: COLORS.border, ...SHADOW.sm, position: 'relative', overflow: 'hidden' },

@@ -13,15 +13,15 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 // White-background social feed — a deliberate departure from the app's
 // purple gradient theme, matching the reference screen exactly.
 const C = {
-  headerBg: '#4B3B8C',
+  headerBg: '#3F2F86',
   page: '#F4F3F9',
   card: '#FFFFFF',
   heading: '#16213E',
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
-  purple: '#4B3B8C',
-  purpleTint: 'rgba(75,59,140,0.1)',
+  purple: '#3F2F86',
+  purpleTint: 'rgba(63,47,134,0.1)',
   green: '#8BC34A',
 };
 
@@ -64,10 +64,10 @@ export default function CommunityScreen({ navigation }: Props) {
               onChangeText={setSearch}
             />
           </View>
-          <TouchableOpacity onPress={() => (navigation as any).navigate('Chats')} hitSlop={8}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => (navigation as any).navigate('Chats')}>
             <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')} hitSlop={8}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Settings')}>
             <Ionicons name="menu-outline" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -159,7 +159,7 @@ export default function CommunityScreen({ navigation }: Props) {
                         <Text style={styles.findLink}>Add contacts</Text>
                       </TouchableOpacity>
                     </View>
-                    <TouchableOpacity onPress={() => setFindFriendsDismissed(true)} hitSlop={8}>
+                    <TouchableOpacity style={styles.dismissBtn} onPress={() => setFindFriendsDismissed(true)}>
                       <Ionicons name="close" size={16} color={C.muted} />
                     </TouchableOpacity>
                   </View>
@@ -243,9 +243,11 @@ const styles = StyleSheet.create({
   searchBar: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: SPACING.xs,
     backgroundColor: '#FFFFFF', borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.md, height: 42,
+    paddingHorizontal: SPACING.md, height: 44,
   },
   searchInput: { flex: 1, fontFamily: FONTS.regular, fontSize: 14, color: C.heading },
+  headerIconBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  dismissBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 
   sheet: { flex: 1, backgroundColor: C.page },
   tabRow: {
@@ -289,7 +291,7 @@ const styles = StyleSheet.create({
 
   filterRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md },
   filterChip: {
-    height: 32, paddingHorizontal: SPACING.md, borderRadius: RADIUS.full,
+    height: 44, paddingHorizontal: SPACING.md, borderRadius: RADIUS.full,
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: C.border,
   },
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
   personName: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.heading },
   personSport: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, marginBottom: 6 },
   followBtn: {
-    alignSelf: 'stretch', height: 32, borderRadius: RADIUS.full,
+    alignSelf: 'stretch', height: 44, borderRadius: RADIUS.full,
     backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center',
   },
   followBtnActive: { backgroundColor: '#FFFFFF', borderWidth: 1.2, borderColor: C.border },

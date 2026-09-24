@@ -14,7 +14,7 @@ const C = {
   border: '#E4E4E9',
   iconBg: '#EFEFF2',
   icon: '#8A8A93',
-  purple: '#4B3B8C',
+  purple: '#3F2F86',
 };
 
 export default function YourGroupsScreen({ navigation }: Props) {
