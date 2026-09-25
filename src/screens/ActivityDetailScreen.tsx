@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar, Share,
-  ActivityIndicator,
+  ActivityIndicator, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   doc, onSnapshot, updateDoc, arrayUnion, arrayRemove,
-  increment, collection, addDoc, serverTimestamp, setDoc,
+  increment, collection, addDoc, serverTimestamp, setDoc, getDoc,
 } from 'firebase/firestore';
 import { auth } from '../services/firebase';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,6 +18,8 @@ import InterestIcon from '../components/InterestIcon';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { DEMO_ACTIVITIES } from '../constants/demoData';
 import { db } from '../services/firebase';
+import StarRating from '../components/StarRating';
+import { submitRating, hasAlreadyRated } from '../services/ratings';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ActivityDetail'>;
@@ -28,32 +30,55 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   const { activityId } = route.params;
   const { user, isSubscribed } = useAuth();
   const [requested, setRequested] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedStars, setSelectedStars] = useState(0);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [alreadyRated, setAlreadyRated] = useState(false);
+  const [organiserRating, setOrganiserRating] = useState<{ rating: number; reviewCount: number }>({ rating: 0, reviewCount: 0 });
   // Initialise from local cache for instant display, but always subscribe to Firestore for live data
   const [activity, setActivity] = useState<Activity | null>(
     DEMO_ACTIVITIES[activityId] || null
   );
   const [loadingActivity, setLoadingActivity] = useState(true);
 
+  // ── ALL hooks must be before any conditional return ────────────────
+
   useEffect(() => {
     const ref = doc(db, 'activities', activityId);
-
     const unsubscribe = onSnapshot(ref, (snap) => {
       if (snap.exists()) {
-        // Firestore is source of truth — always prefer it
         setActivity({ id: snap.id, ...snap.data() } as Activity);
       } else if (DEMO_ACTIVITIES[activityId]) {
-        // Document not in Firestore — fall back to local demo data
         setActivity(DEMO_ACTIVITIES[activityId]);
       }
       setLoadingActivity(false);
     }, () => {
-      // On Firestore error, fall back to local cache
       if (DEMO_ACTIVITIES[activityId]) setActivity(DEMO_ACTIVITIES[activityId]);
       setLoadingActivity(false);
     });
-
     return unsubscribe;
   }, [activityId]);
+
+  // Load organiser rating
+  useEffect(() => {
+    if (!activity?.creatorId) return;
+    getDoc(doc(db, 'users', activity.creatorId)).then((snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setOrganiserRating({ rating: d.rating || 0, reviewCount: d.reviewCount || 0 });
+      }
+    });
+  }, [activity?.creatorId]);
+
+  // Check if user already rated this activity's organiser
+  useEffect(() => {
+    if (!user?.uid || !activity?.id) return;
+    const passed = activity?.date ? new Date(activity.date) < new Date() : false;
+    if (!passed) return;
+    hasAlreadyRated(activity.id, user.uid).then(setAlreadyRated);
+  }, [activity?.id, user?.uid, activity?.date]);
+
+  // ── Conditional returns AFTER all hooks ────────────────────────────
 
   if (loadingActivity) {
     return (
@@ -76,6 +101,32 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   const spotsLeft = activity.slots - activity.joinedCount;
   const date = new Date(activity.date);
   const dateStr = date.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const activityPassed = new Date(activity.date) < new Date();
+
+  const submitRatingHandler = async () => {
+    if (!user || selectedStars === 0) return;
+    setRatingSubmitting(true);
+    try {
+      await submitRating({
+        activityId: activity.id,
+        activityTitle: activity.title,
+        raterId: user.uid,
+        ratedUserId: activity.creatorId,
+        score: selectedStars,
+      });
+      setAlreadyRated(true);
+      setShowRatingModal(false);
+      Alert.alert('Thank you!', `You rated ${activity.creatorName} ${selectedStars} star${selectedStars > 1 ? 's' : ''}.`);
+    } catch (err: any) {
+      if (err.message === 'ALREADY_RATED') {
+        setAlreadyRated(true);
+        setShowRatingModal(false);
+      } else {
+        Alert.alert('Error', 'Could not submit rating. Please try again.');
+      }
+    }
+    setRatingSubmitting(false);
+  };
   const isCreator = user?.uid === activity.creatorId || activity.creatorId === 'demo_user';
   const hasJoined = activity.participants.includes(user?.uid || '');
 
@@ -279,9 +330,15 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{activity.creatorName[0]}</Text>
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.creatorName}>{activity.creatorName}</Text>
               <Text style={styles.creatorSub}>Activity Organiser</Text>
+              <StarRating
+                rating={organiserRating.rating}
+                size={14}
+                showLabel
+                reviewCount={organiserRating.reviewCount}
+              />
             </View>
           </View>
         </View>
@@ -353,7 +410,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         ) : (
           // Non-creator actions
-          <View style={styles.actionRow}>
+          <View style={styles.actionColumn}>
             {/* Join / status button */}
             {hasJoined ? (
               <View style={[styles.joinedRow, styles.actionBtnFlex]}>
@@ -406,9 +463,65 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.primary} />
               <Text style={styles.chatBtnText}>Message</Text>
             </TouchableOpacity>
+
+            {/* Rate organiser — only after activity date passes and user joined */}
+            {activityPassed && hasJoined && (
+              <TouchableOpacity
+                style={[styles.rateBtn, alreadyRated && styles.rateBtnDone]}
+                onPress={() => !alreadyRated && setShowRatingModal(true)}
+                activeOpacity={alreadyRated ? 1 : 0.85}
+              >
+                <Ionicons
+                  name={alreadyRated ? 'star' : 'star-outline'}
+                  size={16}
+                  color={alreadyRated ? '#F59E0B' : COLORS.primary}
+                />
+                <Text style={[styles.rateBtnText, alreadyRated && styles.rateBtnTextDone]}>
+                  {alreadyRated ? 'You rated this organiser' : `Rate ${activity.creatorName}`}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </View>
+
+      {/* Rating Modal */}
+      <Modal visible={showRatingModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Rate {activity.creatorName}</Text>
+            <Text style={styles.modalSub}>How was your experience with this organiser?</Text>
+
+            <View style={styles.starsRow}>
+              <StarRating
+                rating={selectedStars}
+                size={40}
+                interactive
+                onChange={setSelectedStars}
+              />
+            </View>
+
+            <Text style={styles.starLabel}>
+              {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][selectedStars] || 'Tap a star'}
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowRatingModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSubmitBtn, (selectedStars === 0 || ratingSubmitting) && styles.modalSubmitBtnDisabled]}
+                onPress={submitRatingHandler}
+                disabled={selectedStars === 0 || ratingSubmitting}
+              >
+                {ratingSubmitting
+                  ? <ActivityIndicator size="small" color={COLORS.white} />
+                  : <Text style={styles.modalSubmitText}>Submit Rating</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -535,11 +648,40 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
     ...SHADOW.lg,
   },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  actionColumn: { gap: SPACING.sm },
+  rateBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full, borderWidth: 1.5,
+    borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10',
   },
+  rateBtnDone: { borderColor: '#F59E0B', backgroundColor: '#FEF3C7' },
+  rateBtnText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
+  rateBtnTextDone: { color: '#B45309' },
+  // Rating modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: COLORS.surface, borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl, padding: SPACING.xl, paddingBottom: 48,
+    alignItems: 'center',
+  },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.xs },
+  modalSub: { fontSize: 14, color: COLORS.textSecondary, marginBottom: SPACING.xl },
+  starsRow: { marginBottom: SPACING.md },
+  starLabel: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary, height: 24, marginBottom: SPACING.xl },
+  modalActions: { flexDirection: 'row', gap: SPACING.md, width: '100%' },
+  modalCancelBtn: {
+    flex: 1, paddingVertical: SPACING.md, borderRadius: RADIUS.full,
+    borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center',
+  },
+  modalCancelText: { color: COLORS.textSecondary, fontWeight: '600', fontSize: 15 },
+  modalSubmitBtn: {
+    flex: 2, paddingVertical: SPACING.md, borderRadius: RADIUS.full,
+    backgroundColor: COLORS.primary, alignItems: 'center',
+  },
+  modalSubmitBtnDisabled: { backgroundColor: COLORS.textMuted },
+  modalSubmitText: { color: COLORS.white, fontWeight: '700', fontSize: 15 },
   actionBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: SPACING.md,

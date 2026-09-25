@@ -17,7 +17,7 @@ const C = {
 
 export default function WelcomeScreen({ navigation }: Props) {
   const goToSignUp = () => navigation.navigate('AuthChoice');
-  const goToLogin = () => navigation.navigate('Login');
+  const goToLogin = () => navigation.navigate('AuthChoice');
 
   return (
     <View style={styles.container}>

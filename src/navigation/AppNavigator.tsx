@@ -1,20 +1,18 @@
-import React from 'react';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import React, { useRef } from 'react';
+import { NavigationContainer, DefaultTheme, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants/theme';
+import { logScreenView } from '../services/firebaseNative';
 
 import { RootStackParamList, TabParamList } from '../types';
 
 import WelcomeScreen from '../screens/WelcomeScreen';
 import AuthChoiceScreen from '../screens/AuthChoiceScreen';
-import PhoneNumberScreen from '../screens/PhoneNumberScreen';
 import OTPVerifyScreen from '../screens/OTPVerifyScreen';
-import LoginScreen from '../screens/LoginScreen';
-import CreateAccountScreen from '../screens/CreateAccountScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import InterestPickerScreen from '../screens/InterestPickerScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -81,6 +79,8 @@ const navTheme = {
 
 export default function AppNavigator() {
   const { isAuthenticated, isLoading, user } = useAuth();
+  const navigationRef = useNavigationContainerRef();
+  const routeNameRef = useRef<string | undefined>(undefined);
 
   if (isLoading) {
     return (
@@ -91,17 +91,28 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer
+      theme={navTheme}
+      onReady={() => {
+        routeNameRef.current = navigationRef.getCurrentRoute()?.name;
+      }}
+      onStateChange={() => {
+        const previousRouteName = routeNameRef.current;
+        const currentRouteName = navigationRef.getCurrentRoute()?.name;
+        if (currentRouteName && previousRouteName !== currentRouteName) {
+          logScreenView(currentRouteName);
+        }
+        routeNameRef.current = currentRouteName;
+      }}
+      ref={navigationRef}
+    >
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: 'transparent' } }}>
         {!isAuthenticated ? (
           // Auth stack — shown when logged out
           <>
             <Stack.Screen name="Welcome"        component={WelcomeScreen} />
             <Stack.Screen name="AuthChoice"      component={AuthChoiceScreen} />
-            <Stack.Screen name="PhoneNumber"    component={PhoneNumberScreen} />
             <Stack.Screen name="OTPVerify"      component={OTPVerifyScreen} />
-            <Stack.Screen name="Login"          component={LoginScreen} />
-            <Stack.Screen name="CreateAccount"  component={CreateAccountScreen} />
           </>
         ) : !user?.name || !user?.city ? (
           // Profile setup stack — logged in but profile incomplete

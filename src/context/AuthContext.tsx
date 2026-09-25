@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { setAnalyticsUserId, setCrashlyticsUserId, requestPushPermissionAndToken } from '../services/firebaseNative';
 import { User } from '../types';
 
 const USER_CACHE_KEY = 'mybuddy_user_profile';
@@ -12,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   setUser: (user: User | null) => Promise<void>;
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
   isTrialActive: () => boolean;
   isSubscribed: () => boolean;
@@ -27,17 +29,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Active Firebase session — fetch fresh profile from Firestore
-        await loadFromFirestore(firebaseUser.uid, firebaseUser.email || '');
+        await loadFromFirestore(firebaseUser.uid, firebaseUser.email || '', firebaseUser.displayName || '');
+        setAnalyticsUserId(firebaseUser.uid);
+        setCrashlyticsUserId(firebaseUser.uid);
+        // Best-effort — a denied permission or offline device just means no
+        // token gets saved, not a failure of sign-in itself.
+        requestPushPermissionAndToken().then((token) => {
+          if (token) setDoc(doc(db, 'users', firebaseUser.uid), { fcmToken: token }, { merge: true }).catch(() => {});
+        });
       } else {
         // No active session — restore from local AsyncStorage cache (cold start)
         await loadFromCache();
+        setAnalyticsUserId(null);
+        setCrashlyticsUserId(null);
       }
     });
     return unsubscribe;
   }, []);
 
   // Called when Firebase session is active — reads/writes Firestore
-  const loadFromFirestore = async (uid: string, email: string) => {
+  const loadFromFirestore = async (uid: string, email: string, displayName: string) => {
     try {
       const ref = doc(db, 'users', uid);
       const snap = await getDoc(ref);
@@ -52,6 +63,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             u.freeMonthsEarned = Math.floor(parseInt(count) / 5);
           }
         }
+        // Backfill name for accounts created before Google's displayName was captured
+        if (!u.name && displayName) {
+          u.name = displayName;
+        }
+        // Backfill nameLower for accounts created before user search existed —
+        // without it, this user is invisible to Community's search/suggestions.
+        if (u.name && !u.nameLower) {
+          u.nameLower = u.name.toLowerCase();
+          await setDoc(ref, { name: u.name, nameLower: u.nameLower }, { merge: true });
+        }
         await saveToCache(u);
         setUserState(u);
       } else {
@@ -61,7 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newUser: User = {
           uid,
           email,
-          name: '',
+          name: displayName,
+          nameLower: displayName.toLowerCase(),
           city: '',
           state: '',
           interests: [],
@@ -120,6 +142,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Re-fetches the current user's doc from Firestore — used after an
+  // out-of-band write (e.g. a follow-count increment via a batch) so the
+  // locally cached user reflects the true server value instead of racing it.
+  const refreshUser = async () => {
+    if (!auth.currentUser) return;
+    try {
+      const snap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (snap.exists()) {
+        const u = snap.data() as User;
+        await saveToCache(u);
+        setUserState(u);
+      }
+    } catch (err) {
+      console.error('refreshUser error:', err);
+    }
+  };
+
   const logout = async () => {
     try { await signOut(auth); } catch { }
     await AsyncStorage.removeItem(USER_CACHE_KEY);
@@ -148,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, isLoading, isAuthenticated: !!user,
-      setUser, logout, isTrialActive, isSubscribed,
+      setUser, refreshUser, logout, isTrialActive, isSubscribed,
     }}>
       {children}
     </AuthContext.Provider>

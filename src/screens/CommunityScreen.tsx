@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, User } from '../types';
 import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { INTERESTS } from '../constants/interests';
+import { useAuth } from '../context/AuthContext';
+import {
+  followUser, unfollowUser, getFollowingIds, getSuggestedUsers, searchUsers,
+} from '../services/follows';
+import { createPost, getFeedPosts, getMyPosts, Post } from '../services/posts';
 import NoPostsIllustration from '../components/NoPostsIllustration';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
@@ -26,29 +33,146 @@ const C = {
 };
 
 const initials = (name: string) =>
-  name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
+  (name || '?').trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
 
-interface SuggestedPerson { id: string; name: string; sport: string }
-const SUGGESTED: SuggestedPerson[] = [
-  { id: 'p1', name: 'Mike L.', sport: 'Paddle' },
-  { id: 'p2', name: 'Amy T.', sport: 'Badminton' },
-  { id: 'p3', name: 'Sara K.', sport: 'Tennis' },
-  { id: 'p4', name: 'Jon D.', sport: 'Cricket' },
-];
+const primaryInterest = (u: User) => {
+  const id = u.interests?.[0];
+  return INTERESTS.find((i) => i.id === id)?.label || u.city || '';
+};
+
+const timeAgo = (iso: string) => {
+  const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${Math.floor(minutes)}m ago`;
+  const hours = minutes / 60;
+  if (hours < 24) return `${Math.floor(hours)}h ago`;
+  const days = hours / 24;
+  return `${Math.floor(days)}d ago`;
+};
 
 export default function CommunityScreen({ navigation }: Props) {
+  const { user, refreshUser } = useAuth();
   const [tab, setTab] = useState<'feed' | 'groups'>('feed');
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const [search, setSearch] = useState('');
   const [findFriendsDismissed, setFindFriendsDismissed] = useState(false);
-  const [following, setFollowing] = useState<Record<string, boolean>>({});
 
-  const toggleFollow = (id: string) =>
-    setFollowing((prev) => ({ ...prev, [id]: !prev[id] }));
+  const [suggested, setSuggested] = useState<User[]>([]);
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [loadingSuggested, setLoadingSuggested] = useState(true);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [followBusy, setFollowBusy] = useState<Record<string, boolean>>({});
 
-  const people = SUGGESTED.filter((p) =>
-    p.name.toLowerCase().includes(search.trim().toLowerCase())
+  const [feedPosts, setFeedPosts] = useState<Post[]>([]);
+  const [myPosts, setMyPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [composerVisible, setComposerVisible] = useState(false);
+  const [postText, setPostText] = useState('');
+  const [posting, setPosting] = useState(false);
+
+  const loadPosts = async () => {
+    if (!user) return;
+    try {
+      const [feed, mine] = await Promise.all([getFeedPosts(), getMyPosts(user.uid)]);
+      setFeedPosts(feed);
+      setMyPosts(mine);
+    } catch (err) {
+      console.error('Failed to load posts:', err);
+    }
+    setLoadingPosts(false);
+  };
+
+  useEffect(() => { loadPosts(); }, [user?.uid]);
+
+  const submitPost = async () => {
+    if (!user || !postText.trim() || posting) return;
+    setPosting(true);
+    try {
+      const { auth } = await import('../services/firebase');
+      Alert.alert('Debug', `auth.currentUser=${auth.currentUser ? auth.currentUser.uid : 'null'}\ncontext user.uid=${user.uid}`);
+      await createPost(user.uid, user.name || 'Player', postText);
+      setPostText('');
+      setComposerVisible(false);
+      await loadPosts();
+    } catch (err: any) {
+      Alert.alert('Error', `Could not create your post.\n\n${err?.code || ''} ${err?.message || err}`);
+    }
+    setPosting(false);
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const [suggestedUsers, ids] = await Promise.all([
+          getSuggestedUsers(user.uid),
+          getFollowingIds(user.uid),
+        ]);
+        setSuggested(suggestedUsers);
+        setFollowingIds(ids);
+      } catch (err) {
+        console.error('Failed to load suggested users:', err);
+      }
+      setLoadingSuggested(false);
+    })();
+  }, [user?.uid]);
+
+  // Debounced search-as-you-type against Firestore.
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    const term = search.trim();
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    if (!term) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    searchDebounce.current = setTimeout(async () => {
+      try {
+        setSearchResults(await searchUsers(term, user.uid));
+      } catch (err) {
+        console.error('User search failed:', err);
+      }
+      setSearching(false);
+    }, 350);
+    return () => {
+      if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    };
+  }, [search, user?.uid]);
+
+  const people = useMemo(
+    () => (search.trim() ? searchResults : suggested),
+    [search, searchResults, suggested]
   );
+
+  const toggleFollow = async (targetUid: string) => {
+    if (!user || followBusy[targetUid]) return;
+    const wasFollowing = followingIds.has(targetUid);
+    setFollowBusy((prev) => ({ ...prev, [targetUid]: true }));
+    setFollowingIds((prev) => {
+      const next = new Set(prev);
+      wasFollowing ? next.delete(targetUid) : next.add(targetUid);
+      return next;
+    });
+    try {
+      if (wasFollowing) await unfollowUser(user.uid, targetUid);
+      else await followUser(user.uid, targetUid);
+      await refreshUser();
+    } catch (err) {
+      // revert optimistic update on failure
+      setFollowingIds((prev) => {
+        const next = new Set(prev);
+        wasFollowing ? next.add(targetUid) : next.delete(targetUid);
+        return next;
+      });
+      Alert.alert('Error', 'Could not update follow status. Please try again.');
+    }
+    setFollowBusy((prev) => ({ ...prev, [targetUid]: false }));
+  };
 
   return (
     <View style={styles.container}>
@@ -124,20 +248,49 @@ export default function CommunityScreen({ navigation }: Props) {
             </View>
 
             {filter === 'mine' ? (
-              <View style={styles.emptyPosts}>
-                <NoPostsIllustration size={190} />
-                <Text style={styles.emptyPostsTitle}>No posts yet</Text>
-                <Text style={styles.emptyPostsSub}>
-                  Start sharing your experience with the largest community of racket players
-                </Text>
-                <TouchableOpacity
-                  style={styles.createPostBtn}
-                  onPress={() => Alert.alert('Coming soon', 'Creating posts will be available in a future update.')}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.createPostBtnText}>Create post</Text>
-                </TouchableOpacity>
-              </View>
+              loadingPosts ? (
+                <ActivityIndicator style={{ marginTop: SPACING.xxl }} color={C.purple} />
+              ) : myPosts.length === 0 ? (
+                <View style={styles.emptyPosts}>
+                  <NoPostsIllustration size={190} />
+                  <Text style={styles.emptyPostsTitle}>No posts yet</Text>
+                  <Text style={styles.emptyPostsSub}>
+                    Start sharing your experience with the largest community of racket players
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.createPostBtn}
+                    onPress={() => setComposerVisible(true)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.createPostBtnText}>Create post</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ gap: SPACING.md }}>
+                  <TouchableOpacity
+                    style={styles.createPostBtnOutline}
+                    onPress={() => setComposerVisible(true)}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="add" size={16} color={C.purple} />
+                    <Text style={styles.createPostBtnOutlineText}>Create post</Text>
+                  </TouchableOpacity>
+                  {myPosts.map((p) => (
+                    <View key={p.id} style={styles.postCard}>
+                      <View style={styles.postHeader}>
+                        <View style={styles.postAvatar}>
+                          <Text style={styles.postAvatarText}>{initials(p.authorName)}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.postAuthor}>{p.authorName}</Text>
+                          <Text style={styles.postTime}>{timeAgo(p.createdAt)}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.postBody}>{p.text}</Text>
+                    </View>
+                  ))}
+                </View>
+              )
             ) : (
               <>
                 {!findFriendsDismissed && (
@@ -160,64 +313,99 @@ export default function CommunityScreen({ navigation }: Props) {
                 )}
 
                 <View style={styles.suggestedHeader}>
-                  <Text style={styles.sectionTitle}>Suggested for you</Text>
-                  <TouchableOpacity onPress={() => {}}>
-                    <Text style={styles.seeAll}>See all</Text>
-                  </TouchableOpacity>
+                  <Text style={styles.sectionTitle}>
+                    {search.trim() ? 'Search results' : 'Suggested for you'}
+                  </Text>
+                  {(loadingSuggested || searching) && <ActivityIndicator size="small" color={C.purple} />}
                 </View>
 
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.suggestedRow}
-                >
-                  <View style={styles.addFriendsCard}>
-                    <View style={styles.addFriendsCircle}>
-                      <Ionicons name="add" size={22} color={C.muted} />
-                    </View>
-                    <Text style={styles.addFriendsText}>Add friends from your address book</Text>
-                  </View>
-
-                  {people.map((p) => {
-                    const isFollowing = !!following[p.id];
-                    return (
-                      <View key={p.id} style={styles.personCard}>
-                        <View style={styles.personAvatar}>
-                          <Text style={styles.personAvatarText}>{initials(p.name)}</Text>
+                {!loadingSuggested && !searching && people.length === 0 ? (
+                  <Text style={styles.noPeopleText}>
+                    {search.trim() ? 'No players found.' : 'No suggestions yet — check back soon.'}
+                  </Text>
+                ) : (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.suggestedRow}
+                  >
+                    {!search.trim() && (
+                      <View style={styles.addFriendsCard}>
+                        <View style={styles.addFriendsCircle}>
+                          <Ionicons name="add" size={22} color={C.muted} />
                         </View>
-                        <Text style={styles.personName}>{p.name}</Text>
-                        <Text style={styles.personSport}>{p.sport}</Text>
-                        <TouchableOpacity
-                          style={[styles.followBtn, isFollowing && styles.followBtnActive]}
-                          onPress={() => toggleFollow(p.id)}
-                          activeOpacity={0.85}
-                        >
-                          <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextActive]}>
-                            {isFollowing ? 'Following' : 'Follow'}
-                          </Text>
-                        </TouchableOpacity>
+                        <Text style={styles.addFriendsText}>Add friends from your address book</Text>
                       </View>
-                    );
-                  })}
-                </ScrollView>
+                    )}
+
+                    {people.map((p) => {
+                      const isFollowing = followingIds.has(p.uid);
+                      const busy = !!followBusy[p.uid];
+                      return (
+                        <View key={p.uid} style={styles.personCard}>
+                          <View style={styles.personAvatar}>
+                            <Text style={styles.personAvatarText}>{initials(p.name)}</Text>
+                          </View>
+                          <Text style={styles.personName} numberOfLines={1}>{p.name}</Text>
+                          <Text style={styles.personSport} numberOfLines={1}>{primaryInterest(p)}</Text>
+                          <TouchableOpacity
+                            style={[styles.followBtn, isFollowing && styles.followBtnActive]}
+                            onPress={() => toggleFollow(p.uid)}
+                            disabled={busy}
+                            activeOpacity={0.85}
+                          >
+                            {busy ? (
+                              <ActivityIndicator size="small" color={isFollowing ? C.heading : '#FFFFFF'} />
+                            ) : (
+                              <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextActive]}>
+                                {isFollowing ? 'Following' : 'Follow'}
+                              </Text>
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                )}
 
                 {/* Feed */}
-                <View style={styles.postCard}>
-                  <View style={styles.postHeader}>
-                    <View style={styles.postAvatar}>
-                      <Text style={styles.postAvatarText}>SB</Text>
+                <View style={{ gap: SPACING.md }}>
+                  <View style={styles.postCard}>
+                    <View style={styles.postHeader}>
+                      <View style={styles.postAvatar}>
+                        <Text style={styles.postAvatarText}>SB</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.postAuthor}>Sweatbud</Text>
+                        <Text style={styles.postTime}>Pinned</Text>
+                      </View>
+                      <Ionicons name="ellipsis-vertical" size={16} color={C.muted} />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.postAuthor}>Sweatbud</Text>
-                      <Text style={styles.postTime}>1 day ago</Text>
-                    </View>
-                    <Ionicons name="ellipsis-vertical" size={16} color={C.muted} />
+                    <Text style={styles.postHeadline}>🌍 The London Sports Cup is here!</Text>
+                    <Text style={styles.postBody}>
+                      Represent your city in a 6-week digital league. Play when, where and with who
+                      you want, earn points and climb the leaderboard!
+                    </Text>
                   </View>
-                  <Text style={styles.postHeadline}>🌍 The London Sports Cup is here!</Text>
-                  <Text style={styles.postBody}>
-                    Represent your city in a 6-week digital league. Play when, where and with who
-                    you want, earn points and climb the leaderboard!
-                  </Text>
+
+                  {loadingPosts ? (
+                    <ActivityIndicator color={C.purple} />
+                  ) : (
+                    feedPosts.map((p) => (
+                      <View key={p.id} style={styles.postCard}>
+                        <View style={styles.postHeader}>
+                          <View style={styles.postAvatar}>
+                            <Text style={styles.postAvatarText}>{initials(p.authorName)}</Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.postAuthor}>{p.authorName}</Text>
+                            <Text style={styles.postTime}>{timeAgo(p.createdAt)}</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.postBody}>{p.text}</Text>
+                      </View>
+                    ))
+                  )}
                 </View>
               </>
             )}
@@ -226,6 +414,39 @@ export default function CommunityScreen({ navigation }: Props) {
           </ScrollView>
         )}
       </View>
+
+      <Modal visible={composerVisible} animationType="slide" transparent onRequestClose={() => setComposerVisible(false)}>
+        <KeyboardAvoidingView
+          style={styles.composerBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.composerSheet}>
+            <View style={styles.composerHeader}>
+              <TouchableOpacity onPress={() => setComposerVisible(false)} hitSlop={8}>
+                <Text style={styles.composerCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.composerTitle}>New post</Text>
+              <TouchableOpacity onPress={submitPost} disabled={!postText.trim() || posting} hitSlop={8}>
+                {posting ? (
+                  <ActivityIndicator size="small" color={C.purple} />
+                ) : (
+                  <Text style={[styles.composerPost, !postText.trim() && styles.composerPostDisabled]}>Post</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.composerInput}
+              placeholder="Share something with the community..."
+              placeholderTextColor={C.muted}
+              value={postText}
+              onChangeText={setPostText}
+              multiline
+              autoFocus
+              maxLength={500}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -319,9 +540,34 @@ const styles = StyleSheet.create({
   },
   createPostBtnText: { fontFamily: FONTS.bold, fontSize: 15, color: '#FFFFFF' },
 
+  createPostBtnOutline: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderWidth: 1.5, borderColor: C.purple, borderRadius: RADIUS.full,
+    paddingVertical: SPACING.sm,
+  },
+  createPostBtnOutlineText: { fontFamily: FONTS.bold, fontSize: 14, color: C.purple },
+
+  composerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  composerSheet: {
+    backgroundColor: C.card, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    paddingTop: SPACING.md, paddingHorizontal: SPACING.md, paddingBottom: SPACING.xl,
+  },
+  composerHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingBottom: SPACING.md, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: SPACING.md,
+  },
+  composerCancel: { fontFamily: FONTS.regular, fontSize: 15, color: C.sub },
+  composerTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  composerPost: { fontFamily: FONTS.bold, fontSize: 15, color: C.purple },
+  composerPostDisabled: { color: C.muted },
+  composerInput: {
+    fontFamily: FONTS.regular, fontSize: 15, color: C.heading,
+    minHeight: 120, textAlignVertical: 'top',
+  },
+
   suggestedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
   sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
-  seeAll: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.purple },
+  noPeopleText: { fontFamily: FONTS.regular, fontSize: 13.5, color: C.sub, paddingBottom: SPACING.lg },
 
   suggestedRow: { gap: SPACING.sm, paddingBottom: SPACING.lg, paddingRight: SPACING.md },
   addFriendsCard: {

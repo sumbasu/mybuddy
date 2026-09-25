@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "MyBuddy",
+    "name": "SweatBud",
     "slug": "MyBuddy",
+    "scheme": "mybuddy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +15,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.rimpi.mybuddy"
+      "bundleIdentifier": "com.pium.sweatbud",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +24,9 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.pium.sweatbud",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,7 +40,8 @@
             "useFrameworks": "static"
           },
           "android": {
-            "enableProguardInReleaseBuilds": false
+            "enableProguardInReleaseBuilds": false,
+            "enableMinifyInReleaseBuilds": false
           }
         }
       ],
@@ -46,7 +51,13 @@
         {
           "locationWhenInUsePermission": "Sweatbud uses your location to show games and courts near you."
         }
-      ]
+      ],
+      "expo-web-browser",
+      "@react-native-firebase/app",
+      "@react-native-firebase/analytics",
+      "@react-native-firebase/crashlytics",
+      "@react-native-firebase/messaging",
+      "./plugins/withRNFirebaseDisableSPM.js"
     ]
   }
 }

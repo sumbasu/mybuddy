@@ -43,3 +43,14 @@ yarn-error.*
 /android
 GoogleService-Info*.plist
 google-services.json
+
+# Firebase CLI local cache
+.firebase/
+
+# superseded icon design iterations — only the final one is committed
+src/icon/Icon_v_1.png
+src/icon/Icon_v_2.png.png
+src/icon/Icon_v_3.png
+src/icon/Icon_v_4.png
+src/icon/Icon_v_5.png
+src/icon/generated_icon_1024.png

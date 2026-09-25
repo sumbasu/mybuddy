@@ -15,6 +15,15 @@ import {
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import GradientBackground from './src/components/GradientBackground';
+import { recordError } from './src/services/firebaseNative';
+
+// Routes uncaught JS exceptions to Crashlytics in addition to the default
+// red-box/console behavior, so crashes are visible in the Firebase console.
+const defaultErrorHandler = ErrorUtils.getGlobalHandler();
+ErrorUtils.setGlobalHandler((error, isFatal) => {
+  recordError(error, isFatal ? 'Unhandled fatal error' : 'Unhandled error');
+  defaultErrorHandler(error, isFatal);
+});
 
 export default function App() {
   const [fontsLoaded] = useFonts({
