@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, Linking, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { signInWithPhoneNumber } from 'firebase/auth';
 import { RootStackParamList } from '../types';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
 import { auth, firebaseConfig } from '../services/firebase';
+import FirebaseRecaptchaVerifier, { FirebaseRecaptchaVerifierHandle } from '../components/FirebaseRecaptchaVerifier';
 import { setPendingConfirmation } from '../services/phoneAuth';
 import { useGoogleSignIn } from '../services/googleAuth';
 import { signInWithApple, isAppleSignInAvailable } from '../services/appleAuth';
@@ -54,7 +54,7 @@ export default function AuthChoiceScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [optIn, setOptIn] = useState(false);
   const [phoneLoading, setPhoneLoading] = useState(false);
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierHandle>(null);
 
   const { signIn: signInWithGoogle, loading: googleLoading, ready: googleReady } = useGoogleSignIn();
 
@@ -108,7 +108,7 @@ export default function AuthChoiceScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <FirebaseRecaptchaVerifierModal
+      <FirebaseRecaptchaVerifier
         ref={recaptchaVerifier}
         firebaseConfig={firebaseConfig}
         attemptInvisibleVerification

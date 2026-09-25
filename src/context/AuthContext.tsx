@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { setAnalyticsUserId, setCrashlyticsUserId, requestPushPermissionAndToken } from '../services/firebaseNative';
 import { User } from '../types';
 
 const USER_CACHE_KEY = 'mybuddy_user_profile';
@@ -29,9 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         // Active Firebase session — fetch fresh profile from Firestore
         await loadFromFirestore(firebaseUser.uid, firebaseUser.email || '', firebaseUser.displayName || '');
+        setAnalyticsUserId(firebaseUser.uid);
+        setCrashlyticsUserId(firebaseUser.uid);
+        // Best-effort — a denied permission or offline device just means no
+        // token gets saved, not a failure of sign-in itself.
+        requestPushPermissionAndToken().then((token) => {
+          if (token) setDoc(doc(db, 'users', firebaseUser.uid), { fcmToken: token }, { merge: true }).catch(() => {});
+        });
       } else {
         // No active session — restore from local AsyncStorage cache (cold start)
         await loadFromCache();
+        setAnalyticsUserId(null);
+        setCrashlyticsUserId(null);
       }
     });
     return unsubscribe;

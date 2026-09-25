@@ -28,6 +28,7 @@ export interface User {
   matchType?: string;
   preferredTime?: string;
   buddyGenderPreference?: 'any' | 'same' | 'male' | 'female';
+  fcmToken?: string;
 }
 
 export interface SubscriptionStatus {
