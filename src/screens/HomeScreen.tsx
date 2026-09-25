@@ -114,7 +114,7 @@ export default function HomeScreen({ navigation }: Props) {
         activeOpacity={0.85}
       >
         <View style={styles.bannerIconWrap}>
-          <MaterialCommunityIcons name="crown-outline" size={16} color={C.purple} />
+          <MaterialCommunityIcons name="crown-outline" size={16} color={C.lime} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.bannerTitle}>Upgrade to Premium Now</Text>
@@ -139,9 +139,6 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.bellIconBtn} onPress={() => (navigation as any).navigate('Chats')}>
             <Ionicons name="notifications-outline" size={18} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Settings')}>
-            <Ionicons name="menu-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -335,7 +332,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   bannerDismissBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.heading },
+  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.purple },
   bannerSub: { fontFamily: FONTS.regular, fontSize: 9.7, color: C.sub, marginTop: 2 },
 
   quickRow: { flexDirection: 'row', justifyContent: 'space-between' },

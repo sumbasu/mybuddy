@@ -16,7 +16,7 @@ const C = {
   label: 'rgba(63,47,134,0.45)',
   sub: '#767683',
   heading: '#16213E',
-  gold: '#E8B84B',
+  lime: '#C8DB2E',
   danger: '#FF6B6B',
 };
 
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     width: 136, height: 44, borderRadius: RADIUS.lg,
     backgroundColor: C.heading, alignItems: 'center', justifyContent: 'center',
   },
-  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 11.3, color: C.gold },
+  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 11.3, color: C.lime },
   shareBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
     width: 136, height: 44, borderRadius: RADIUS.lg,

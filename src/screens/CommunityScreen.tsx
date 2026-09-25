@@ -64,12 +64,6 @@ export default function CommunityScreen({ navigation }: Props) {
               onChangeText={setSearch}
             />
           </View>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => (navigation as any).navigate('Chats')}>
-            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Settings')}>
-            <Ionicons name="menu-outline" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
         </View>
       </View>
 

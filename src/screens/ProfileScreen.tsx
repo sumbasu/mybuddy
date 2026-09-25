@@ -21,6 +21,7 @@ const C = {
   border: '#ECEBF2',
   purple: '#3F2F86',
   gold: '#E8B84B',
+  lime: '#C8DB2E',
   error: '#EF233C',
 };
 
@@ -42,7 +43,7 @@ const PREFERENCES: { key: 'bestHand' | 'courtPosition' | 'matchType' | 'preferre
 ];
 
 export default function ProfileScreen({ navigation }: Props) {
-  const { user, logout, isSubscribed } = useAuth();
+  const { user, logout, isSubscribed, setUser } = useAuth();
   const { activities } = useActivities();
   const [resultFilter, setResultFilter] = useState(RESULT_FILTERS[0]);
 
@@ -65,6 +66,18 @@ export default function ProfileScreen({ navigation }: Props) {
     Alert.alert('Coming soon', 'Editing player preferences will be available in a future update.');
   };
 
+  const removeInterest = (id: string) => {
+    if (!user) return;
+    const remaining = (user.interests || []).filter((i) => i !== id);
+    // Dropping below 2 kicks the whole app into the onboarding interest-picker
+    // stack (AppNavigator), which has no way back — keep at least 2 here.
+    if (remaining.length < 2) {
+      Alert.alert('Keep at least 2', 'You need at least 2 interests so we can match you with people who share them.');
+      return;
+    }
+    setUser({ ...user, interests: remaining });
+  };
+
   return (
     <View style={styles.container}>
       {/* Header — stays on the app's purple */}
@@ -72,11 +85,8 @@ export default function ProfileScreen({ navigation }: Props) {
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.headerIconBtn} onPress={() => (navigation as any).navigate('Chats')}>
-              <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Settings')}>
-              <Ionicons name="menu-outline" size={22} color="#FFFFFF" />
+              <Ionicons name="settings-outline" size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -113,7 +123,7 @@ export default function ProfileScreen({ navigation }: Props) {
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
             <Text style={styles.statValue}>{followers}</Text>
-            <Text style={styles.statLabel}>Followers</Text>
+            <Text style={styles.statLabel}>{followers < 2 ? 'Follower' : 'Followers'}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statCol}>
@@ -141,6 +151,9 @@ export default function ProfileScreen({ navigation }: Props) {
                 <Text style={[styles.interestChipText, i === 0 && styles.interestChipTextActive]}>
                   {interest?.label || id}
                 </Text>
+                <TouchableOpacity onPress={() => removeInterest(id)} hitSlop={8}>
+                  <Ionicons name="close" size={13} color={i === 0 ? '#FFFFFF' : C.sub} />
+                </TouchableOpacity>
               </View>
             );
           })}
@@ -266,10 +279,11 @@ const styles = StyleSheet.create({
     backgroundColor: C.heading,
     alignItems: 'center', justifyContent: 'center',
   },
-  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 13.5, color: C.gold },
+  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 13.5, color: C.lime },
 
   interestsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs, marginBottom: SPACING.lg },
   interestChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
     borderRadius: RADIUS.lg, paddingVertical: 7, paddingHorizontal: SPACING.md,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.2, borderColor: C.border,

@@ -19,7 +19,9 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   const [city, setCity] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isValid = age && parseInt(age) >= 16 && gender && city;
+  const ageNum = parseInt(age);
+  const ageValid = age !== '' && ageNum > 16 && ageNum < 75;
+  const isValid = ageValid && gender && city;
 
   const saveProfile = async () => {
     if (!isValid || !user) return;
@@ -73,13 +75,16 @@ export default function ProfileSetupScreen({ navigation }: Props) {
               value={age}
               onChangeText={setAge}
             />
+            {age !== '' && !ageValid && (
+              <Text style={styles.ageHint}>Age must be between 17 and 74</Text>
+            )}
           </View>
 
           <CityPicker
             label="Location"
             value={city}
             onChange={setCity}
-            placeholder="London, UK"
+            placeholder="Search your location..."
           />
 
           <View style={styles.field}>
@@ -146,6 +151,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 11, fontWeight: '700', color: COLORS.textMuted, marginBottom: SPACING.xl, textTransform: 'uppercase', letterSpacing: 1.5 },
   form: { marginBottom: SPACING.xl },
   field: { marginBottom: SPACING.md },
+  ageHint: { fontSize: 11, color: COLORS.error, marginTop: SPACING.xs },
   label: {
     fontSize: 11,
     fontWeight: '700',

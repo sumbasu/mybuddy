@@ -18,7 +18,7 @@ const C = {
   purple: '#3F2F86',
   label: 'rgba(63,47,134,0.45)',
   heading: '#16213E',
-  gold: '#E8B84B',
+  lime: '#C8DB2E',
 };
 
 
@@ -37,11 +37,10 @@ export default function EditProfileScreen({ navigation }: Props) {
     gender !== (user?.gender || '') ||
     city !== (user?.city || '');
 
-  const save = async () => {
-    if (!name.trim()) {
-      Alert.alert('Required', 'Please enter your name.');
-      return;
-    }
+  const ageNum = parseInt(age);
+  const ageValid = age.trim() === '' || (ageNum > 16 && ageNum < 75);
+
+  const doSave = async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -52,13 +51,28 @@ export default function EditProfileScreen({ navigation }: Props) {
         gender: gender || user.gender,
         city: city || user.city,
       });
-      Alert.alert('Saved!', 'Your profile has been updated.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
     } catch {
       Alert.alert('Error', 'Could not save profile. Please try again.');
+      setLoading(false);
+      return;
     }
     setLoading(false);
+    navigation.goBack();
+  };
+
+  const confirmSave = () => {
+    if (!name.trim()) {
+      Alert.alert('Required', 'Please enter your name.');
+      return;
+    }
+    if (!ageValid) {
+      Alert.alert('Invalid age', 'Age must be between 17 and 74.');
+      return;
+    }
+    Alert.alert('Save changes', 'Do you want to save your changes?', [
+      { text: 'No', style: 'cancel', onPress: () => navigation.goBack() },
+      { text: 'Yes', onPress: doSave },
+    ]);
   };
 
   return (
@@ -73,11 +87,11 @@ export default function EditProfileScreen({ navigation }: Props) {
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <TouchableOpacity
             style={[styles.saveBtn, (!hasChanges || loading) && styles.saveBtnDisabled]}
-            onPress={save}
+            onPress={confirmSave}
             disabled={!hasChanges || loading}
           >
             {loading
-              ? <ActivityIndicator size="small" color={C.gold} />
+              ? <ActivityIndicator size="small" color={C.lime} />
               : <Text style={styles.saveBtnText}>Save</Text>}
           </TouchableOpacity>
         </View>
@@ -132,6 +146,9 @@ export default function EditProfileScreen({ navigation }: Props) {
                 keyboardType="numeric"
                 maxLength={3}
               />
+              {age.trim() !== '' && !ageValid && (
+                <Text style={styles.ageHint}>Age must be between 17 and 74</Text>
+              )}
             </View>
 
             <View style={styles.divider} />
@@ -159,7 +176,12 @@ export default function EditProfileScreen({ navigation }: Props) {
             <View style={styles.divider} />
 
             <View style={styles.fieldWrap}>
-              <CityPicker label="City" value={city} onChange={setCity} placeholder="Search your city..." />
+              <CityPicker
+                label="Location"
+                value={city}
+                onChange={setCity}
+                placeholder="Search your location..."
+              />
             </View>
 
           </View>
@@ -223,7 +245,7 @@ const styles = StyleSheet.create({
     minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: RADIUS.full,
   },
   saveBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.25)' },
-  saveBtnText: { color: C.gold, fontWeight: '700', fontSize: 14 },
+  saveBtnText: { color: C.lime, fontWeight: '700', fontSize: 14 },
 
   section: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
   sectionTitle: { fontSize: 11, fontWeight: '700', color: C.label, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm },
@@ -243,6 +265,7 @@ const styles = StyleSheet.create({
   readValue: { fontSize: 15, color: '#FFFFFF', fontWeight: '500' },
   readValueMuted: { color: 'rgba(255,255,255,0.6)' },
   hint: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
+  ageHint: { fontSize: 11, color: '#FF8A80', marginTop: 4 },
 
   genderRow: { flexDirection: 'row', gap: SPACING.sm },
   genderChip: {
@@ -250,9 +273,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
   },
-  genderChipActive: { borderColor: C.gold, backgroundColor: 'rgba(232,184,75,0.18)' },
+  genderChipActive: { borderColor: C.lime, backgroundColor: 'rgba(200,219,46,0.18)' },
   genderChipText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
-  genderChipTextActive: { color: C.gold, fontWeight: '700' },
+  genderChipTextActive: { color: C.lime, fontWeight: '700' },
 
   dropdown: {
     backgroundColor: COLORS.surface, borderRadius: RADIUS.md,

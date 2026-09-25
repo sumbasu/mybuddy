@@ -13,12 +13,17 @@ interface Props {
   placeholder?: string;
 }
 
-export default function CityPicker({ value, onChange, label = 'City', placeholder = 'Search city...' }: Props) {
+export default function CityPicker({ value, onChange, label = 'Location', placeholder = 'Search location...' }: Props) {
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
 
   const valid = isValidCity(value);
+  // Whether to show the dropdown/error depends only on whether there are
+  // matches — not on the `focused` flag, which can lag a beat behind the
+  // real keyboard state and was hiding valid suggestions while still typing.
+  const showDropdown = suggestions.length > 0;
+  const showNoMatch = !showDropdown && query.trim().length > 1 && !valid;
 
   const handleChange = (text: string) => {
     setQuery(text);
@@ -36,7 +41,7 @@ export default function CityPicker({ value, onChange, label = 'City', placeholde
   const borderColor = !focused
     ? COLORS.border
     : valid
-    ? COLORS.success
+    ? '#C8DB2E'
     : query.length > 0
     ? COLORS.error
     : COLORS.primary;
@@ -49,7 +54,7 @@ export default function CityPicker({ value, onChange, label = 'City', placeholde
         <Ionicons
           name="location-outline"
           size={18}
-          color={valid ? COLORS.success : focused ? COLORS.primary : COLORS.textMuted}
+          color={valid ? '#C8DB2E' : focused ? COLORS.primary : COLORS.textMuted}
         />
         <TextInput
           style={styles.input}
@@ -71,8 +76,8 @@ export default function CityPicker({ value, onChange, label = 'City', placeholde
           returnKeyType="done"
           autoCorrect={false}
         />
-        {valid && <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />}
-        {!valid && query.length > 0 && !focused && (
+        {valid && <Ionicons name="checkmark-circle" size={18} color={'#C8DB2E'} />}
+        {showNoMatch && (
           <Ionicons name="alert-circle" size={18} color={COLORS.error} />
         )}
         {query.length > 0 && (
@@ -82,15 +87,15 @@ export default function CityPicker({ value, onChange, label = 'City', placeholde
         )}
       </View>
 
-      {/* Validation hint */}
-      {query.length > 1 && !valid && !focused && (
+      {/* Validation hint — only when there are genuinely no matches left to pick from */}
+      {showNoMatch && (
         <Text style={styles.errorHint}>
-          "{query}" is not in our city list. Please select from suggestions.
+          "{query}" is not in our location list. Please select from suggestions.
         </Text>
       )}
 
       {/* Suggestions dropdown */}
-      {suggestions.length > 0 && focused && (
+      {showDropdown && (
         <View style={styles.dropdown}>
           <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
             {suggestions.map((city) => (
@@ -100,16 +105,6 @@ export default function CityPicker({ value, onChange, label = 'City', placeholde
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
-      )}
-
-      {/* No results */}
-      {focused && query.length > 1 && suggestions.length === 0 && !valid && (
-        <View style={styles.dropdown}>
-          <View style={styles.suggestion}>
-            <Ionicons name="search-outline" size={14} color={COLORS.textMuted} />
-            <Text style={styles.noResultText}>No city found. Try a different spelling.</Text>
-          </View>
         </View>
       )}
     </View>
