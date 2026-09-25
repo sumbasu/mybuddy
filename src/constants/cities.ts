@@ -25212,7 +25212,11 @@ const CITY_ALIASES: Record<string, string> = {
   pondicherry: 'puducherry',
 };
 
-export function searchCities(query: string): string[] {
+// `priorityCity` (the user's current device-detected city, if known) pulls
+// matches in that city to the top — otherwise a search like "Bell" surfaces
+// alphabetically-first areas from anywhere in India ("Bellad Bagewadi,
+// Belagavi") ahead of the one the user is actually standing in.
+export function searchCities(query: string, priorityCity?: string): string[] {
   const raw = query.trim().toLowerCase();
   if (!raw) return [];
   const q = CITY_ALIASES[raw] || raw;
@@ -25228,15 +25232,28 @@ export function searchCities(query: string): string[] {
   });
 
   const seen = new Set<string>();
-  const results: string[] = [];
+  const ordered: string[] = [];
   for (const c of [...areaMatches, ...cityMatches]) {
     const key = c.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    results.push(c);
-    if (results.length >= 8) break;
+    ordered.push(c);
   }
-  return results;
+
+  if (priorityCity) {
+    const pc = priorityCity.trim().toLowerCase();
+    const normalizedPriority = CITY_ALIASES[pc] || pc;
+    const suffix = `, ${normalizedPriority}`;
+    // Stable sort — only reorders local-city matches ahead of everything
+    // else, preserving the area-then-city rank within each group.
+    ordered.sort((a, b) => {
+      const aLocal = a.toLowerCase().endsWith(suffix) ? 0 : 1;
+      const bLocal = b.toLowerCase().endsWith(suffix) ? 0 : 1;
+      return aLocal - bLocal;
+    });
+  }
+
+  return ordered.slice(0, 8);
 }
 
 export function isValidCity(name: string): boolean {

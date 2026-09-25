@@ -7,6 +7,9 @@ import BrandLogo from '../components/BrandLogo';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Welcome'> };
 
+const TERMS_URL = 'https://mybuddy-bd717.web.app/terms-of-service.html';
+const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
+
 const C = {
   purple: '#3F2F86',
   page: '#FFFFFF',
@@ -44,11 +47,11 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         <Text style={styles.terms}>
           By continuing you agree to our{' '}
-          <Text style={styles.termsLink} onPress={() => Linking.openURL('https://sweatbud.app/terms')}>
+          <Text style={styles.termsLink} onPress={() => Linking.openURL(TERMS_URL)}>
             Terms of use
           </Text>{' '}
           and{' '}
-          <Text style={styles.termsLink} onPress={() => Linking.openURL('https://sweatbud.app/privacy')}>
+          <Text style={styles.termsLink} onPress={() => Linking.openURL(PRIVACY_URL)}>
             Privacy policy
           </Text>
         </Text>

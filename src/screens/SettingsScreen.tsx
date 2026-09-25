@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -7,6 +7,9 @@ import { useAuth } from '../context/AuthContext';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'> };
+
+const TERMS_URL = 'https://mybuddy-bd717.web.app/terms-of-service.html';
+const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 
 // White sheet between a purple header and the rest of the app — matches the Profile screen.
 const C = {
@@ -111,8 +114,8 @@ export default function SettingsScreen({ navigation }: Props) {
         </Section>
 
         <Section label="Legal information">
-          <Row icon="document-outline" label="Terms of use" onPress={soon} />
-          <Row icon="document-outline" label="Privacy Policy" onPress={soon} />
+          <Row icon="document-outline" label="Terms of use" onPress={() => Linking.openURL(TERMS_URL)} />
+          <Row icon="document-outline" label="Privacy Policy" onPress={() => Linking.openURL(PRIVACY_URL)} />
         </Section>
 
         <View style={styles.card}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, StatusBar, Alert, Linking, Platform,
 } from 'react-native';
@@ -68,11 +68,41 @@ export default function HomeScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
 
   const onRefresh = () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 600);
   };
+
+  const resolveLocationLabel = async () => {
+    try {
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const [place] = await Location.reverseGeocodeAsync({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+      // Prefer neighborhood-level detail (e.g. "HSR Layout") over the bare
+      // city name, falling back a level at a time when it isn't available.
+      const neighborhood = place?.district || place?.street || place?.name;
+      const city = place?.city || place?.subregion || place?.region;
+      const label = [neighborhood, city].filter(Boolean).join(', ');
+      if (label) setLocationLabel(label);
+    } catch {
+      // Best-effort — the "Enable location" card just won't be replaced with a place name.
+    }
+  };
+
+  // Picks up an already-granted permission (e.g. from a previous session) so
+  // the prompt card doesn't reappear on every cold start.
+  useEffect(() => {
+    Location.getForegroundPermissionsAsync().then(({ status }) => {
+      if (status === 'granted') {
+        setLocationEnabled(true);
+        resolveLocationLabel();
+      }
+    });
+  }, []);
 
   const enableLocation = async () => {
     const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
@@ -91,6 +121,7 @@ export default function HomeScreen({ navigation }: Props) {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status === 'granted') {
       setLocationEnabled(true);
+      resolveLocationLabel();
     } else {
       // Denied just now — send them to Settings so they can turn it on there.
       if (Platform.OS === 'ios') {
@@ -151,6 +182,12 @@ export default function HomeScreen({ navigation }: Props) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.purple} />}
       >
         <Text style={styles.greeting}>Hey {user?.name?.split(' ')[0] || 'there'}, let's get moving</Text>
+        {locationEnabled && locationLabel && (
+          <View style={styles.locationRow}>
+            <Ionicons name="location" size={12} color={C.sub} />
+            <Text style={styles.locationRowText}>{locationLabel}</Text>
+          </View>
+        )}
 
         {/* Upgrade banner — sits up top until dismissed, then moves to the bottom */}
         {!bannerDismissed && upgradeBanner}
@@ -319,6 +356,12 @@ const styles = StyleSheet.create({
     fontSize: 18, fontFamily: FONTS.bold, color: C.heading,
     paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, paddingBottom: SPACING.sm,
   },
+
+  locationRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: SPACING.md, marginTop: -SPACING.sm, paddingBottom: SPACING.sm,
+  },
+  locationRowText: { fontSize: 12.5, fontFamily: FONTS.medium, color: C.sub },
 
   section: { paddingHorizontal: SPACING.md, marginTop: SPACING.lg },
   banner: {
