@@ -90,8 +90,6 @@ export default function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const routeNameRef = useRef<string | undefined>(undefined);
 
-  console.log('[nav] render — isAuthenticated=', isAuthenticated, 'name=', user?.name, 'city=', user?.city, 'interests=', user?.interests);
-
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
