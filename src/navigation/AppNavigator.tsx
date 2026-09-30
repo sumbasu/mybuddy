@@ -16,6 +16,8 @@ import OTPVerifyScreen from '../screens/OTPVerifyScreen';
 import ProfileSetupScreen from '../screens/ProfileSetupScreen';
 import InterestPickerScreen from '../screens/InterestPickerScreen';
 import HomeScreen from '../screens/HomeScreen';
+import AllGamesScreen from '../screens/AllGamesScreen';
+import FindGameScreen from '../screens/FindGameScreen';
 import CommunityScreen from '../screens/CommunityScreen';
 import CreateActivityScreen from '../screens/CreateActivityScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
@@ -29,7 +31,6 @@ import YourMatchesScreen from '../screens/YourMatchesScreen';
 import YourClassesScreen from '../screens/YourClassesScreen';
 import YourEventsScreen from '../screens/YourEventsScreen';
 import YourFavouritesScreen from '../screens/YourFavouritesScreen';
-import YourGroupsScreen from '../screens/YourGroupsScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -82,6 +83,8 @@ export default function AppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const routeNameRef = useRef<string | undefined>(undefined);
 
+  console.log('[nav] render — isAuthenticated=', isAuthenticated, 'name=', user?.name, 'city=', user?.city, 'interests=', user?.interests);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -124,6 +127,8 @@ export default function AppNavigator() {
           // Main app stack
           <>
             <Stack.Screen name="MainTabs"       component={MainTabs} />
+            <Stack.Screen name="AllGames"        component={AllGamesScreen} />
+            <Stack.Screen name="FindGame"        component={FindGameScreen} />
             <Stack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
             <Stack.Screen name="CreateActivity" component={CreateActivityScreen} />
             <Stack.Screen name="InterestPicker" component={InterestPickerScreen} />
@@ -136,7 +141,6 @@ export default function AppNavigator() {
             <Stack.Screen name="YourClasses"    component={YourClassesScreen} />
             <Stack.Screen name="YourEvents"     component={YourEventsScreen} />
             <Stack.Screen name="YourFavourites" component={YourFavouritesScreen} />
-            <Stack.Screen name="YourGroups"      component={YourGroupsScreen} />
             <Stack.Screen name="Subscription"   component={SubscriptionScreen} />
           </>
         )}

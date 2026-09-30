@@ -1,14 +1,34 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
+  ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import CityPicker from '../components/CityPicker';
 import { COLORS, SPACING, RADIUS, SHADOW, FONTS } from '../constants/theme';
+
+const MIN_AGE = 17;
+const MAX_AGE = 74;
+const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+
+function ageFromDob(dob: Date): number {
+  return Math.floor((Date.now() - dob.getTime()) / MS_PER_YEAR);
+}
+
+function formatDob(dob: Date): string {
+  return dob.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+const GENDER_OPTIONS = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+] as const;
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'> };
 
@@ -22,27 +42,39 @@ const C = {
 };
 
 
+// Seeds a starting point for the DOB picker from the legacy integer `age`
+// field (still the source of truth everywhere else in the app) when no
+// precise `dob` has been saved yet — an approximation, not a stored fact.
+function seedDob(user: { dob?: string; age?: number } | null): Date | null {
+  if (user?.dob) return new Date(user.dob);
+  if (user?.age) return new Date(new Date().getFullYear() - user.age, 0, 1);
+  return null;
+}
+
 export default function EditProfileScreen({ navigation }: Props) {
   const { user, setUser } = useAuth();
 
   const [name, setName] = useState(user?.name || '');
-  const [age, setAge] = useState(user?.age ? String(user.age) : '');
-  const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>(user?.gender || '');
+  const [dob, setDob] = useState<Date | null>(seedDob(user));
+  const [showDobPicker, setShowDobPicker] = useState(false);
+  const [gender, setGender] = useState<'male' | 'female' | 'other' | 'prefer_not_to_say' | ''>(user?.gender || '');
   const [city, setCity] = useState(user?.city || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [buddyPref, setBuddyPref] = useState<'any' | 'same' | 'male' | 'female'>(
     user?.buddyGenderPreference || 'any'
   );
   const [loading, setLoading] = useState(false);
 
+  const initialDob = seedDob(user);
   const hasChanges =
     name.trim() !== (user?.name || '') ||
-    age !== (user?.age ? String(user.age) : '') ||
+    dob?.getTime() !== initialDob?.getTime() ||
     gender !== (user?.gender || '') ||
     city !== (user?.city || '') ||
+    email.trim() !== (user?.email || '') ||
     buddyPref !== (user?.buddyGenderPreference || 'any');
 
-  const ageNum = parseInt(age);
-  const ageValid = age.trim() === '' || (ageNum > 16 && ageNum < 75);
+  const ageValid = !dob || (ageFromDob(dob) >= MIN_AGE && ageFromDob(dob) <= MAX_AGE);
 
   const doSave = async () => {
     if (!user) return;
@@ -52,9 +84,11 @@ export default function EditProfileScreen({ navigation }: Props) {
         ...user,
         name: name.trim(),
         nameLower: name.trim().toLowerCase(),
-        age: age ? parseInt(age) : user.age,
+        age: dob ? ageFromDob(dob) : user.age,
+        dob: dob ? dob.toISOString() : user.dob,
         gender: gender || user.gender,
         city: city || user.city,
+        email: email.trim() || user.email,
         buddyGenderPreference: buddyPref,
       });
     } catch {
@@ -63,7 +97,9 @@ export default function EditProfileScreen({ navigation }: Props) {
       return;
     }
     setLoading(false);
-    navigation.goBack();
+    Alert.alert('Profile updated', 'Your changes have been saved.', [
+      { text: 'OK', onPress: () => navigation.goBack() },
+    ]);
   };
 
   const confirmSave = () => {
@@ -72,7 +108,7 @@ export default function EditProfileScreen({ navigation }: Props) {
       return;
     }
     if (!ageValid) {
-      Alert.alert('Invalid age', 'Age must be between 17 and 74.');
+      Alert.alert('Invalid date of birth', `Age must be between ${MIN_AGE} and ${MAX_AGE}.`);
       return;
     }
     Alert.alert('Save changes', 'Do you want to save your changes?', [
@@ -102,17 +138,37 @@ export default function EditProfileScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        {/* Read-only: email */}
+        {/* Email — editable only when the profile doesn't already have one;
+            an existing email is tied to how the user signed in (Google/Apple)
+            and can't be changed here. */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
-            <Field
-              icon="mail-outline"
-              label="Email"
-              value={user?.email || '—'}
-              editable={false}
-              hint="Email cannot be changed"
-            />
+            {user?.email ? (
+              <Field
+                icon="mail-outline"
+                label="Email"
+                value={user.email}
+                editable={false}
+                hint="Email cannot be changed"
+              />
+            ) : (
+              <View style={styles.fieldWrap}>
+                <View style={styles.fieldHeader}>
+                  <Ionicons name="mail-outline" size={16} color="#FFFFFF" />
+                  <Text style={styles.label}>Email</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Add an email address"
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+            )}
           </View>
         </View>
 
@@ -141,19 +197,15 @@ export default function EditProfileScreen({ navigation }: Props) {
             <View style={styles.fieldWrap}>
               <View style={styles.fieldHeader}>
                 <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
-                <Text style={styles.label}>Age</Text>
+                <Text style={styles.label}>Date of birth</Text>
               </View>
-              <TextInput
-                style={styles.input}
-                value={age}
-                onChangeText={setAge}
-                placeholder="Your age"
-                placeholderTextColor="rgba(255,255,255,0.5)"
-                keyboardType="numeric"
-                maxLength={3}
-              />
-              {age.trim() !== '' && !ageValid && (
-                <Text style={styles.ageHint}>Age must be between 17 and 74</Text>
+              <TouchableOpacity style={styles.dobInput} onPress={() => setShowDobPicker(true)} activeOpacity={0.7}>
+                <Text style={dob ? styles.dobValue : styles.dobPlaceholder}>
+                  {dob ? formatDob(dob) : 'Select your date of birth'}
+                </Text>
+              </TouchableOpacity>
+              {dob && !ageValid && (
+                <Text style={styles.ageHint}>Age must be between {MIN_AGE} and {MAX_AGE}</Text>
               )}
             </View>
 
@@ -164,15 +216,15 @@ export default function EditProfileScreen({ navigation }: Props) {
                 <Ionicons name="transgender-outline" size={16} color="#FFFFFF" />
                 <Text style={styles.label}>Gender</Text>
               </View>
-              <View style={styles.genderRow}>
-                {(['male', 'female', 'other'] as const).map(g => (
+              <View style={styles.genderGrid}>
+                {GENDER_OPTIONS.map(({ value, label }) => (
                   <TouchableOpacity
-                    key={g}
-                    style={[styles.genderChip, gender === g && styles.genderChipActive]}
-                    onPress={() => setGender(g)}
+                    key={value}
+                    style={[styles.genderChip, gender === value && styles.genderChipActive]}
+                    onPress={() => setGender(value)}
                   >
-                    <Text style={[styles.genderChipText, gender === g && styles.genderChipTextActive]}>
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    <Text style={[styles.genderChipText, gender === value && styles.genderChipTextActive]}>
+                      {label}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -192,6 +244,33 @@ export default function EditProfileScreen({ navigation }: Props) {
 
           </View>
         </View>
+
+        {showDobPicker && (
+          <Modal transparent animationType="slide">
+            <View style={styles.pickerModal}>
+              <View style={styles.pickerSheet}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerTitle}>Date of birth</Text>
+                  <TouchableOpacity onPress={() => setShowDobPicker(false)}>
+                    <Text style={styles.pickerDone}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={dob || new Date(new Date().getFullYear() - 25, 0, 1)}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={new Date(new Date().getFullYear() - MIN_AGE, 11, 31)}
+                  minimumDate={new Date(new Date().getFullYear() - MAX_AGE, 0, 1)}
+                  accentColor={COLORS.primary}
+                  textColor="#000000"
+                  themeVariant="light"
+                  onChange={(_, picked) => { if (picked) setDob(picked); }}
+                  style={{ width: '100%' }}
+                />
+              </View>
+            </View>
+          </Modal>
+        )}
 
         {/* Buddy gender preference */}
         <View style={styles.section}>
@@ -312,6 +391,22 @@ const styles = StyleSheet.create({
   readValueMuted: { color: 'rgba(255,255,255,0.6)' },
   hint: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
   ageHint: { fontSize: 11, color: '#FF8A80', marginTop: 4 },
+  dobInput: {
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
+    borderRadius: RADIUS.md, paddingHorizontal: SPACING.md,
+    paddingVertical: 12,
+  },
+  dobValue: { fontSize: 15, color: '#FFFFFF' },
+  dobPlaceholder: { fontSize: 15, color: 'rgba(255,255,255,0.5)' },
+  pickerModal: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
+  pickerSheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, paddingBottom: 24 },
+  pickerHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+  },
+  pickerTitle: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
+  pickerDone: { fontSize: 15, fontWeight: '700', color: COLORS.primary },
   prefHint: { fontSize: 12, color: COLORS.textMuted, marginBottom: SPACING.sm },
   prefGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   prefChip: {
@@ -324,11 +419,12 @@ const styles = StyleSheet.create({
   prefChipText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
   prefChipTextActive: { color: COLORS.white, fontWeight: '700' },
 
-  genderRow: { flexDirection: 'row', gap: SPACING.sm },
+  genderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   genderChip: {
-    flex: 1, minHeight: 44, borderRadius: RADIUS.md,
+    width: '47%', minHeight: 44, borderRadius: RADIUS.md,
     borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
+    paddingHorizontal: SPACING.xs,
   },
   genderChipActive: { borderColor: C.lime, backgroundColor: 'rgba(200,219,46,0.18)' },
   genderChipText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },

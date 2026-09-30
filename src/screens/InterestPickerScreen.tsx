@@ -24,15 +24,27 @@ export default function InterestPickerScreen({ navigation }: Props) {
   };
 
   const save = async () => {
-    if (selected.length < 2 || !user) return;
+    console.log('[interests] save() called, selected=', selected, 'user=', user?.uid);
+    if (selected.length < 2 || !user) {
+      console.log('[interests] save() bailed early — selected.length or user missing');
+      return;
+    }
     setLoading(true);
-    await setUser({ ...user, interests: selected });
+    try {
+      await setUser({ ...user, interests: selected });
+      console.log('[interests] setUser resolved');
+    } catch (err) {
+      console.log('[interests] setUser threw', err);
+    }
     // Reached two ways: pushed from Profile/EditProfile inside the main stack
     // (go back to it), or shown by AppNavigator during onboarding, in which
     // case there's nothing to go back to — it swaps to the main stack itself
     // once `user.interests` has 2+ entries.
     if (navigation.canGoBack()) {
+      console.log('[interests] canGoBack — calling goBack()');
       navigation.goBack();
+    } else {
+      console.log('[interests] cannot go back — waiting on AppNavigator to swap stacks');
     }
     setLoading(false);
   };

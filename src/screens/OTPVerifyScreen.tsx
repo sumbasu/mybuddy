@@ -44,11 +44,28 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
   }, []);
 
   const handleChange = (val: string, idx: number) => {
+    const cleaned = val.replace(/[^0-9]/g, '');
+
+    // SMS autofill (and a manual paste) delivers the whole code into whichever
+    // box is focused, not one digit — spread it across all six boxes instead
+    // of dropping everything but the last character.
+    if (cleaned.length > 1) {
+      const fullDigits = cleaned.slice(0, 6).split('');
+      setOtp((prev) => {
+        const next = [...prev];
+        fullDigits.forEach((d, i) => { next[i] = d; });
+        return next;
+      });
+      const lastIdx = Math.min(fullDigits.length, 6) - 1;
+      inputs.current[lastIdx]?.focus();
+      return;
+    }
+
     const digits = [...otp];
-    digits[idx] = val;
+    digits[idx] = cleaned;
     setOtp(digits);
-    if (val && idx < 5) inputs.current[idx + 1]?.focus();
-    if (!val && idx > 0) inputs.current[idx - 1]?.focus();
+    if (cleaned && idx < 5) inputs.current[idx + 1]?.focus();
+    if (!cleaned && idx > 0) inputs.current[idx - 1]?.focus();
   };
 
   const verify = async () => {
@@ -77,6 +94,13 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
     setLoading(false);
   };
 
+  // Auto-submits as soon as all six digits are in, whether typed, pasted, or
+  // filled by SMS autofill — no need to also tap Verify.
+  useEffect(() => {
+    if (otp.join('').length === 6 && !loading) verify();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp]);
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
@@ -97,9 +121,13 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
               ref={(r) => { inputs.current[i] = r; }}
               style={[styles.otpBox, digit && styles.otpBoxFilled]}
               value={digit}
-              onChangeText={(v) => handleChange(v.replace(/[^0-9]/g, '').slice(-1), i)}
+              onChangeText={(v) => handleChange(v, i)}
               keyboardType="numeric"
-              maxLength={1}
+              // No maxLength — SMS autofill delivers the full 6-digit code into
+              // whichever box is focused, and handleChange splits it apart.
+              // A maxLength here would truncate that to one character first.
+              textContentType="oneTimeCode"
+              autoComplete="sms-otp"
               selectTextOnFocus
             />
           ))}
@@ -114,6 +142,10 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
         </View>
+
+        <TouchableOpacity style={styles.changeNumberRow} onPress={() => navigation.goBack()} hitSlop={8}>
+          <Text style={styles.changeNumberLink}>Change number</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -148,6 +180,9 @@ const styles = StyleSheet.create({
   resendRow: { alignItems: 'center' },
   resendHint: { fontFamily: FONTS.regular, fontSize: 13, color: C.resendMuted },
   resendLink: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.resendLink },
+
+  changeNumberRow: { alignItems: 'center', marginTop: SPACING.md },
+  changeNumberLink: { fontFamily: FONTS.medium, fontSize: 13, color: C.resendLink },
 
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,

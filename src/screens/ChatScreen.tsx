@@ -14,7 +14,18 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../services/firebase';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
+
+// White sheet with a purple header — matches Profile/Settings/ActivityDetail,
+// not the old dark-gradient theme this screen used to carry.
+const C = {
+  page: '#FFFFFF',
+  purple: '#3F2F86',
+  heading: '#16213E',
+  sub: '#767683',
+  muted: '#9A9AA6',
+  border: '#ECEBF2',
+};
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Chat'>;
@@ -125,14 +136,14 @@ export default function ChatScreen({ navigation, route }: Props) {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.primary} />
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={styles.headerName}>{participantName || activityTitle || 'Chat'}</Text>
           </View>
         </View>
         <View style={styles.sessionWrap}>
-          <Ionicons name="lock-closed-outline" size={48} color={COLORS.textMuted} />
+          <Ionicons name="lock-closed-outline" size={48} color={C.muted} />
           <Text style={styles.sessionText}>Sign in required to use chat</Text>
           <Text style={styles.sessionSub}>Please log out and sign in again to activate messaging.</Text>
         </View>
@@ -149,7 +160,7 @@ export default function ChatScreen({ navigation, route }: Props) {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.primary} />
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={styles.headerName}>{participantName || activityTitle || 'Chat'}</Text>
@@ -161,7 +172,7 @@ export default function ChatScreen({ navigation, route }: Props) {
 
         {loading ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator color={COLORS.primary} />
+            <ActivityIndicator color={C.purple} />
           </View>
         ) : (
           <FlatList
@@ -172,7 +183,7 @@ export default function ChatScreen({ navigation, route }: Props) {
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
-                <Ionicons name="chatbubbles-outline" size={48} color={COLORS.textMuted} />
+                <Ionicons name="chatbubbles-outline" size={48} color={C.muted} />
                 <Text style={styles.emptyText}>No messages yet.{'\n'}Say hello! 👋</Text>
               </View>
             }
@@ -202,7 +213,7 @@ export default function ChatScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={C.muted}
             value={input}
             onChangeText={setInput}
             returnKeyType="send"
@@ -214,7 +225,7 @@ export default function ChatScreen({ navigation, route }: Props) {
             onPress={send}
             disabled={!input.trim()}
           >
-            <Ionicons name="send" size={18} color={COLORS.white} />
+            <Ionicons name="send" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>
@@ -223,66 +234,65 @@ export default function ChatScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: C.page },
   header: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.surface,
+    backgroundColor: C.purple,
     paddingTop: 56, paddingBottom: SPACING.md,
     paddingHorizontal: SPACING.lg,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
     gap: SPACING.md,
   },
   backBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   headerInfo: { flex: 1 },
-  headerName: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
-  headerSub: { fontSize: 12, color: COLORS.textMuted },
+  headerName: { fontFamily: FONTS.bold, fontSize: 16, color: '#FFFFFF' },
+  headerSub: { fontFamily: FONTS.regular, fontSize: 12, color: 'rgba(255,255,255,0.7)' },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   msgList: { padding: SPACING.lg, gap: SPACING.sm },
   msgListEmpty: { flex: 1, justifyContent: 'center' },
   emptyWrap: { alignItems: 'center', gap: SPACING.md },
-  emptyText: { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', lineHeight: 22 },
+  emptyText: { fontFamily: FONTS.regular, fontSize: 14, color: C.muted, textAlign: 'center', lineHeight: 22 },
   bubbleWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: SPACING.sm, marginBottom: SPACING.sm },
   bubbleWrapMe: { flexDirection: 'row-reverse' },
   senderAvatar: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: COLORS.primary + '30',
+    backgroundColor: 'rgba(63,47,134,0.12)',
     alignItems: 'center', justifyContent: 'center',
   },
-  senderAvatarText: { fontSize: 12, fontWeight: '700', color: COLORS.primary },
+  senderAvatarText: { fontFamily: FONTS.bold, fontSize: 12, color: C.purple },
   bubble: {
-    maxWidth: '75%', backgroundColor: COLORS.surface,
+    maxWidth: '75%', backgroundColor: '#F4F3F9',
     borderRadius: RADIUS.lg, borderBottomLeftRadius: 4,
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
   },
   bubbleMe: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: C.purple,
     borderBottomLeftRadius: RADIUS.lg, borderBottomRightRadius: 4,
   },
-  senderName: { fontSize: 11, fontWeight: '700', color: COLORS.primary, marginBottom: 3 },
-  bubbleText: { fontSize: 14, color: COLORS.textPrimary, lineHeight: 20 },
-  bubbleTextMe: { color: COLORS.white },
-  bubbleTime: { fontSize: 10, color: COLORS.textMuted, marginTop: 3, alignSelf: 'flex-end' },
+  senderName: { fontFamily: FONTS.bold, fontSize: 11, color: C.purple, marginBottom: 3 },
+  bubbleText: { fontFamily: FONTS.regular, fontSize: 14, color: C.heading, lineHeight: 20 },
+  bubbleTextMe: { color: '#FFFFFF' },
+  bubbleTime: { fontFamily: FONTS.regular, fontSize: 10, color: C.muted, marginTop: 3, alignSelf: 'flex-end' },
   bubbleTimeMe: { color: 'rgba(255,255,255,0.7)' },
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end',
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     padding: SPACING.md, paddingBottom: 32,
-    borderTopWidth: 1, borderTopColor: COLORS.border,
+    borderTopWidth: 1, borderTopColor: C.border,
     gap: SPACING.sm,
   },
   input: {
-    flex: 1, borderWidth: 1.5, borderColor: COLORS.border,
+    flex: 1, borderWidth: 1.5, borderColor: C.border,
     borderRadius: RADIUS.full, paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm, fontSize: 14,
-    color: COLORS.textPrimary, maxHeight: 100,
+    paddingVertical: SPACING.sm, fontFamily: FONTS.regular, fontSize: 14,
+    color: C.heading, maxHeight: 100,
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: COLORS.primary,
+    backgroundColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: COLORS.textMuted },
+  sendBtnDisabled: { backgroundColor: C.muted },
   sessionWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md, paddingHorizontal: SPACING.xl },
-  sessionText: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
-  sessionSub: { fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },
+  sessionText: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  sessionSub: { fontFamily: FONTS.regular, fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 20 },
 });

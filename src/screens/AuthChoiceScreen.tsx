@@ -163,7 +163,7 @@ export default function AuthChoiceScreen({ navigation }: Props) {
           disabled={!isPhoneValid || phoneLoading}
           activeOpacity={0.85}
         >
-          {phoneLoading ? <ActivityIndicator color={C.btnText} /> : <Text style={styles.continueBtnText}>Continue</Text>}
+          {phoneLoading ? <ActivityIndicator color={C.btnText} /> : <Text style={styles.continueBtnText}>Send code</Text>}
         </TouchableOpacity>
 
         <View style={styles.dividerRow}>
@@ -249,8 +249,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginTop: 2,
   },
   checkboxOn: { backgroundColor: C.checkboxBorder },
-  checkLabel: { fontFamily: FONTS.semiBold, fontSize: 14.5, color: C.checkText, marginBottom: 4, lineHeight: 19 },
-  checkDesc: { fontFamily: FONTS.regular, fontSize: 12, color: C.checkDesc, lineHeight: 17 },
+  checkLabel: { fontFamily: FONTS.regular, fontSize: 13, color: C.checkText, marginBottom: 3, lineHeight: 17.5 },
+  checkDesc: { fontFamily: FONTS.regular, fontSize: 11, color: C.checkDesc, lineHeight: 15.5 },
 
   continueBtn: {
     backgroundColor: C.btnEnabled, borderRadius: RADIUS.full,

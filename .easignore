@@ -1,0 +1,58 @@
+# Mirrors .gitignore, but EAS Build needs GoogleService-Info.plist and
+# google-services.json in the upload (git keeps them out of the repo, EAS
+# needs the actual files to build native Firebase in). .env is left out
+# on purpose — its EXPO_PUBLIC_* values are pushed as EAS environment
+# variables instead (`eas env:create`), which is how a cloud build gets them.
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env.*
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# Firebase CLI local cache
+.firebase/
+
+# superseded icon design iterations — only the final one is committed
+src/icon/Icon_v_1.png
+src/icon/Icon_v_2.png.png
+src/icon/Icon_v_3.png
+src/icon/Icon_v_4.png
+src/icon/Icon_v_5.png
+src/icon/generated_icon_1024.png

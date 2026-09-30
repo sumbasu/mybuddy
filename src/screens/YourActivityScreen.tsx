@@ -35,7 +35,7 @@ export default function YourActivityScreen({ navigation }: Props) {
               item.key === 'matches' ? () => navigation.navigate('YourMatches')
               : item.key === 'classes' ? () => navigation.navigate('YourClasses')
               : item.key === 'events' ? () => navigation.navigate('YourEvents')
-              : item.key === 'groups' ? () => navigation.navigate('YourGroups')
+              : item.key === 'groups' ? () => navigation.navigate('MainTabs', { screen: 'Community', params: { tab: 'groups' } })
               : item.key === 'favouriteClubs' ? () => navigation.navigate('YourFavourites')
               : soon
             }

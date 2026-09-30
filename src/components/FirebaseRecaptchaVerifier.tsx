@@ -21,6 +21,12 @@ interface FirebaseConfig {
 export interface FirebaseRecaptchaVerifierHandle {
   type: 'recaptcha';
   verify: () => Promise<string>;
+  // Not part of the public ApplicationVerifier type, but firebase/auth's
+  // signInWithPhoneNumber unconditionally calls this in a `finally` block
+  // after every send attempt (see @firebase/auth's _verifyPhoneNumber) —
+  // without it, that call throws "_reset is not a function" right after
+  // the SMS is dispatched, before the confirmation ever reaches the caller.
+  _reset: () => void;
 }
 
 interface Props {
@@ -182,6 +188,10 @@ const FirebaseRecaptchaVerifier = forwardRef<FirebaseRecaptchaVerifierHandle, Pr
         setVisibleLoaded(false);
       }
     }),
+    // Our own onVerify/onError handlers already reset the invisible WebView
+    // (remounting it via invisibleKey) after each attempt, so there's
+    // nothing extra to do here — this just needs to exist and not throw.
+    _reset: () => {},
   }));
 
   return (

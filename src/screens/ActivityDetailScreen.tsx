@@ -15,11 +15,28 @@ import { RootStackParamList, Activity } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { INTERESTS } from '../constants/interests';
 import InterestIcon from '../components/InterestIcon';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { DEMO_ACTIVITIES } from '../constants/demoData';
 import { db } from '../services/firebase';
 import StarRating from '../components/StarRating';
 import { submitRating, hasAlreadyRated } from '../services/ratings';
+
+// White sheet with a purple header — matches Profile/Settings/Subscription,
+// not the old dark-gradient theme this screen used to carry.
+const C = {
+  page: '#FFFFFF',
+  purple: '#3F2F86',
+  heading: '#16213E',
+  sub: '#767683',
+  muted: '#9A9AA6',
+  border: '#ECEBF2',
+  lime: '#C8DB2E',
+  success: '#06D6A0',
+  warning: '#B8860B',
+  warningBg: '#FFF6DC',
+  error: '#EF233C',
+  errorBg: '#FDEDEF',
+};
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ActivityDetail'>;
@@ -83,7 +100,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   if (loadingActivity) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={COLORS.primary} size="large" />
+        <ActivityIndicator color={C.purple} size="large" />
       </View>
     );
   }
@@ -91,7 +108,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   if (!activity) {
     return (
       <View style={styles.center}>
-        <Ionicons name="alert-circle-outline" size={48} color={COLORS.textMuted} />
+        <Ionicons name="alert-circle-outline" size={48} color={C.muted} />
         <Text style={styles.notFoundText}>Activity not found</Text>
       </View>
     );
@@ -174,7 +191,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       // 4. Send the notification message
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         senderId: 'system',
-        senderName: 'MyBuddy',
+        senderName: 'sweatbud',
         text: `👋 ${user.name || 'Someone'} has requested to join "${activity.title}". Open the activity to Accept or Reject.`,
         createdAt: serverTimestamp(),
         read: false,
@@ -205,7 +222,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       const chatId = `join_${activity.id}_${uid}`;
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         senderId: 'system',
-        senderName: 'MyBuddy',
+        senderName: 'sweatbud',
         text: `✅ Your request to join "${activity.title}" has been accepted! See you there.`,
         createdAt: serverTimestamp(),
         read: false,
@@ -267,7 +284,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
           });
           const chatId = `join_${activity.id}_${uid}`;
           await addDoc(collection(db, 'chats', chatId, 'messages'), {
-            senderId: 'system', senderName: 'MyBuddy',
+            senderId: 'system', senderName: 'sweatbud',
             text: `Sorry, your request to join "${activity.title}" was not accepted this time.`,
             createdAt: serverTimestamp(), read: false,
           });
@@ -295,22 +312,22 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               style={styles.editBtn}
               onPress={() => navigation.navigate('CreateActivity', { activityId: activity.id })}
             >
-              <Ionicons name="create-outline" size={16} color={COLORS.white} />
+              <Ionicons name="create-outline" size={16} color="#FFFFFF" />
               <Text style={styles.editBtnText}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
-        <InterestIcon id={interest?.id} size={40} color={COLORS.white} style={styles.heroIcon} />
+        <InterestIcon id={interest?.id} size={40} color="#FFFFFF" style={styles.heroIcon} />
         <Text style={styles.heroTitle}>{activity.title}</Text>
         <Text style={styles.heroInterest}>{interest?.label || activity.interest}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.sheet} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         <View style={styles.infoCard}>
           <Row icon="calendar" label="Date" value={dateStr} />
           <Row icon="time-outline" label="Time" value={activity.time} />
           <Row icon="location-outline" label="Location" value={`${activity.location.name}\n${activity.location.address}`} />
-          <Row icon="people-outline" label="Spots" value={`${spotsLeft} of ${activity.slots} remaining`} color={spotsLeft === 0 ? COLORS.error : COLORS.success} />
+          <Row icon="people-outline" label="Spots" value={`${spotsLeft} of ${activity.slots} remaining`} color={spotsLeft === 0 ? C.error : C.success} />
           {activity.skillLevel && activity.skillLevel !== 'any' && (
             <Row icon="bar-chart-outline" label="Skill Level" value={activity.skillLevel.charAt(0).toUpperCase() + activity.skillLevel.slice(1)} />
           )}
@@ -347,7 +364,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
         {isCreator && (
           <View style={styles.section}>
             <View style={styles.requestsHeader}>
-              <Ionicons name="people-outline" size={16} color={COLORS.warning} />
+              <Ionicons name="people-outline" size={16} color={C.warning} />
               <Text style={styles.requestsTitle}>
                 Join Requests
                 {(activity.pendingRequests?.length || 0) > 0
@@ -358,7 +375,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
             {(!activity.pendingRequests || activity.pendingRequests.length === 0) ? (
               <View style={styles.noRequestsRow}>
-                <Ionicons name="checkmark-circle-outline" size={16} color={COLORS.textMuted} />
+                <Ionicons name="checkmark-circle-outline" size={16} color={C.muted} />
                 <Text style={styles.noRequestsText}>No pending requests</Text>
               </View>
             ) : (
@@ -375,14 +392,14 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                         style={styles.acceptBtn}
                         onPress={() => handleAccept(uid, name)}
                       >
-                        <Ionicons name="checkmark" size={16} color={COLORS.white} />
+                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                         <Text style={styles.acceptBtnText}>Accept</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.rejectBtn}
                         onPress={() => handleReject(uid, name)}
                       >
-                        <Ionicons name="close" size={16} color={COLORS.error} />
+                        <Ionicons name="close" size={16} color={C.error} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -404,7 +421,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             activeOpacity={0.85}
           >
             <View style={styles.actionBtnInner}>
-              <Ionicons name="chatbubbles" size={18} color={COLORS.white} />
+              <Ionicons name="chatbubbles" size={18} color="#FFFFFF" />
               <Text style={styles.actionBtnText}>Chat with Participants</Text>
             </View>
           </TouchableOpacity>
@@ -416,19 +433,19 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               <View style={[styles.joinedRow, styles.actionBtnFlex]}>
                 <View style={[styles.actionBtn, styles.joinedBtn, { flex: 1 }]}>
                   <View style={styles.actionBtnInner}>
-                    <Ionicons name="checkmark-circle" size={18} color={COLORS.white} />
+                    <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
                     <Text style={styles.actionBtnText}>You've Joined</Text>
                   </View>
                 </View>
                 <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave} activeOpacity={0.85}>
-                  <Ionicons name="exit-outline" size={18} color={COLORS.error} />
+                  <Ionicons name="exit-outline" size={18} color={C.error} />
                   <Text style={styles.leaveBtnText}>Leave</Text>
                 </TouchableOpacity>
               </View>
             ) : (requested || hasPendingRequest) ? (
               <View style={[styles.actionBtn, styles.requestedBtn, styles.actionBtnFlex]}>
                 <View style={styles.actionBtnInner}>
-                  <Ionicons name="time" size={18} color={COLORS.white} />
+                  <Ionicons name="time" size={18} color="#FFFFFF" />
                   <Text style={styles.actionBtnText}>Request Pending</Text>
                 </View>
               </View>
@@ -439,7 +456,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             ) : (
               <TouchableOpacity style={[styles.actionBtn, styles.actionBtnFlex]} onPress={handleJoin} activeOpacity={0.85}>
                 <View style={styles.actionBtnInner}>
-                  <Ionicons name="person-add" size={18} color={COLORS.white} />
+                  <Ionicons name="person-add" size={18} color="#FFFFFF" />
                   <Text style={styles.actionBtnText}>Request to Join</Text>
                 </View>
               </TouchableOpacity>
@@ -460,7 +477,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               }}
               activeOpacity={0.85}
             >
-              <Ionicons name="chatbubble-ellipses" size={20} color={COLORS.primary} />
+              <Ionicons name="chatbubble-ellipses" size={20} color={C.purple} />
               <Text style={styles.chatBtnText}>Message</Text>
             </TouchableOpacity>
 
@@ -474,7 +491,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 <Ionicons
                   name={alreadyRated ? 'star' : 'star-outline'}
                   size={16}
-                  color={alreadyRated ? '#F59E0B' : COLORS.primary}
+                  color={alreadyRated ? '#F59E0B' : C.purple}
                 />
                 <Text style={[styles.rateBtnText, alreadyRated && styles.rateBtnTextDone]}>
                   {alreadyRated ? 'You rated this organiser' : `Rate ${activity.creatorName}`}
@@ -515,7 +532,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 disabled={selectedStars === 0 || ratingSubmitting}
               >
                 {ratingSubmitting
-                  ? <ActivityIndicator size="small" color={COLORS.white} />
+                  ? <ActivityIndicator size="small" color="#FFFFFF" />
                   : <Text style={styles.modalSubmitText}>Submit Rating</Text>}
               </TouchableOpacity>
             </View>
@@ -532,7 +549,7 @@ function Row({ icon, label, value, color, last }: {
   return (
     <View style={[rowStyles.row, last && rowStyles.rowLast]}>
       <View style={rowStyles.iconWrap}>
-        <Ionicons name={icon} size={18} color={color || COLORS.primary} />
+        <Ionicons name={icon} size={18} color={color || C.purple} />
       </View>
       <View style={rowStyles.content}>
         <Text style={rowStyles.label}>{label}</Text>
@@ -548,28 +565,28 @@ const rowStyles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: C.border,
     gap: SPACING.md,
   },
   rowLast: { borderBottomWidth: 0 },
   iconWrap: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: COLORS.primary + '12',
+    backgroundColor: 'rgba(63,47,134,0.08)',
     alignItems: 'center', justifyContent: 'center',
   },
   content: { flex: 1, paddingTop: 2 },
-  label: { fontSize: 11, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 0.7, fontWeight: '600' },
-  value: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '500', marginTop: 3, lineHeight: 20 },
+  label: { fontFamily: FONTS.semiBold, fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7 },
+  value: { fontFamily: FONTS.medium, fontSize: 14, color: C.heading, marginTop: 3, lineHeight: 20 },
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md },
-  notFoundText: { fontSize: 16, color: COLORS.textMuted, fontWeight: '600' },
+  container: { flex: 1, backgroundColor: C.purple },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md, backgroundColor: C.page },
+  notFoundText: { fontFamily: FONTS.semiBold, fontSize: 16, color: C.muted },
   heroBar: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: C.purple,
     paddingTop: 56,
-    paddingBottom: SPACING.xl,
+    paddingBottom: SPACING.lg,
     paddingHorizontal: SPACING.lg,
   },
   heroTopRow: {
@@ -591,59 +608,66 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.35)',
   },
-  editBtnText: { color: COLORS.white, fontSize: 13, fontWeight: '700' },
+  editBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 13 },
   heroIcon: { marginBottom: SPACING.sm },
-  heroTitle: { fontSize: 22, fontWeight: '800', color: COLORS.white, lineHeight: 28 },
-  heroInterest: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 4 },
-  body: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
+  heroTitle: { fontFamily: FONTS.extraBold, fontSize: 22, color: '#FFFFFF', lineHeight: 28 },
+  heroInterest: { fontFamily: FONTS.regular, fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+  sheet: {
+    flex: 1, backgroundColor: C.page,
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+  },
+  body: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: 120 },
   infoCard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     marginBottom: SPACING.lg,
+    borderWidth: 1, borderColor: C.border,
     ...SHADOW.sm,
   },
   section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.sm },
-  description: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 22 },
+  sectionTitle: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading, marginBottom: SPACING.sm },
+  description: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, lineHeight: 22 },
   creatorRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   avatar: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: COLORS.primary,
+    backgroundColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontSize: 18, fontWeight: '700', color: COLORS.white },
-  creatorName: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
-  creatorSub: { fontSize: 12, color: COLORS.textMuted },
+  avatarText: { fontFamily: FONTS.bold, fontSize: 18, color: '#FFFFFF' },
+  creatorName: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading },
+  creatorSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.muted },
   requestsHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm },
-  requestsTitle: { fontSize: 14, fontWeight: '700', color: COLORS.warning },
+  requestsTitle: { fontFamily: FONTS.bold, fontSize: 14, color: C.warning },
   requestRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: COLORS.surface, borderRadius: RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.sm, ...SHADOW.sm,
+    backgroundColor: '#FFFFFF', borderRadius: RADIUS.md,
+    padding: SPACING.md, marginBottom: SPACING.sm,
+    borderWidth: 1, borderColor: C.border, ...SHADOW.sm,
   },
-  requestAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  requestAvatarText: { fontSize: 14, fontWeight: '700', color: COLORS.white },
-  requestUid: { flex: 1, fontSize: 13, color: COLORS.textPrimary, fontWeight: '500' },
+  requestAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center' },
+  requestAvatarText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFFFFF' },
+  requestUid: { flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: C.heading },
   requestActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  acceptBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 44, backgroundColor: COLORS.success, paddingHorizontal: SPACING.sm, borderRadius: RADIUS.full },
-  acceptBtnText: { color: COLORS.white, fontSize: 12, fontWeight: '700' },
-  rejectBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.error + '15', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: COLORS.error + '40' },
+  acceptBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 44, backgroundColor: C.success, paddingHorizontal: SPACING.sm, borderRadius: RADIUS.full },
+  acceptBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 12 },
+  rejectBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.errorBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(239,35,60,0.3)' },
   joinedRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   leaveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
     minHeight: 44,
     paddingHorizontal: SPACING.md,
     borderRadius: RADIUS.full, borderWidth: 1.5,
-    borderColor: COLORS.error, backgroundColor: COLORS.error + '10',
+    borderColor: C.error, backgroundColor: C.errorBg,
   },
-  leaveBtnText: { color: COLORS.error, fontSize: 13, fontWeight: '700' },
+  leaveBtnText: { fontFamily: FONTS.bold, color: C.error, fontSize: 13 },
   noRequestsRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.sm },
-  noRequestsText: { fontSize: 13, color: COLORS.textMuted },
+  noRequestsText: { fontFamily: FONTS.regular, fontSize: 13, color: C.muted },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1, borderTopColor: C.border,
     padding: SPACING.lg,
     paddingBottom: 36,
     ...SHADOW.lg,
@@ -654,36 +678,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 6, paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full, borderWidth: 1.5,
-    borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10',
+    borderColor: C.purple, backgroundColor: 'rgba(63,47,134,0.06)',
   },
   rateBtnDone: { borderColor: '#F59E0B', backgroundColor: '#FEF3C7' },
-  rateBtnText: { fontSize: 13, color: COLORS.primary, fontWeight: '700' },
+  rateBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: C.purple },
   rateBtnTextDone: { color: '#B45309' },
   // Rating modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: COLORS.surface, borderTopLeftRadius: RADIUS.xl,
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: RADIUS.xl,
     borderTopRightRadius: RADIUS.xl, padding: SPACING.xl, paddingBottom: 48,
     alignItems: 'center',
   },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary, marginBottom: SPACING.xs },
-  modalSub: { fontSize: 14, color: COLORS.textSecondary, marginBottom: SPACING.xl },
+  modalTitle: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading, marginBottom: SPACING.xs },
+  modalSub: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, marginBottom: SPACING.xl },
   starsRow: { marginBottom: SPACING.md },
-  starLabel: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary, height: 24, marginBottom: SPACING.xl },
+  starLabel: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading, height: 24, marginBottom: SPACING.xl },
   modalActions: { flexDirection: 'row', gap: SPACING.md, width: '100%' },
   modalCancelBtn: {
     flex: 1, paddingVertical: SPACING.md, borderRadius: RADIUS.full,
-    borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center',
+    borderWidth: 1.5, borderColor: C.border, alignItems: 'center',
   },
-  modalCancelText: { color: COLORS.textSecondary, fontWeight: '600', fontSize: 15 },
+  modalCancelText: { fontFamily: FONTS.semiBold, color: C.sub, fontSize: 15 },
   modalSubmitBtn: {
     flex: 2, paddingVertical: SPACING.md, borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primary, alignItems: 'center',
+    backgroundColor: C.purple, alignItems: 'center',
   },
-  modalSubmitBtnDisabled: { backgroundColor: COLORS.textMuted },
-  modalSubmitText: { color: COLORS.white, fontWeight: '700', fontSize: 15 },
+  modalSubmitBtnDisabled: { backgroundColor: C.muted },
+  modalSubmitText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 15 },
   actionBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: C.purple,
     paddingVertical: SPACING.md,
     borderRadius: RADIUS.full,
     alignItems: 'center',
@@ -695,20 +719,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.sm,
   },
-  joinedBtn: { backgroundColor: COLORS.success },
-  requestedBtn: { backgroundColor: COLORS.warning },
-  fullBtn: { backgroundColor: COLORS.textMuted },
-  actionBtnText: { color: COLORS.white, fontSize: 15, fontWeight: '700' },
+  joinedBtn: { backgroundColor: C.success },
+  requestedBtn: { backgroundColor: C.warning },
+  fullBtn: { backgroundColor: C.muted },
+  actionBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 15 },
   chatBtn: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.primary + '15',
+    backgroundColor: 'rgba(63,47,134,0.08)',
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
+    borderColor: C.purple,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
   },
-  chatBtnText: { color: COLORS.primary, fontSize: 9, fontWeight: '700' },
+  chatBtnText: { fontFamily: FONTS.bold, color: C.purple, fontSize: 9 },
 });

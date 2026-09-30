@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { INTERESTS } from '../constants/interests';
 import StarRating from '../components/StarRating';
+import { storage } from '../services/firebase';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
@@ -36,17 +39,24 @@ const initials = (name?: string) =>
 
 const RESULT_FILTERS = ['5 results', '10 results', 'All results'];
 
-const PREFERENCES: { key: 'bestHand' | 'courtPosition' | 'matchType' | 'preferredTime'; emoji: string; label: string }[] = [
-  { key: 'bestHand', emoji: '🤚', label: 'Best hand' },
-  { key: 'courtPosition', emoji: '📍', label: 'Court position' },
-  { key: 'matchType', emoji: '🥇', label: 'Match type' },
-  { key: 'preferredTime', emoji: '🌅', label: 'Preferred time to play' },
+type PrefKey = 'bestHand' | 'courtPosition' | 'matchType' | 'preferredTime';
+
+const PREFERENCES: { key: PrefKey; emoji: string; label: string; options: string[] }[] = [
+  { key: 'bestHand', emoji: '🤚', label: 'Best hand', options: ['Right', 'Left', 'Ambidextrous'] },
+  { key: 'courtPosition', emoji: '📍', label: 'Court position', options: ['Left court', 'Right court', 'Either'] },
+  { key: 'matchType', emoji: '🥇', label: 'Match type', options: ['Singles', 'Doubles', 'Either'] },
+  { key: 'preferredTime', emoji: '🌅', label: 'Preferred time to play', options: ['Morning', 'Afternoon', 'Evening', 'Night'] },
 ];
 
 export default function ProfileScreen({ navigation }: Props) {
   const { user, logout, isSubscribed, setUser } = useAuth();
   const { activities } = useActivities();
   const [resultFilter, setResultFilter] = useState(RESULT_FILTERS[0]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [prefsModalVisible, setPrefsModalVisible] = useState(false);
+  const [draftPrefs, setDraftPrefs] = useState<Record<PrefKey, string>>({
+    bestHand: '', courtPosition: '', matchType: '', preferredTime: '',
+  });
 
   const subscribed = isSubscribed();
   const myUid = user?.uid || 'demo_user';
@@ -64,7 +74,66 @@ export default function ProfileScreen({ navigation }: Props) {
   };
 
   const editPreferences = () => {
-    Alert.alert('Coming soon', 'Editing player preferences will be available in a future update.');
+    setDraftPrefs({
+      bestHand: user?.bestHand || '',
+      courtPosition: user?.courtPosition || '',
+      matchType: user?.matchType || '',
+      preferredTime: user?.preferredTime || '',
+    });
+    setPrefsModalVisible(true);
+  };
+
+  const savePreferences = async () => {
+    if (!user) return;
+    await setUser({ ...user, ...draftPrefs });
+    setPrefsModalVisible(false);
+  };
+
+  const uploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+    if (!user) return;
+    setUploadingPhoto(true);
+    try {
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const photoRef = ref(storage, `profiles/${user.uid}/avatar.jpg`);
+      await uploadBytes(photoRef, blob);
+      const photoURL = await getDownloadURL(photoRef);
+      await setUser({ ...user, photoURL });
+    } catch {
+      Alert.alert('Error', 'Could not upload photo. Please try again.');
+    }
+    setUploadingPhoto(false);
+  };
+
+  const pickFromCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera access is required to take a photo.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.7 });
+    if (!result.canceled) uploadPhoto(result.assets[0]);
+  };
+
+  const pickFromLibrary = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Photo library access is required to choose a photo.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.7,
+    });
+    if (!result.canceled) uploadPhoto(result.assets[0]);
+  };
+
+  const changePhoto = () => {
+    if (uploadingPhoto) return;
+    Alert.alert('Profile Photo', undefined, [
+      { text: 'Take Photo', onPress: pickFromCamera },
+      { text: 'Choose from Library', onPress: pickFromLibrary },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   };
 
   const removeInterest = (id: string) => {
@@ -97,9 +166,20 @@ export default function ProfileScreen({ navigation }: Props) {
       <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
         {/* Identity */}
         <View style={styles.identityRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(user?.name)}</Text>
-          </View>
+          <TouchableOpacity style={styles.avatar} onPress={changePhoto} activeOpacity={0.85}>
+            {user?.photoURL ? (
+              <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initials(user?.name)}</Text>
+            )}
+            <View style={styles.avatarBadge}>
+              {uploadingPhoto ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons name="camera" size={13} color="#FFFFFF" />
+              )}
+            </View>
+          </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{user?.name || 'Your Name'}</Text>
             <StarRating rating={user?.rating || 0} size={14} showLabel reviewCount={user?.reviewCount} />
@@ -222,6 +302,44 @@ export default function ProfileScreen({ navigation }: Props) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <Modal visible={prefsModalVisible} transparent animationType="slide" onRequestClose={() => setPrefsModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Player Preferences</Text>
+              <TouchableOpacity onPress={() => setPrefsModalVisible(false)} hitSlop={8}>
+                <Ionicons name="close" size={22} color={C.heading} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={{ paddingBottom: SPACING.md }}>
+              {PREFERENCES.map((p) => (
+                <View key={p.key} style={styles.modalPrefBlock}>
+                  <Text style={styles.modalPrefLabel}>{p.emoji} {p.label}</Text>
+                  <View style={styles.modalOptionsRow}>
+                    {p.options.map((opt) => {
+                      const active = draftPrefs[p.key] === opt;
+                      return (
+                        <TouchableOpacity
+                          key={opt}
+                          style={[styles.modalOptionChip, active && styles.modalOptionChipActive]}
+                          onPress={() => setDraftPrefs((prev) => ({ ...prev, [p.key]: active ? '' : opt }))}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={[styles.modalOptionText, active && styles.modalOptionTextActive]}>{opt}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={savePreferences} activeOpacity={0.85}>
+              <Text style={styles.modalSaveBtnText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -254,7 +372,14 @@ const styles = StyleSheet.create({
     backgroundColor: C.heading,
     alignItems: 'center', justifyContent: 'center',
   },
+  avatarImage: { width: 64, height: 64, borderRadius: 32 },
   avatarText: { fontFamily: FONTS.bold, fontSize: 20, color: '#FFFFFF', letterSpacing: 0.7 },
+  avatarBadge: {
+    position: 'absolute', right: -2, bottom: -2,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: C.purple, borderWidth: 2, borderColor: '#FFFFFF',
+    alignItems: 'center', justifyContent: 'center',
+  },
   name: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
   locationText: { fontSize: 12, fontFamily: FONTS.medium, color: C.sub },
@@ -266,7 +391,7 @@ const styles = StyleSheet.create({
   },
   statCol: { flex: 1, alignItems: 'center' },
   statValue: { fontFamily: FONTS.extraBold, fontSize: 22, color: C.heading },
-  statLabel: { fontFamily: FONTS.regular, fontSize: 11, color: C.sub, marginTop: 2 },
+  statLabel: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, marginTop: 2 },
   statDivider: { width: 1, height: '70%', backgroundColor: C.border },
 
   actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.lg },
@@ -291,7 +416,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.2, borderColor: C.border,
   },
   interestChipActive: { backgroundColor: C.heading, borderColor: C.heading },
-  interestChipText: { fontFamily: FONTS.bold, fontSize: 12, color: C.sub },
+  interestChipText: { fontFamily: FONTS.bold, fontSize: 13, color: C.sub },
   interestChipTextActive: { color: '#FFFFFF' },
   addChip: {
     borderRadius: RADIUS.lg, minHeight: 44, paddingHorizontal: SPACING.md,
@@ -299,10 +424,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1.2, borderColor: C.border,
   },
-  addChipText: { fontFamily: FONTS.bold, fontSize: 12, color: C.sub },
+  addChipText: { fontFamily: FONTS.bold, fontSize: 13, color: C.sub },
 
   section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 15.5, color: C.heading },
+  sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
   filterRow: { flexDirection: 'row', gap: SPACING.xs, marginTop: SPACING.sm, marginBottom: SPACING.sm },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -312,7 +437,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.2, borderColor: C.border,
   },
   filterChipActive: { backgroundColor: C.border, borderColor: C.border },
-  filterChipText: { fontFamily: FONTS.semiBold, fontSize: 11, color: C.sub },
+  filterChipText: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.sub },
   filterChipTextActive: { color: C.heading },
   progressCard: {
     alignItems: 'center', gap: 6,
@@ -320,11 +445,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border,
     borderRadius: RADIUS.lg, paddingVertical: SPACING.xl, paddingHorizontal: SPACING.md,
   },
-  progressTitle: { fontFamily: FONTS.bold, fontSize: 13, color: C.heading, marginTop: 6 },
-  progressSub: { fontFamily: FONTS.regular, fontSize: 10.5, color: C.sub, textAlign: 'center' },
+  progressTitle: { fontFamily: FONTS.bold, fontSize: 14, color: C.heading, marginTop: 6 },
+  progressSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, textAlign: 'center' },
 
   prefsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
-  prefsEdit: { fontFamily: FONTS.semiBold, fontSize: 12, color: C.purple },
+  prefsEdit: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.purple },
   prefRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
     backgroundColor: '#FFFFFF',
@@ -332,8 +457,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
   },
   prefEmoji: { fontSize: 19 },
-  prefLabel: { fontFamily: FONTS.medium, fontSize: 11.5, color: C.sub },
-  prefValue: { fontFamily: FONTS.bold, fontSize: 11.5, color: C.heading, marginTop: 2 },
+  prefLabel: { fontFamily: FONTS.medium, fontSize: 12, color: C.sub },
+  prefValue: { fontFamily: FONTS.bold, fontSize: 12.5, color: C.heading, marginTop: 2 },
 
   logoutBtn: {
     height: 44, borderRadius: RADIUS.xl,
@@ -342,4 +467,31 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   logoutBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: C.error, letterSpacing: 0.3 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: '#FFFFFF', borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: SPACING.xl, maxHeight: '75%',
+  },
+  modalHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  modalTitle: { fontFamily: FONTS.extraBold, fontSize: 18, color: C.heading },
+  modalPrefBlock: { marginBottom: SPACING.lg },
+  modalPrefLabel: { fontFamily: FONTS.bold, fontSize: 14, color: C.heading, marginBottom: SPACING.sm },
+  modalOptionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
+  modalOptionChip: {
+    minHeight: 40, paddingHorizontal: SPACING.md, borderRadius: RADIUS.full,
+    borderWidth: 1.2, borderColor: C.border, backgroundColor: '#FFFFFF',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modalOptionChipActive: { backgroundColor: C.purple, borderColor: C.purple },
+  modalOptionText: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.sub },
+  modalOptionTextActive: { color: '#FFFFFF' },
+  modalSaveBtn: {
+    height: 50, borderRadius: RADIUS.full, backgroundColor: C.heading,
+    alignItems: 'center', justifyContent: 'center', marginTop: SPACING.sm,
+  },
+  modalSaveBtnText: { fontFamily: FONTS.extraBold, fontSize: 15, color: C.lime },
 });

@@ -46,11 +46,11 @@ const colorForInterest = (id: string) => {
   return CATEGORY_PALETTE[hash % CATEGORY_PALETTE.length];
 };
 
+// "Book a court" and "Learn" are pulled until those features actually exist —
+// a dead "Coming soon" tap is worse than one fewer button.
 const QUICK_ACTIONS = [
-  { key: 'find',  label: 'Find a game',  icon: 'magnify' as const,                  onPress: (nav: any) => nav.navigate('Community') },
+  { key: 'find',  label: 'Find a game',  icon: 'magnify' as const,                  onPress: (nav: any) => nav.navigate('FindGame') },
   { key: 'host',  label: 'Add a game',   icon: 'calendar-plus-outline' as const,    onPress: (nav: any) => nav.navigate('CreateActivity') },
-  { key: 'book',  label: 'Book a court', icon: 'view-grid-outline' as const,        onPress: (nav: any) => {} },
-  { key: 'learn', label: 'Learn',        icon: 'school-outline' as const,           onPress: (nav: any) => {} },
 ];
 
 const titleCase = (s: string) => s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
@@ -249,7 +249,7 @@ export default function HomeScreen({ navigation }: Props) {
                 <Ionicons name="information-circle-outline" size={13} color={C.muted} />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => (navigation as any).navigate('Community')}>
+            <TouchableOpacity onPress={() => navigation.navigate('AllGames')}>
               <Text style={styles.seeAll}>See all</Text>
             </TouchableOpacity>
           </View>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.purple },
   bannerSub: { fontFamily: FONTS.regular, fontSize: 9.7, color: C.sub, marginTop: 2 },
 
-  quickRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  quickRow: { flexDirection: 'row', gap: SPACING.xl },
   quickItem: { alignItems: 'center', gap: 8, width: 64 },
   quickIconWrap: {
     width: 56, height: 56, borderRadius: 28,

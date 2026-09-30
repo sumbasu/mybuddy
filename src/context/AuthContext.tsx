@@ -8,6 +8,17 @@ import { User } from '../types';
 
 const USER_CACHE_KEY = 'mybuddy_user_profile';
 
+const PROVIDER_ID_MAP: Record<string, User['signInProvider']> = {
+  'phone': 'phone',
+  'google.com': 'google',
+  'apple.com': 'apple',
+  'password': 'email',
+};
+
+function resolveSignInProvider(firebaseUser: { providerData: { providerId: string }[] }): User['signInProvider'] {
+  return PROVIDER_ID_MAP[firebaseUser.providerData[0]?.providerId] ?? 'unknown';
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -29,7 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // Active Firebase session — fetch fresh profile from Firestore
-        await loadFromFirestore(firebaseUser.uid, firebaseUser.email || '', firebaseUser.displayName || '');
+        await loadFromFirestore(
+          firebaseUser.uid,
+          firebaseUser.email || '',
+          firebaseUser.displayName || '',
+          resolveSignInProvider(firebaseUser)
+        );
         setAnalyticsUserId(firebaseUser.uid);
         setCrashlyticsUserId(firebaseUser.uid);
         // Best-effort — a denied permission or offline device just means no
@@ -48,7 +64,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Called when Firebase session is active — reads/writes Firestore
-  const loadFromFirestore = async (uid: string, email: string, displayName: string) => {
+  const loadFromFirestore = async (
+    uid: string,
+    email: string,
+    displayName: string,
+    signInProvider: User['signInProvider']
+  ) => {
     try {
       const ref = doc(db, 'users', uid);
       const snap = await getDoc(ref);
@@ -73,6 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           u.nameLower = u.name.toLowerCase();
           await setDoc(ref, { name: u.name, nameLower: u.nameLower }, { merge: true });
         }
+        // Backfill signInProvider for accounts created before this field
+        // existed — inferred from the current session, which is accurate
+        // here since this app doesn't support linking multiple providers.
+        if (!u.signInProvider) {
+          u.signInProvider = signInProvider;
+          await setDoc(ref, { signInProvider }, { merge: true });
+        }
         await saveToCache(u);
         setUserState(u);
       } else {
@@ -94,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           referralCount: 0,
           freeMonthsEarned: 0,
           discountPct: 0,
+          signInProvider,
         };
         await setDoc(ref, newUser);
         await saveToCache(newUser);
