@@ -12,7 +12,7 @@ const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 
 const C = {
   purple: '#3F2F86',
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   heading: '#16213E',
   sub: '#767683',
   link: '#3F2F86',

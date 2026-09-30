@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import CityPicker from '../components/CityPicker';
@@ -13,6 +14,7 @@ import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'ProfileSetup'> };
 
 export default function ProfileSetupScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { user, setUser } = useAuth();
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
@@ -109,7 +111,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       {/* Fixed footer, outside the ScrollView — keeps the button's touch
           target from drifting when the city dropdown collapses and the
           scroll content resizes underneath it. */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <TouchableOpacity
           style={[styles.btn, (!isValid || loading) && styles.btnDisabled]}
           onPress={saveProfile}
@@ -140,7 +142,6 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
-    paddingBottom: 36,
   },
   back: { flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: SPACING.lg, alignSelf: 'flex-start' },
   backText: { fontSize: 16, color: COLORS.textPrimary, marginLeft: 2 },

@@ -4,6 +4,7 @@ import {
   ActivityIndicator, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   doc, onSnapshot, updateDoc, arrayUnion, arrayRemove,
   increment, collection, addDoc, serverTimestamp, setDoc, getDoc,
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export default function ActivityDetailScreen({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
   const { activityId } = route.params;
   const { user, isSubscribed } = useAuth();
   const [requested, setRequested] = useState(false);
@@ -395,7 +397,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
         {isCreator ? (
           // Creator actions
           <TouchableOpacity
@@ -645,7 +647,6 @@ const styles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: COLORS.surface,
     padding: SPACING.lg,
-    paddingBottom: 36,
     ...SHADOW.lg,
   },
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },

@@ -14,7 +14,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'EditPr
 
 // White page with a purple header and purple cards — matches Settings/Profile.
 const C = {
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   purple: '#3F2F86',
   label: 'rgba(63,47,134,0.45)',
   heading: '#16213E',

@@ -3,6 +3,7 @@ import { NavigationContainer, DefaultTheme, useNavigationContainerRef } from '@r
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants/theme';
@@ -38,6 +39,12 @@ const Tab = createBottomTabNavigator<TabParamList>();
 // 3-tab structure matching the Figma design (Home / Community / Profile) —
 // Create, Chats, and Activities-detail flows are reached via the root stack instead of tabs.
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  // Android's edge-to-edge mode (app.json) draws the app behind the system
+  // nav bar, so the tab bar must add the real inset itself instead of a
+  // fixed value — otherwise it sits partly behind gesture/button nav bars.
+  const tabBarPaddingBottom = Math.max(insets.bottom, 10);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -46,9 +53,9 @@ function MainTabs() {
         tabBarInactiveTintColor: COLORS.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginBottom: 4 },
         tabBarStyle: {
-          height: 72,
+          height: 62 + tabBarPaddingBottom,
           paddingTop: 8,
-          paddingBottom: 10,
+          paddingBottom: tabBarPaddingBottom,
           borderTopWidth: 1,
           borderTopColor: COLORS.border,
           backgroundColor: COLORS.surface,

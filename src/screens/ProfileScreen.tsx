@@ -14,7 +14,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 // White-body layout matching the Playtomic reference — purple header, white sheet below.
 const C = {
   headerBg: '#3F2F86',
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   card: '#FFFFFF',
   heading: '#16213E',
   sub: '#767683',

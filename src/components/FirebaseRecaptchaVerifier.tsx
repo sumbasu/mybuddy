@@ -21,6 +21,11 @@ interface FirebaseConfig {
 export interface FirebaseRecaptchaVerifierHandle {
   type: 'recaptcha';
   verify: () => Promise<string>;
+  // Newer Firebase Auth SDKs call this internally (not part of the public
+  // ApplicationVerifier type) to clear state before a retry — e.g. after a
+  // failed signInWithPhoneNumber attempt. Without it, Firebase throws
+  // "verifier?._reset is not a function".
+  _reset: () => void;
 }
 
 interface Props {
@@ -182,6 +187,14 @@ const FirebaseRecaptchaVerifier = forwardRef<FirebaseRecaptchaVerifierHandle, Pr
         setVisibleLoaded(false);
       }
     }),
+    _reset: () => {
+      pending.current = null;
+      setInvisibleVerify(false);
+      setInvisibleLoaded(false);
+      setInvisibleKey((k) => k + 1);
+      setVisible(false);
+      setVisibleLoaded(false);
+    },
   }));
 
   return (
