@@ -18,7 +18,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'AuthCh
 // Phone entry lives directly on this screen (no separate "continue with
 // phone" tap) so sign-in is a single step no matter which method is used.
 const C = {
-  bg: '#FFFFFF',
+  bg: '#FAFAFA',
   heading: '#1A1A1A',
   sub: '#888888',
   fieldBg: '#F2F2F5',

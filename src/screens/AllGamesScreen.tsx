@@ -15,7 +15,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'AllGam
 // Same white-sheet-on-purple-header layout as the rest of the app.
 const C = {
   headerBg: '#3F2F86',
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   card: '#FFFFFF',
   heading: '#16213E',
   sub: '#767683',

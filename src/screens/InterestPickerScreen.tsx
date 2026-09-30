@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../types';
 import { INTERESTS, INTEREST_CATEGORIES } from '../constants/interests';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +14,7 @@ import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'InterestPicker'> };
 
 export default function InterestPickerScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { user, setUser } = useAuth();
   const [selected, setSelected] = useState<string[]>(user?.interests || []);
   const [loading, setLoading] = useState(false);
@@ -94,7 +96,7 @@ export default function InterestPickerScreen({ navigation }: Props) {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <TouchableOpacity
           style={[styles.btn, (selected.length < 2 || loading) && styles.btnDisabled]}
           onPress={save}
@@ -173,7 +175,6 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: COLORS.surface,
     padding: SPACING.lg,
-    paddingBottom: 36,
     ...SHADOW.lg,
   },
   btn: {

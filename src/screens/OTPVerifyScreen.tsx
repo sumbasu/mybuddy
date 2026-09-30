@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPendingConfirmation, clearPendingConfirmation } from '../services/phoneAuth';
 import { RootStackParamList } from '../types';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
@@ -18,7 +19,7 @@ type Props = {
 // Same white-background palette as PhoneNumberScreen — this is a direct
 // continuation of that step.
 const C = {
-  bg: '#FFFFFF',
+  bg: '#FAFAFA',
   heading: '#16213E',
   sub: '#888888',
   boxBorder: '#E1E3E8',
@@ -32,6 +33,7 @@ const C = {
 };
 
 export default function OTPVerifyScreen({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
   const { phone } = route.params;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -148,7 +150,7 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <TouchableOpacity
           style={[styles.btn, (otp.join('').length < 6 || loading) && styles.btnDisabled]}
           onPress={verify}
@@ -186,7 +188,7 @@ const styles = StyleSheet.create({
 
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: 36,
+    paddingHorizontal: SPACING.lg, paddingTop: SPACING.md,
     backgroundColor: C.bg,
   },
   btn: {

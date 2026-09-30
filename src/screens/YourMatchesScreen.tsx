@@ -69,7 +69,7 @@ export default function YourMatchesScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
   backBtn: { paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.sm },
   title: {
     fontFamily: FONTS.extraBold, fontSize: 28, color: C.text,

@@ -16,7 +16,7 @@ import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 // White page with purple accents — matches the rest of the app, not the old
 // dark-gradient theme this screen used to carry.
 const C = {
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   purple: '#3F2F86',
   heading: '#16213E',
   sub: '#767683',
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   pickerSheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
     borderTopLeftRadius: RADIUS.xl,
     borderTopRightRadius: RADIUS.xl,
     paddingBottom: 40,

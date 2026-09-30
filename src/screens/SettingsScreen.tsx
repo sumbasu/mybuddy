@@ -13,7 +13,7 @@ const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 
 // White sheet between a purple header and the rest of the app — matches the Profile screen.
 const C = {
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   purple: '#3F2F86',
   purpleBorder: 'rgba(255,255,255,0.15)',
   label: 'rgba(63,47,134,0.45)',

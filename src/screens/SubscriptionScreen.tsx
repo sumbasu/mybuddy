@@ -12,7 +12,7 @@ import Constants from 'expo-constants';
 // White sheet with a purple header — matches Profile/Settings/Edit Profile,
 // not the old dark-gradient onboarding theme this screen used to carry.
 const C = {
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   purple: '#3F2F86',
   heading: '#16213E',
   sub: '#767683',

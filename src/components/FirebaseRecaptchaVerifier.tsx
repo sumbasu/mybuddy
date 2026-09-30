@@ -188,10 +188,14 @@ const FirebaseRecaptchaVerifier = forwardRef<FirebaseRecaptchaVerifierHandle, Pr
         setVisibleLoaded(false);
       }
     }),
-    // Our own onVerify/onError handlers already reset the invisible WebView
-    // (remounting it via invisibleKey) after each attempt, so there's
-    // nothing extra to do here — this just needs to exist and not throw.
-    _reset: () => {},
+    _reset: () => {
+      pending.current = null;
+      setInvisibleVerify(false);
+      setInvisibleLoaded(false);
+      setInvisibleKey((k) => k + 1);
+      setVisible(false);
+      setVisibleLoaded(false);
+    },
   }));
 
   return (

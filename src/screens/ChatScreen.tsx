@@ -19,7 +19,7 @@ import { FONTS, SPACING, RADIUS } from '../constants/theme';
 // White sheet with a purple header — matches Profile/Settings/ActivityDetail,
 // not the old dark-gradient theme this screen used to carry.
 const C = {
-  page: '#FFFFFF',
+  page: '#FAFAFA',
   purple: '#3F2F86',
   heading: '#16213E',
   sub: '#767683',
