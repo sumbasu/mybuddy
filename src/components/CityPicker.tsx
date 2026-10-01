@@ -13,9 +13,40 @@ interface Props {
   onChange: (city: string) => void;
   label?: string;
   placeholder?: string;
+  // 'dark' (default) matches the purple-gradient onboarding screens this
+  // component was built for. 'light' is for white-card screens (Edit
+  // Profile's redesign) where the dark variant's cream-on-translucent
+  // colors would be unreadable.
+  variant?: 'dark' | 'light';
 }
 
-export default function CityPicker({ value, onChange, label = 'Location', placeholder = 'Search location...' }: Props) {
+const THEME = {
+  dark: {
+    label: COLORS.textSecondary,
+    inputBg: COLORS.surface,
+    inputBorder: COLORS.border,
+    text: COLORS.textPrimary,
+    placeholder: COLORS.textMuted,
+    icon: COLORS.textMuted,
+    dropdownBg: COLORS.surface,
+    dropdownBorder: COLORS.border,
+    suggestionBorder: COLORS.border,
+  },
+  light: {
+    label: '#6E6E80',
+    inputBg: '#FFFFFF',
+    inputBorder: '#E6E6EC',
+    text: '#1B1F3B',
+    placeholder: '#9A9AAB',
+    icon: '#9A9AAB',
+    dropdownBg: '#FFFFFF',
+    dropdownBorder: '#E6E6EC',
+    suggestionBorder: '#E6E6EC',
+  },
+};
+
+export default function CityPicker({ value, onChange, label = 'Location', placeholder = 'Search location...', variant = 'dark' }: Props) {
+  const t = THEME[variant];
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
@@ -114,27 +145,27 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
   }, []);
 
   const borderColor = !focused
-    ? COLORS.border
+    ? t.inputBorder
     : valid
     ? '#C8DB2E'
     : COLORS.primary;
 
   return (
     <View style={styles.wrapper}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={[styles.label, { color: t.label }]}>{label}</Text> : null}
 
-      <View style={[styles.inputRow, { borderColor }]}>
+      <View style={[styles.inputRow, { borderColor, backgroundColor: t.inputBg }]}>
         <Ionicons
           name="location-outline"
           size={18}
-          color={valid ? '#C8DB2E' : focused ? COLORS.primary : COLORS.textMuted}
+          color={valid ? '#C8DB2E' : focused ? COLORS.primary : t.icon}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: t.text }]}
           value={query}
           onChangeText={handleChange}
           placeholder={placeholder}
-          placeholderTextColor={COLORS.textMuted}
+          placeholderTextColor={t.placeholder}
           onFocus={() => {
             setFocused(true);
             setSuggestions(searchCities(query, priorityCity));
@@ -149,14 +180,14 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
           returnKeyType="done"
           autoCorrect={false}
         />
-        {remoteLoading && <ActivityIndicator size="small" color={COLORS.textMuted} />}
+        {remoteLoading && <ActivityIndicator size="small" color={t.icon} />}
         {valid && <Ionicons name="checkmark-circle" size={18} color={'#C8DB2E'} />}
         {showNoMatch && (
           <Ionicons name="alert-circle" size={18} color={COLORS.error} />
         )}
         {query.length > 0 && (
           <TouchableOpacity onPress={() => { setQuery(''); onChange(''); setSuggestions([]); }} hitSlop={12}>
-            <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
+            <Ionicons name="close-circle" size={18} color={t.icon} />
           </TouchableOpacity>
         )}
       </View>
@@ -170,12 +201,12 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
 
       {/* Suggestions dropdown */}
       {showDropdown && (
-        <View style={styles.dropdown}>
+        <View style={[styles.dropdown, { backgroundColor: t.dropdownBg, borderColor: t.dropdownBorder }]}>
           <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
             {suggestions.map((city) => (
-              <TouchableOpacity key={city} style={styles.suggestion} onPress={() => select(city)}>
+              <TouchableOpacity key={city} style={[styles.suggestion, { borderBottomColor: t.suggestionBorder }]} onPress={() => select(city)}>
                 <Ionicons name="location-outline" size={14} color={COLORS.primary} />
-                <Text style={styles.suggestionText}>{city}</Text>
+                <Text style={[styles.suggestionText, { color: t.text }]}>{city}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -188,28 +219,27 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
 const styles = StyleSheet.create({
   wrapper: { marginBottom: SPACING.sm },
   label: {
-    fontSize: 12, fontWeight: '600', color: COLORS.textSecondary,
+    fontSize: 12, fontWeight: '600',
     textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: SPACING.xs,
   },
   inputRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     borderWidth: 1.5, borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md, paddingVertical: 11,
-    backgroundColor: COLORS.surface,
   },
-  input: { flex: 1, fontSize: 15, color: COLORS.textPrimary },
+  input: { flex: 1, fontSize: 15 },
   errorHint: { fontSize: 11, color: COLORS.error, marginTop: 4, marginLeft: 2 },
   dropdown: {
-    backgroundColor: COLORS.surface, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
     maxHeight: 220, marginTop: 4, ...SHADOW.md,
   },
   suggestion: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     minHeight: 44,
     paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
   },
-  suggestionText: { fontSize: 14, color: COLORS.textPrimary },
+  suggestionText: { fontSize: 14 },
   noResultText: { fontSize: 13, color: COLORS.textMuted, fontStyle: 'italic' },
 });
