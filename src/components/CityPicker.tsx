@@ -8,14 +8,34 @@ import { searchCities, isValidCity } from '../constants/cities';
 import { searchRoadsAndLandmarks } from '../services/geocoding';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
+// Light palette for use on a white/light page background (e.g. onboarding
+// screens). The default styling below is tuned for the dark purple cards
+// this component sits in on Edit Profile.
+const LIGHT = {
+  label: '#767683',
+  border: '#ECEBF2',
+  surface: '#FFFFFF',
+  text: '#16213E',
+  muted: '#9A9AA6',
+};
+
 interface Props {
   value: string;
   onChange: (city: string) => void;
   label?: string;
   placeholder?: string;
+  variant?: 'dark' | 'light';
 }
 
-export default function CityPicker({ value, onChange, label = 'Location', placeholder = 'Search location...' }: Props) {
+export default function CityPicker({
+  value, onChange, label = 'Location', placeholder = 'Search location...', variant = 'dark',
+}: Props) {
+  const light = variant === 'light';
+  const labelColor = light ? LIGHT.label : COLORS.textSecondary;
+  const borderColorDefault = light ? LIGHT.border : COLORS.border;
+  const surfaceColor = light ? LIGHT.surface : COLORS.surface;
+  const textColor = light ? LIGHT.text : COLORS.textPrimary;
+  const mutedColor = light ? LIGHT.muted : COLORS.textMuted;
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
@@ -114,27 +134,27 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
   }, []);
 
   const borderColor = !focused
-    ? COLORS.border
+    ? borderColorDefault
     : valid
     ? '#C8DB2E'
     : COLORS.primary;
 
   return (
     <View style={styles.wrapper}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={[styles.label, { color: labelColor }]}>{label}</Text> : null}
 
-      <View style={[styles.inputRow, { borderColor }]}>
+      <View style={[styles.inputRow, { borderColor, backgroundColor: surfaceColor }]}>
         <Ionicons
           name="location-outline"
           size={18}
-          color={valid ? '#C8DB2E' : focused ? COLORS.primary : COLORS.textMuted}
+          color={valid ? '#C8DB2E' : focused ? COLORS.primary : mutedColor}
         />
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: textColor }]}
           value={query}
           onChangeText={handleChange}
           placeholder={placeholder}
-          placeholderTextColor={COLORS.textMuted}
+          placeholderTextColor={mutedColor}
           onFocus={() => {
             setFocused(true);
             setSuggestions(searchCities(query, priorityCity));
@@ -149,14 +169,14 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
           returnKeyType="done"
           autoCorrect={false}
         />
-        {remoteLoading && <ActivityIndicator size="small" color={COLORS.textMuted} />}
+        {remoteLoading && <ActivityIndicator size="small" color={mutedColor} />}
         {valid && <Ionicons name="checkmark-circle" size={18} color={'#C8DB2E'} />}
         {showNoMatch && (
           <Ionicons name="alert-circle" size={18} color={COLORS.error} />
         )}
         {query.length > 0 && (
           <TouchableOpacity onPress={() => { setQuery(''); onChange(''); setSuggestions([]); }} hitSlop={12}>
-            <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
+            <Ionicons name="close-circle" size={18} color={mutedColor} />
           </TouchableOpacity>
         )}
       </View>
@@ -170,12 +190,12 @@ export default function CityPicker({ value, onChange, label = 'Location', placeh
 
       {/* Suggestions dropdown */}
       {showDropdown && (
-        <View style={styles.dropdown}>
+        <View style={[styles.dropdown, { backgroundColor: surfaceColor, borderColor: borderColorDefault }]}>
           <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
             {suggestions.map((city) => (
-              <TouchableOpacity key={city} style={styles.suggestion} onPress={() => select(city)}>
+              <TouchableOpacity key={city} style={[styles.suggestion, { borderBottomColor: borderColorDefault }]} onPress={() => select(city)}>
                 <Ionicons name="location-outline" size={14} color={COLORS.primary} />
-                <Text style={styles.suggestionText}>{city}</Text>
+                <Text style={[styles.suggestionText, { color: textColor }]}>{city}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>

@@ -41,12 +41,10 @@ const C = {
 const TERMS_URL = 'https://mybuddy-bd717.web.app/terms-of-service.html';
 const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 
-// Sign In with Apple's capability was pulled from app.json/entitlements —
-// the free signing team can't hold it, so it's disabled here too to avoid
-// showing a button that would fail every tap. Flip this back to true (and
-// re-add the "expo-apple-authentication" plugin to app.json) once signed
-// with a paid Apple Developer Program team.
-const APPLE_SIGNIN_ENABLED = false;
+// Sign In with Apple's capability requires a paid Apple Developer Program
+// team (a free/personal signing team can't hold the entitlement) — now that
+// the project is signed with a paid team, this is re-enabled.
+const APPLE_SIGNIN_ENABLED = true;
 
 export default function AuthChoiceScreen({ navigation }: Props) {
   const [countryCode] = useState('+91');

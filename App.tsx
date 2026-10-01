@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import GradientBackground from './src/components/GradientBackground';
 import { recordError } from './src/services/firebaseNative';
+import { requestTrackingPermission } from './src/services/tracking';
 
 // Routes uncaught JS exceptions to Crashlytics in addition to the default
 // red-box/console behavior, so crashes are visible in the Firebase console.
@@ -34,6 +35,13 @@ export default function App() {
     Poppins_700Bold,
     Poppins_800ExtraBold,
   });
+
+  // Requested once the UI is actually visible, not before — Apple's own
+  // guidance is to avoid firing this system prompt before the app has shown
+  // the user anything.
+  useEffect(() => {
+    if (fontsLoaded) requestTrackingPermission();
+  }, [fontsLoaded]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

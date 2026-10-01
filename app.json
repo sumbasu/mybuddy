@@ -66,8 +66,15 @@
       "@react-native-firebase/analytics",
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/messaging",
+      "expo-apple-authentication",
       "./plugins/withRNFirebaseDisableSPM.js",
-      "./plugins/withAndroidNavBarNoScrim.js"
+      "./plugins/withAndroidNavBarNoScrim.js",
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Sweatbud uses this to understand how you use the app and improve your experience. Your data is never sold to third parties."
+        }
+      ]
     ],
     "extra": {
       "eas": {
