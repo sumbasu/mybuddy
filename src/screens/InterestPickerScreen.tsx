@@ -13,6 +13,22 @@ import { COLORS, FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'InterestPicker'> };
 
+const MIN_SELECTED = 2;
+
+// Purple header + rounded white sheet — same convention as Welcome/Settings/Profile.
+const C = {
+  purple: '#3F2F86',
+  page: '#FAFAFA',
+  card: '#FFFFFF',
+  heading: '#16213E',
+  sub: '#767683',
+  subtle: '#9A9AA6',
+  border: '#ECEBF2',
+  tint: '#ECEBF4',
+  onBrandMuted: 'rgba(255,255,255,0.72)',
+  disabled: '#DCDCE4',
+};
+
 export default function InterestPickerScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const { user, setUser } = useAuth();
@@ -25,8 +41,12 @@ export default function InterestPickerScreen({ navigation }: Props) {
     );
   };
 
+  const count = selected.length;
+  const canContinue = count >= MIN_SELECTED && !loading;
+  const remaining = Math.max(0, MIN_SELECTED - count);
+
   const save = async () => {
-    if (selected.length < 2 || !user) return;
+    if (count < MIN_SELECTED || !user) return;
     setLoading(true);
     await setUser({ ...user, interests: selected });
     // Reached two ways: pushed from Profile/EditProfile inside the main stack
@@ -40,99 +60,118 @@ export default function InterestPickerScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.root}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         {navigation.canGoBack() && (
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color={COLORS.textPrimary} />
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={COLORS.white} />
           </TouchableOpacity>
         )}
-        <Text style={styles.title}>Pick Your Interests</Text>
+        <Text style={styles.title}>Choose an activity</Text>
         <Text style={styles.subtitle}>
-          Choose at least 2 — we'll match you with people who share them
+          Choose at least {MIN_SELECTED} and we'll match you with people who share them.
         </Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{selected.length} selected</Text>
-        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {INTEREST_CATEGORIES.map((cat) => (
-          <View key={cat.id} style={styles.section}>
-            <Text style={styles.categoryLabel}>{cat.label}</Text>
-            <View style={styles.grid}>
-              {INTERESTS.filter((i) => i.category === cat.id).map((interest) => {
-                const isSelected = selected.includes(interest.id);
-                return (
-                  <TouchableOpacity
-                    key={interest.id}
-                    style={[styles.chip, isSelected && styles.chipSelected]}
-                    onPress={() => toggle(interest.id)}
-                    activeOpacity={0.8}
-                  >
-                    <InterestIcon id={interest.id} size={16} color={isSelected ? COLORS.white : COLORS.textPrimary} />
-                    <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
-                      {interest.label}
-                    </Text>
-                    {isSelected && <Ionicons name="checkmark" size={14} color={COLORS.white} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        ))}
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity
-          style={[styles.btn, (selected.length < 2 || loading) && styles.btnDisabled]}
-          onPress={save}
-          disabled={selected.length < 2 || loading}
-          activeOpacity={0.85}
+      <View style={styles.sheet}>
+        <ScrollView
+          contentContainerStyle={[styles.scroll, { paddingBottom: 120 + insets.bottom }]}
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator color={COLORS.white} />
-          ) : selected.length < 2 ? (
-            <Text style={styles.btnText}>Pick at least 2</Text>
-          ) : (
-            <View style={styles.btnInner}>
-              <Text style={styles.btnText}>Continue</Text>
-              <Ionicons name="arrow-forward" size={18} color={COLORS.white} />
+          <View style={styles.statusRow}>
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>{count} selected</Text>
             </View>
-          )}
-        </TouchableOpacity>
+            <Text style={styles.statusHint}>
+              {canContinue ? "You're all set" : `Pick ${remaining} more`}
+            </Text>
+          </View>
+
+          {INTEREST_CATEGORIES.map((cat) => (
+            <View key={cat.id} style={styles.section}>
+              <Text style={styles.categoryLabel}>{cat.label}</Text>
+              <View style={styles.grid}>
+                {INTERESTS.filter((i) => i.category === cat.id).map((interest) => {
+                  const isSelected = selected.includes(interest.id);
+                  return (
+                    <TouchableOpacity
+                      key={interest.id}
+                      style={[styles.chip, isSelected && styles.chipSelected]}
+                      onPress={() => toggle(interest.id)}
+                      activeOpacity={0.8}
+                    >
+                      <InterestIcon id={interest.id} size={18} color={isSelected ? COLORS.accent : C.subtle} />
+                      <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                        {interest.label}
+                      </Text>
+                      {isSelected && <Ionicons name="checkmark" size={16} color={COLORS.white} />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          <TouchableOpacity
+            style={[styles.btn, !canContinue && styles.btnDisabled]}
+            onPress={save}
+            disabled={!canContinue}
+            activeOpacity={0.9}
+          >
+            {loading ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              <View style={styles.btnInner}>
+                <Text style={[styles.btnText, !canContinue && styles.btnTextDisabled]}>Continue</Text>
+                <Ionicons name="arrow-forward" size={20} color={canContinue ? COLORS.accent : C.subtle} />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: 56,
-    paddingBottom: SPACING.lg,
-    backgroundColor: COLORS.background,
+  root: { flex: 1, backgroundColor: C.purple },
+
+  header: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    marginBottom: SPACING.lg,
   },
-  backBtn: { marginBottom: SPACING.md, alignSelf: 'flex-start', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 30, fontFamily: FONTS.light, color: COLORS.textPrimary, marginBottom: SPACING.xs },
-  subtitle: { fontSize: 14, color: COLORS.textSecondary, lineHeight: 20 },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.primary + '20',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-    marginTop: SPACING.sm,
+  title: { fontFamily: FONTS.semiBold, fontSize: 30, lineHeight: 36, color: COLORS.white, letterSpacing: -0.3 },
+  subtitle: { fontSize: 15, lineHeight: 22, color: C.onBrandMuted, marginTop: SPACING.xs },
+
+  sheet: {
+    flex: 1,
+    backgroundColor: C.page,
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    overflow: 'hidden',
   },
-  badgeText: { color: COLORS.primary, fontWeight: '700', fontSize: 13 },
   scroll: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
-  section: { marginBottom: SPACING.xl },
+
+  statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm },
+  countPill: {
+    backgroundColor: C.tint,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.lg,
+  },
+  countPillText: { fontWeight: '700', fontSize: 14, color: C.heading },
+  statusHint: { fontSize: 14, color: C.sub },
+
+  section: { marginTop: SPACING.xl },
   categoryLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.textSecondary,
+    color: C.sub,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: SPACING.sm,
@@ -142,36 +181,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 44,
-    backgroundColor: COLORS.surface,
+    backgroundColor: C.card,
     borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.md,
     borderWidth: 1.5,
-    borderColor: COLORS.border,
+    borderColor: C.border,
     gap: SPACING.xs,
     ...SHADOW.sm,
   },
   chipSelected: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
+    backgroundColor: C.heading,
+    borderColor: C.heading,
   },
-  chipLabel: { fontSize: 13, fontWeight: '500', color: COLORS.textPrimary },
+  chipLabel: { fontSize: 13, fontWeight: '500', color: C.heading },
   chipLabelSelected: { color: COLORS.white, fontWeight: '700' },
+
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.surface,
-    padding: SPACING.lg,
-    ...SHADOW.lg,
+    backgroundColor: C.page,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: C.border,
   },
   btn: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
+    height: 56,
+    backgroundColor: C.heading,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  btnDisabled: { backgroundColor: COLORS.textMuted },
+  btnDisabled: { backgroundColor: C.disabled },
   btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  btnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  btnText: { color: COLORS.white, fontSize: 17, fontWeight: '800' },
+  btnTextDisabled: { color: C.subtle },
 });
