@@ -21,10 +21,11 @@ interface FirebaseConfig {
 export interface FirebaseRecaptchaVerifierHandle {
   type: 'recaptcha';
   verify: () => Promise<string>;
-  // Newer Firebase Auth SDKs call this internally (not part of the public
-  // ApplicationVerifier type) to clear state before a retry — e.g. after a
-  // failed signInWithPhoneNumber attempt. Without it, Firebase throws
-  // "verifier?._reset is not a function".
+  // Not part of the public ApplicationVerifier type, but firebase/auth's
+  // signInWithPhoneNumber unconditionally calls this in a `finally` block
+  // after every send attempt (see @firebase/auth's _verifyPhoneNumber) —
+  // without it, that call throws "_reset is not a function" right after
+  // the SMS is dispatched, before the confirmation ever reaches the caller.
   _reset: () => void;
 }
 

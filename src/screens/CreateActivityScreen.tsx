@@ -11,7 +11,18 @@ import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { INTERESTS } from '../constants/interests';
 import InterestIcon from '../components/InterestIcon';
-import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+
+// White page with purple accents — matches the rest of the app, not the old
+// dark-gradient theme this screen used to carry.
+const C = {
+  page: '#FAFAFA',
+  purple: '#3F2F86',
+  heading: '#16213E',
+  sub: '#767683',
+  muted: '#9A9AA6',
+  border: '#ECEBF2',
+};
 import { DEMO_ACTIVITIES, addActivity } from '../constants/demoData';
 import { collection, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -52,9 +63,9 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
     return (
       <View style={styles.gateContainer}>
         <TouchableOpacity style={styles.gateClose} onPress={() => navigation.goBack()} hitSlop={12}>
-          <Ionicons name="close" size={18} color={COLORS.textPrimary} />
+          <Ionicons name="close" size={18} color={C.heading} />
         </TouchableOpacity>
-        <Ionicons name="lock-closed" size={48} color={COLORS.primary} style={styles.gateIcon} />
+        <Ionicons name="lock-closed" size={48} color={C.purple} style={styles.gateIcon} />
         <Text style={styles.gateTitle}>Subscribe to Post Activities</Text>
         <Text style={styles.gateSub}>
           Your free trial has ended. Upgrade to create and join unlimited activities.
@@ -177,7 +188,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
                 style={[styles.interestChip, interest === i.id && styles.interestChipActive]}
                 onPress={() => setInterest(i.id)}
               >
-                <InterestIcon id={i.id} size={22} color={interest === i.id ? COLORS.primary : COLORS.textSecondary} style={styles.interestIcon} />
+                <InterestIcon id={i.id} size={22} color={interest === i.id ? '#FFFFFF' : C.sub} style={styles.interestIcon} />
                 <Text style={[styles.interestLabel, interest === i.id && styles.interestLabelActive]}>
                   {i.label}
                 </Text>
@@ -190,7 +201,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="e.g. Sunday Morning Tennis at Koramangala"
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={C.muted}
             value={title}
             onChangeText={setTitle}
           />
@@ -200,7 +211,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Tell people what to expect, skill level, what to bring..."
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={C.muted}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -213,7 +224,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <View style={{ flex: 1, marginRight: SPACING.sm }}>
             <Section title="Date *">
               <TouchableOpacity style={styles.pickerBtn} onPress={() => setShowDatePicker(true)}>
-                <Ionicons name="calendar-outline" size={16} color={COLORS.textSecondary} />
+                <Ionicons name="calendar-outline" size={16} color={C.sub} />
                 <Text style={styles.pickerText}>{formatDate(selectedDate)}</Text>
               </TouchableOpacity>
             </Section>
@@ -221,7 +232,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <View style={{ flex: 1 }}>
             <Section title="Time *">
               <TouchableOpacity style={styles.pickerBtn} onPress={() => setShowTimePicker(true)}>
-                <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
+                <Ionicons name="time-outline" size={16} color={C.sub} />
                 <Text style={styles.pickerText}>{formatTime(selectedDate)}</Text>
               </TouchableOpacity>
             </Section>
@@ -244,7 +255,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
                   mode="date"
                   display="inline"
                   minimumDate={new Date()}
-                  accentColor={COLORS.primary}
+                  accentColor={C.purple}
                   textColor="#000000"
                   themeVariant="light"
                   onChange={(_, picked) => {
@@ -277,7 +288,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
                   display="spinner"
                   textColor="#000000"
                   themeVariant="light"
-                  accentColor={COLORS.primary}
+                  accentColor={C.purple}
                   onChange={(_, picked) => {
                     if (!picked) return;
                     const merged = new Date(selectedDate);
@@ -295,7 +306,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="e.g. Koramangala Tennis Court"
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={C.muted}
             value={locationName}
             onChangeText={setLocationName}
           />
@@ -305,7 +316,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Full address"
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={C.muted}
             value={locationAddress}
             onChangeText={setLocationAddress}
           />
@@ -364,7 +375,7 @@ export default function CreateActivityScreen({ navigation, route }: Props) {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={COLORS.white} />
+            <ActivityIndicator color={'#FFFFFF'} />
           ) : (
             <Text style={styles.submitBtnText}>{isEditing ? 'Save Changes ✅' : 'Post Activity'}</Text>
           )}
@@ -385,47 +396,47 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 const sectionStyles = StyleSheet.create({
-  label: { fontSize: 12, fontWeight: '600', color: COLORS.textSecondary, marginBottom: SPACING.xs, textTransform: 'uppercase', letterSpacing: 0.6 },
+  label: { fontFamily: FONTS.semiBold, fontSize: 12, color: C.sub, marginBottom: SPACING.xs, textTransform: 'uppercase', letterSpacing: 0.6 },
 });
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: COLORS.background, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
+  container: { backgroundColor: C.page, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: SPACING.lg },
   headerCancelBtn: { minHeight: 44, justifyContent: 'center' },
-  cancel: { color: COLORS.primary, fontSize: 15, fontWeight: '600' },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: COLORS.textPrimary },
+  cancel: { fontFamily: FONTS.semiBold, color: C.purple, fontSize: 15 },
+  headerTitle: { fontFamily: FONTS.extraBold, fontSize: 17, color: C.heading },
   interestRow: { gap: SPACING.sm, paddingBottom: SPACING.xs },
-  interestChip: { alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: RADIUS.md, padding: SPACING.sm, width: 76, borderWidth: 1.5, borderColor: COLORS.border },
-  interestChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
+  interestChip: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: RADIUS.md, padding: SPACING.sm, width: 76, borderWidth: 1.5, borderColor: C.border },
+  interestChipActive: { borderColor: C.purple, backgroundColor: C.purple },
   interestIcon: { marginBottom: 4 },
-  interestLabel: { fontSize: 11, color: COLORS.textSecondary, textAlign: 'center' },
-  interestLabelActive: { color: COLORS.white, fontWeight: '700' },
-  input: { borderWidth: 1.5, borderColor: COLORS.border, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, paddingVertical: 12, fontSize: 14, color: COLORS.textPrimary, backgroundColor: COLORS.surface },
+  interestLabel: { fontFamily: FONTS.regular, fontSize: 11, color: C.sub, textAlign: 'center' },
+  interestLabelActive: { fontFamily: FONTS.bold, color: '#FFFFFF' },
+  input: { borderWidth: 1.5, borderColor: C.border, borderRadius: RADIUS.md, paddingHorizontal: SPACING.md, paddingVertical: 12, fontFamily: FONTS.regular, fontSize: 14, color: C.heading, backgroundColor: '#FFFFFF' },
   textArea: { minHeight: 80 },
   row: { flexDirection: 'row' },
   slotsRow: { flexDirection: 'row', gap: SPACING.sm },
-  slotChip: { width: 44, height: 44, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface },
-  slotChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
-  slotText: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary },
-  slotTextActive: { color: COLORS.white },
+  slotChip: { width: 44, height: 44, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: C.border, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  slotChipActive: { borderColor: C.purple, backgroundColor: C.purple },
+  slotText: { fontFamily: FONTS.semiBold, fontSize: 14, color: C.sub },
+  slotTextActive: { color: '#FFFFFF' },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  optionChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: SPACING.md, borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.surface },
-  optionChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
-  optionText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
-  optionTextActive: { color: COLORS.white, fontWeight: '700' },
+  optionChip: { minHeight: 44, justifyContent: 'center', paddingHorizontal: SPACING.md, borderRadius: RADIUS.full, borderWidth: 1.5, borderColor: C.border, backgroundColor: '#FFFFFF' },
+  optionChipActive: { borderColor: C.purple, backgroundColor: C.purple },
+  optionText: { fontFamily: FONTS.medium, fontSize: 13, color: C.sub },
+  optionTextActive: { fontFamily: FONTS.bold, color: '#FFFFFF' },
   pickerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 44,
     borderWidth: 1.5,
-    borderColor: COLORS.border,
+    borderColor: C.border,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     gap: SPACING.sm,
   },
   pickerIcon: { fontSize: 16 },
-  pickerText: { fontSize: 13, color: COLORS.textPrimary, fontWeight: '500', flex: 1 },
+  pickerText: { fontFamily: FONTS.medium, fontSize: 13, color: C.heading, flex: 1 },
   pickerModal: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -445,18 +456,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: C.border,
   },
-  pickerTitle: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
-  pickerDone: { fontSize: 16, fontWeight: '700', color: COLORS.primary },
-  submitBtn: { backgroundColor: COLORS.primary, paddingVertical: SPACING.md, borderRadius: RADIUS.full, alignItems: 'center', marginTop: SPACING.md },
-  submitBtnDisabled: { backgroundColor: COLORS.textMuted },
-  submitBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
-  gateContainer: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
-  gateClose: { position: 'absolute', top: 56, right: SPACING.lg, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border },
+  pickerTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  pickerDone: { fontFamily: FONTS.bold, fontSize: 16, color: C.purple },
+  submitBtn: { backgroundColor: C.purple, paddingVertical: SPACING.md, borderRadius: RADIUS.full, alignItems: 'center', marginTop: SPACING.md },
+  submitBtnDisabled: { backgroundColor: C.muted },
+  submitBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 16 },
+  gateContainer: { flex: 1, backgroundColor: C.page, alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.xl },
+  gateClose: { position: 'absolute', top: 56, right: SPACING.lg, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: C.border },
   gateIcon: { marginBottom: SPACING.lg },
-  gateTitle: { fontSize: 22, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center', marginBottom: SPACING.sm },
-  gateSub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xl },
-  gateBtn: { backgroundColor: COLORS.primary, paddingVertical: SPACING.md, paddingHorizontal: SPACING.xxl, borderRadius: RADIUS.full },
-  gateBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  gateTitle: { fontFamily: FONTS.extraBold, fontSize: 22, color: C.heading, textAlign: 'center', marginBottom: SPACING.sm },
+  gateSub: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xl },
+  gateBtn: { backgroundColor: C.purple, paddingVertical: SPACING.md, paddingHorizontal: SPACING.xxl, borderRadius: RADIUS.full },
+  gateBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 16 },
 });

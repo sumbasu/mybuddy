@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export interface User {
   uid: string;
   email?: string;
@@ -5,7 +7,8 @@ export interface User {
   name: string;
   nameLower?: string;
   age?: number;
-  gender?: 'male' | 'female' | 'other';
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  dob?: string; // ISO date string — replaces free-text age entry in Edit Profile
   city: string;
   state: string;
   interests: string[];
@@ -29,6 +32,10 @@ export interface User {
   preferredTime?: string;
   buddyGenderPreference?: 'any' | 'same' | 'male' | 'female';
   fcmToken?: string;
+  // How this account first signed in — captured once at account creation,
+  // not re-derived later, so it reflects the original sign-up method even
+  // if the user later links another provider to the same Firebase account.
+  signInProvider?: 'phone' | 'google' | 'apple' | 'email' | 'unknown';
 }
 
 export interface SubscriptionStatus {
@@ -96,9 +103,10 @@ export type RootStackParamList = {
   YourClasses: undefined;
   YourEvents: undefined;
   YourFavourites: undefined;
-  YourGroups: undefined;
   LocationSetup: undefined;
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<TabParamList> | undefined;
+  AllGames: undefined;
+  FindGame: undefined;
   ActivityDetail: { activityId: string };
   CreateActivity: { activityId?: string } | undefined;
   UserProfile: { userId: string };
@@ -109,6 +117,6 @@ export type RootStackParamList = {
 
 export type TabParamList = {
   Home: undefined;
-  Community: undefined;
+  Community: { tab?: 'feed' | 'groups' } | undefined;
   Profile: undefined;
 };

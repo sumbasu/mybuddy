@@ -20,6 +20,11 @@ const C = {
 
 export default function YourMatchesScreen({ navigation }: Props) {
   const [showCanceled, setShowCanceled] = useState(true);
+  // No real match history is wired up yet — this screen always shows the
+  // empty state, so the "today"/"show canceled" filters have nothing to
+  // filter. Gating on this (rather than removing them) means they reappear
+  // automatically once a real matches list replaces this placeholder.
+  const matches: unknown[] = [];
 
   const uploadScore = () => Alert.alert('Coming soon', 'Uploading match scores will be available in a future update.');
 
@@ -31,19 +36,23 @@ export default function YourMatchesScreen({ navigation }: Props) {
 
       <Text style={styles.title}>Your matches</Text>
 
-      <View style={styles.filterRow}>
-        <TouchableOpacity style={styles.todayPill} activeOpacity={0.85}>
-          <Text style={styles.todayPillText}>TODAY</Text>
-        </TouchableOpacity>
-        <Text style={styles.filterLabel}>Show canceled matches</Text>
-        <Switch
-          value={showCanceled}
-          onValueChange={setShowCanceled}
-          trackColor={{ false: '#D8D8DE', true: C.purple }}
-          thumbColor="#FFFFFF"
-        />
-      </View>
-      <View style={styles.divider} />
+      {matches.length > 0 && (
+        <>
+          <View style={styles.filterRow}>
+            <TouchableOpacity style={styles.todayPill} activeOpacity={0.85}>
+              <Text style={styles.todayPillText}>TODAY</Text>
+            </TouchableOpacity>
+            <Text style={styles.filterLabel}>Show canceled matches</Text>
+            <Switch
+              value={showCanceled}
+              onValueChange={setShowCanceled}
+              trackColor={{ false: '#D8D8DE', true: C.purple }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          <View style={styles.divider} />
+        </>
+      )}
 
       <View style={styles.empty}>
         <SoccerGoalIllustration size={220} />

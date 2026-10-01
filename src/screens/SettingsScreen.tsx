@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -83,7 +83,11 @@ export default function SettingsScreen({ navigation }: Props) {
       <ScrollView style={styles.sheet} contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
         <View style={styles.identityBlock}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(user?.name)}</Text>
+            {user?.photoURL ? (
+              <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initials(user?.name)}</Text>
+            )}
           </View>
           <Text style={styles.name}>{user?.name || 'Your Name'}</Text>
           <Text style={styles.trial}>
@@ -151,26 +155,27 @@ const styles = StyleSheet.create({
     backgroundColor: C.heading,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontFamily: FONTS.extraBold, fontSize: 19, color: '#FFFFFF', letterSpacing: 0.5 },
-  name: { fontFamily: FONTS.bold, fontSize: 18, color: C.heading, marginTop: SPACING.sm, textAlign: 'center' },
-  trial: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, marginTop: 2, textAlign: 'center' },
+  avatarImage: { width: 64, height: 64, borderRadius: 32 },
+  avatarText: { fontFamily: FONTS.extraBold, fontSize: 20, color: '#FFFFFF', letterSpacing: 0.5 },
+  name: { fontFamily: FONTS.bold, fontSize: 19, color: C.heading, marginTop: SPACING.sm, textAlign: 'center' },
+  trial: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 2, textAlign: 'center' },
 
   actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.md },
   goProBtn: {
     width: 136, height: 44, borderRadius: RADIUS.lg,
     backgroundColor: C.heading, alignItems: 'center', justifyContent: 'center',
   },
-  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 11.3, color: C.lime },
+  goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 13.5, color: C.lime },
   shareBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
     width: 136, height: 44, borderRadius: RADIUS.lg,
     borderWidth: 1.2, borderColor: C.purple,
   },
-  shareBtnText: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.purple },
+  shareBtnText: { fontFamily: FONTS.semiBold, fontSize: 13.5, color: C.purple },
 
   section: { marginBottom: SPACING.lg },
   sectionLabel: {
-    fontFamily: FONTS.bold, fontSize: 9.7, color: C.label,
+    fontFamily: FONTS.bold, fontSize: 11, color: C.label,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: SPACING.sm,
   },
   card: {
@@ -184,6 +189,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.8, borderBottomColor: C.purpleBorder,
   },
   rowIconWrap: { width: 26, alignItems: 'center' },
-  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: '#FFFFFF' },
-  rowSub: { fontFamily: FONTS.regular, fontSize: 8.9, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: '#FFFFFF' },
+  rowSub: { fontFamily: FONTS.regular, fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
 });

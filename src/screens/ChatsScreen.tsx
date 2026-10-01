@@ -8,7 +8,18 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { db, auth } from '../services/firebase';
-import { COLORS, SPACING, RADIUS } from '../constants/theme';
+import { FONTS, SPACING, RADIUS } from '../constants/theme';
+
+// White sheet with a purple header — matches Profile/Settings/Chat, not the
+// old dark-gradient theme this screen used to carry.
+const C = {
+  page: '#FAFAFA',
+  purple: '#3F2F86',
+  heading: '#16213E',
+  sub: '#767683',
+  muted: '#9A9AA6',
+  border: '#ECEBF2',
+};
 
 type ChatItem = {
   id: string;
@@ -59,14 +70,25 @@ export default function ChatsScreen({ navigation }: Props) {
   if (!isSubscribed()) {
     return (
       <View style={styles.gateContainer}>
-        <Ionicons name="chatbubbles-outline" size={56} color={COLORS.textMuted} />
-        <Text style={styles.gateTitle}>Messaging is a Premium Feature</Text>
-        <Text style={styles.gateSub}>
-          Subscribe to chat with your activity buddies and coordinate meetups.
-        </Text>
-        <TouchableOpacity style={styles.gateBtn} onPress={() => navigation.navigate('Subscription')}>
-          <Text style={styles.gateBtnText}>Upgrade Now</Text>
-        </TouchableOpacity>
+        <View style={styles.gateHeader}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity style={styles.gateBackBtn} onPress={() => navigation.goBack()} hitSlop={8}>
+              <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.gateBody}>
+          <View style={styles.gateIconWrap}>
+            <Ionicons name="chatbubbles-outline" size={40} color={C.purple} />
+          </View>
+          <Text style={styles.gateTitle}>Messaging is a Premium Feature</Text>
+          <Text style={styles.gateSub}>
+            Subscribe to chat with your activity buddies and coordinate meetups.
+          </Text>
+          <TouchableOpacity style={styles.gateBtn} onPress={() => navigation.navigate('Subscription')}>
+            <Text style={styles.gateBtnText}>Upgrade Now</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -74,12 +96,17 @@ export default function ChatsScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        {navigation.canGoBack() && (
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={8}>
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
         <Text style={styles.title}>Messages</Text>
       </View>
 
       {loading ? (
         <View style={styles.loadingWrap}>
-          <ActivityIndicator color={COLORS.primary} />
+          <ActivityIndicator color={C.purple} />
         </View>
       ) : (
         <FlatList
@@ -131,7 +158,7 @@ export default function ChatsScreen({ navigation }: Props) {
           }}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="chatbubbles-outline" size={56} color={COLORS.textMuted} />
+              <Ionicons name="chatbubbles-outline" size={56} color={C.muted} />
               <Text style={styles.emptyTitle}>No messages yet</Text>
               <Text style={styles.emptyText}>
                 Join or create an activity to start chatting with buddies!
@@ -145,54 +172,65 @@ export default function ChatsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: C.page },
   header: {
     paddingHorizontal: SPACING.lg, paddingTop: 56,
-    paddingBottom: SPACING.md, backgroundColor: COLORS.surface,
+    paddingBottom: SPACING.md, backgroundColor: C.purple,
   },
-  title: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary },
+  backBtn: { minWidth: 44, minHeight: 44, justifyContent: 'center', marginLeft: -SPACING.sm, marginBottom: 4 },
+  title: { fontFamily: FONTS.extraBold, fontSize: 24, color: '#FFFFFF' },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { flexGrow: 1 },
   chatRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.surface, paddingHorizontal: SPACING.lg,
+    backgroundColor: '#FFFFFF', paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md, borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: C.border,
   },
-  chatRowUnread: { backgroundColor: COLORS.primary + '08' },
+  chatRowUnread: { backgroundColor: 'rgba(63,47,134,0.05)' },
   avatar: {
     width: 50, height: 50, borderRadius: 25,
-    backgroundColor: COLORS.primary, alignItems: 'center',
+    backgroundColor: C.purple, alignItems: 'center',
     justifyContent: 'center', marginRight: SPACING.md,
   },
-  avatarText: { fontSize: 20, fontWeight: '800', color: COLORS.white },
+  avatarText: { fontFamily: FONTS.extraBold, fontSize: 20, color: '#FFFFFF' },
   chatInfo: { flex: 1 },
   chatTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  chatName: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary, flex: 1, marginRight: SPACING.sm },
-  chatTime: { fontSize: 11, color: COLORS.textMuted },
-  chatLast: { fontSize: 13, color: COLORS.textSecondary, marginTop: 3 },
-  chatLastUnread: { color: COLORS.textPrimary, fontWeight: '600' },
+  chatName: { fontFamily: FONTS.bold, fontSize: 14, color: C.heading, flex: 1, marginRight: SPACING.sm },
+  chatTime: { fontFamily: FONTS.regular, fontSize: 11, color: C.muted },
+  chatLast: { fontFamily: FONTS.regular, fontSize: 13, color: C.sub, marginTop: 3 },
+  chatLastUnread: { fontFamily: FONTS.semiBold, color: C.heading },
   unreadBadge: {
     minWidth: 22, height: 22, borderRadius: 11,
-    backgroundColor: COLORS.primary, alignItems: 'center',
+    backgroundColor: C.purple, alignItems: 'center',
     justifyContent: 'center', paddingHorizontal: 4, marginLeft: SPACING.sm,
   },
-  unreadText: { color: COLORS.white, fontSize: 11, fontWeight: '800' },
+  unreadText: { fontFamily: FONTS.extraBold, color: '#FFFFFF', fontSize: 11 },
   empty: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     paddingTop: 80, gap: SPACING.md, paddingHorizontal: SPACING.xl,
   },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: COLORS.textPrimary },
-  emptyText: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22 },
-  gateContainer: {
-    flex: 1, backgroundColor: COLORS.background, alignItems: 'center',
-    justifyContent: 'center', paddingHorizontal: SPACING.xl, gap: SPACING.md,
+  emptyTitle: { fontFamily: FONTS.bold, fontSize: 17, color: C.heading },
+  emptyText: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22 },
+  gateContainer: { flex: 1, backgroundColor: C.purple },
+  gateHeader: { paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.md, alignItems: 'flex-start' },
+  gateBackBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -SPACING.sm },
+  gateBody: {
+    flex: 1, backgroundColor: C.page,
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: SPACING.xl, gap: SPACING.md,
   },
-  gateTitle: { fontSize: 22, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center' },
-  gateSub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22 },
+  gateIconWrap: {
+    width: 84, height: 84, borderRadius: 42,
+    backgroundColor: 'rgba(63,47,134,0.08)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.sm,
+  },
+  gateTitle: { fontFamily: FONTS.extraBold, fontSize: 20, color: C.heading, textAlign: 'center' },
+  gateSub: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 22 },
   gateBtn: {
-    backgroundColor: COLORS.primary, paddingVertical: SPACING.md,
+    backgroundColor: C.purple, paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xxl, borderRadius: RADIUS.full, marginTop: SPACING.sm,
   },
-  gateBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
+  gateBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 16 },
 });

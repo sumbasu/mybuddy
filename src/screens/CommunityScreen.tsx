@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, User } from '../types';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList, TabParamList, User } from '../types';
 import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 import { INTERESTS } from '../constants/interests';
 import { useAuth } from '../context/AuthContext';
@@ -15,7 +16,10 @@ import {
 import { createPost, getFeedPosts, getMyPosts, Post } from '../services/posts';
 import NoPostsIllustration from '../components/NoPostsIllustration';
 
-type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  route: RouteProp<TabParamList, 'Community'>;
+};
 
 // White-background social feed — a deliberate departure from the app's
 // purple gradient theme, matching the reference screen exactly.
@@ -51,9 +55,16 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(days)}d ago`;
 };
 
-export default function CommunityScreen({ navigation }: Props) {
+export default function CommunityScreen({ navigation, route }: Props) {
   const { user, refreshUser } = useAuth();
-  const [tab, setTab] = useState<'feed' | 'groups'>('feed');
+  const [tab, setTab] = useState<'feed' | 'groups'>(route.params?.tab || 'feed');
+
+  // The tab navigator keeps this screen mounted, so a deep link from
+  // elsewhere (e.g. Your Activity's "Groups" row) arrives as a params
+  // update on an already-open screen, not a fresh mount — react to it here.
+  useEffect(() => {
+    if (route.params?.tab) setTab(route.params.tab);
+  }, [route.params?.tab]);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const [search, setSearch] = useState('');
   const [findFriendsDismissed, setFindFriendsDismissed] = useState(false);

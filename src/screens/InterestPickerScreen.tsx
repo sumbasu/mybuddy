@@ -50,11 +50,20 @@ export default function InterestPickerScreen({ navigation }: Props) {
     setLoading(true);
     await setUser({ ...user, interests: selected });
     // Reached two ways: pushed from Profile/EditProfile inside the main stack
-    // (go back to it), or shown by AppNavigator during onboarding, in which
-    // case there's nothing to go back to — it swaps to the main stack itself
-    // once `user.interests` has 2+ entries.
+    // (go back to it), or shown by AppNavigator during onboarding.
+    //
+    // The onboarding case can't rely on AppNavigator's conditional screen
+    // list to auto-navigate away: "InterestPicker" is registered as a route
+    // name in BOTH the gated onboarding stack and the main app stack (so it
+    // can also be reached later from Profile), so when `user.interests`
+    // flips the routing condition, React Navigation sees the same active
+    // route name persist across the re-render and never treats it as a
+    // navigation — the screen just sits there even though the underlying
+    // stack config changed. Reset explicitly instead of waiting for it.
     if (navigation.canGoBack()) {
       navigation.goBack();
+    } else {
+      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
     }
     setLoading(false);
   };
