@@ -8,6 +8,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { auth } from '../services/firebase';
 import CityPicker from '../components/CityPicker';
 import { COLORS, SPACING, RADIUS, SHADOW, FONTS } from '../constants/theme';
 
@@ -59,7 +60,7 @@ export default function EditProfileScreen({ navigation }: Props) {
   const [showDobPicker, setShowDobPicker] = useState(false);
   const [gender, setGender] = useState<'male' | 'female' | 'other' | 'prefer_not_to_say' | ''>(user?.gender || '');
   const [city, setCity] = useState(user?.city || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || auth.currentUser?.phoneNumber || '');
   const [buddyPref, setBuddyPref] = useState<'any' | 'same' | 'male' | 'female'>(
     user?.buddyGenderPreference || 'any'
   );
@@ -71,7 +72,7 @@ export default function EditProfileScreen({ navigation }: Props) {
     dob?.getTime() !== initialDob?.getTime() ||
     gender !== (user?.gender || '') ||
     city !== (user?.city || '') ||
-    email.trim() !== (user?.email || '') ||
+    phone.trim() !== (user?.phone || '') ||
     buddyPref !== (user?.buddyGenderPreference || 'any');
 
   const ageValid = !dob || (ageFromDob(dob) >= MIN_AGE && ageFromDob(dob) <= MAX_AGE);
@@ -88,7 +89,7 @@ export default function EditProfileScreen({ navigation }: Props) {
         dob: dob ? dob.toISOString() : user.dob,
         gender: gender || user.gender,
         city: city || user.city,
-        email: email.trim() || user.email,
+        phone: phone.trim(),
         buddyGenderPreference: buddyPref,
       });
     } catch {
@@ -109,6 +110,10 @@ export default function EditProfileScreen({ navigation }: Props) {
     }
     if (!ageValid) {
       Alert.alert('Invalid date of birth', `Age must be between ${MIN_AGE} and ${MAX_AGE}.`);
+      return;
+    }
+    if (!phone.trim()) {
+      Alert.alert('Required', 'Please enter your phone number.');
       return;
     }
     Alert.alert('Save changes', 'Do you want to save your changes?', [
@@ -138,37 +143,38 @@ export default function EditProfileScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        {/* Email — editable only when the profile doesn't already have one;
-            an existing email is tied to how the user signed in (Google/Apple)
-            and can't be changed here. */}
+        {/* Email is the account's unique ID and can never be changed here.
+            Phone is required but editable, since numbers change over time. */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
-            {user?.email ? (
-              <Field
-                icon="mail-outline"
-                label="Email"
-                value={user.email}
-                editable={false}
-                hint="Email cannot be changed"
-              />
-            ) : (
-              <View style={styles.fieldWrap}>
-                <View style={styles.fieldHeader}>
-                  <Ionicons name="mail-outline" size={16} color="#FFFFFF" />
-                  <Text style={styles.label}>Email</Text>
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Add an email address"
-                  placeholderTextColor="rgba(255,255,255,0.5)"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
+            <Field
+              icon="mail-outline"
+              label="Email"
+              value={user?.email || 'Not set'}
+              editable={false}
+              hint="Email cannot be changed"
+            />
+
+            <View style={styles.divider} />
+
+            <View style={styles.fieldWrap}>
+              <View style={styles.fieldHeader}>
+                <Ionicons name="call-outline" size={16} color="#FFFFFF" />
+                <Text style={styles.label}>Phone number *</Text>
               </View>
-            )}
+              <TextInput
+                style={styles.input}
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="Add your phone number"
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                keyboardType="phone-pad"
+              />
+              {!phone.trim() && (
+                <Text style={styles.ageHint}>Phone number is required</Text>
+              )}
+            </View>
           </View>
         </View>
 
