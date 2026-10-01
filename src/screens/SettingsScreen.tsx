@@ -72,7 +72,7 @@ export default function SettingsScreen({ navigation }: Props) {
       {/* Purple header — minimal, matches the app's purple */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
-          <Ionicons name="close" size={20} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity onPress={handleLogout} style={styles.headerLogoutBtn}>
           <Ionicons name="power" size={20} color="#FFFFFF" />
