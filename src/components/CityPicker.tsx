@@ -36,7 +36,7 @@ const THEME = {
     label: '#6E6E80',
     inputBg: '#FFFFFF',
     inputBorder: '#E6E6EC',
-    text: '#1B1F3B',
+    text: '#3D3081',
     placeholder: '#9A9AAB',
     icon: '#9A9AAB',
     dropdownBg: '#FFFFFF',

@@ -34,19 +34,17 @@ const C = {
   link: '#4B3B8C',
   purple: '#4B3B8C',
   btnDisabled: '#CBD3F7',
-  btnEnabled: '#4B5BD9',
+  btnEnabled: '#3F2F86',
   btnText: '#FFFFFF',
 };
 
 const TERMS_URL = 'https://mybuddy-bd717.web.app/terms-of-service.html';
 const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 
-// Sign In with Apple's capability was pulled from app.json/entitlements —
-// the free signing team can't hold it, so it's disabled here too to avoid
-// showing a button that would fail every tap. Flip this back to true (and
-// re-add the "expo-apple-authentication" plugin to app.json) once signed
-// with a paid Apple Developer Program team.
-const APPLE_SIGNIN_ENABLED = false;
+// Requires the "Sign In with Apple" capability enabled on the App ID in
+// Apple Developer Portal, and a paid Developer Program membership to hold
+// it — the free personal team this was previously built with can't.
+const APPLE_SIGNIN_ENABLED = true;
 
 export default function AuthChoiceScreen({ navigation }: Props) {
   const [countryCode] = useState('+91');

@@ -41,7 +41,7 @@ const C = {
   bg: '#F7F7F9',
   surface: '#FFFFFF',
   border: '#E6E6EC',
-  text: '#1B1F3B',
+  text: '#3D3081',
   textMuted: '#6E6E80',
   textSubtle: '#9A9AAB',
   tint: '#ECEBF4',

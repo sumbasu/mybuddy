@@ -14,7 +14,7 @@ const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 // White sheet between a purple header and the rest of the app — matches the Profile screen.
 const C = {
   page: '#FAFAFA',
-  purple: '#3F2F86',
+  purple: '#3d3081',
   purpleBorder: 'rgba(255,255,255,0.15)',
   label: 'rgba(63,47,134,0.45)',
   sub: '#767683',
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   identityBlock: { alignItems: 'center', marginBottom: SPACING.lg },
   avatar: {
     width: 64, height: 64, borderRadius: 32,
-    backgroundColor: C.heading,
+    backgroundColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
   avatarImage: { width: 64, height: 64, borderRadius: 32 },
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginTop: SPACING.md },
   goProBtn: {
     width: 136, height: 44, borderRadius: RADIUS.lg,
-    backgroundColor: C.heading, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center',
   },
   goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 13.5, color: C.lime },
   shareBtn: {

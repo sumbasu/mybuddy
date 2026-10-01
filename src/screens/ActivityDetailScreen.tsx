@@ -25,12 +25,12 @@ import { submitRating, hasAlreadyRated } from '../services/ratings';
 // Flat light page, card-based layout — matches the Pick Interests redesign.
 const C = {
   brand: '#695DA1',
-  navy: '#1B1F3B',
+  navy: '#3D3081',
   lime: '#C9E24B',
   bg: '#F7F7F9',
   surface: '#FFFFFF',
   border: '#E6E6EC',
-  text: '#1B1F3B',
+  text: '#3D3081',
   textMuted: '#6E6E80',
   textSubtle: '#9A9AAB',
   tint: '#ECEBF4',
