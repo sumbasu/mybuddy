@@ -21,7 +21,7 @@ const C = {
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
-  purple: '#3F2F86',
+  purple: '#3D3081',
   lime: '#C8DB2E',
 };
 
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   stackAvatarText: { fontFamily: FONTS.extraBold, fontSize: 10, color: 'rgba(0,0,0,0.7)' },
   spotsFraction: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.sub },
   joinBtn: {
-    backgroundColor: C.heading, borderRadius: RADIUS.full,
+    backgroundColor: C.purple, borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.md, paddingVertical: 8,
   },
   joinBtnText: { fontFamily: FONTS.bold, fontSize: 12.5, color: C.lime },

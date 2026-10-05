@@ -62,11 +62,11 @@
         }
       ],
       "expo-web-browser",
+      "expo-apple-authentication",
       "@react-native-firebase/app",
       "@react-native-firebase/analytics",
       "@react-native-firebase/crashlytics",
       "@react-native-firebase/messaging",
-      "expo-apple-authentication",
       "./plugins/withRNFirebaseDisableSPM.js",
       "./plugins/withAndroidNavBarNoScrim.js",
       [

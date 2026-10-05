@@ -33,7 +33,7 @@ const C = {
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
-  purple: '#3F2F86',
+  purple: '#3D3081',
   purpleTint: 'rgba(63,47,134,0.1)',
   green: '#8BC34A',
 };
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
   tabItem: { flex: 1, alignItems: 'center', paddingVertical: SPACING.md },
   tabText: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.muted },
   tabTextActive: { color: C.heading, fontFamily: FONTS.bold },
-  tabUnderline: { marginTop: SPACING.sm, height: 2, width: 36, backgroundColor: C.heading, borderRadius: 1 },
+  tabUnderline: { marginTop: SPACING.sm, height: 2, width: 36, backgroundColor: C.purple, borderRadius: 1 },
 
   groupsTab: { flex: 1, paddingTop: SPACING.lg },
   groupsCard: {
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: C.border,
   },
-  filterChipActive: { backgroundColor: C.heading, borderColor: C.heading },
+  filterChipActive: { backgroundColor: C.purple, borderColor: C.purple },
   filterChipText: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.heading },
   filterChipTextActive: { color: '#FFFFFF' },
 

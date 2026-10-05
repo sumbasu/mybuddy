@@ -34,16 +34,16 @@ const C = {
   link: '#4B3B8C',
   purple: '#4B3B8C',
   btnDisabled: '#CBD3F7',
-  btnEnabled: '#4B5BD9',
+  btnEnabled: '#3F2F86',
   btnText: '#FFFFFF',
 };
 
 const TERMS_URL = 'https://mybuddy-bd717.web.app/terms-of-service.html';
 const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 
-// Sign In with Apple's capability requires a paid Apple Developer Program
-// team (a free/personal signing team can't hold the entitlement) — now that
-// the project is signed with a paid team, this is re-enabled.
+// Requires the "Sign In with Apple" capability enabled on the App ID in
+// Apple Developer Portal, and a paid Developer Program membership to hold
+// it — the free personal team this was previously built with can't.
 const APPLE_SIGNIN_ENABLED = true;
 
 export default function AuthChoiceScreen({ navigation }: Props) {

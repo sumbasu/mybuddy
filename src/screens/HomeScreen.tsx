@@ -22,7 +22,7 @@ const C = {
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
-  purple: '#3F2F86',
+  purple: '#3D3081',
   purpleTint: 'rgba(63,47,134,0.08)',
   purpleLight: '#52449A',
   lime: '#C8DB2E',

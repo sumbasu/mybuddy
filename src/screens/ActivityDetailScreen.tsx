@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar, Share,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, StatusBar,
   ActivityIndicator, Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,27 +16,30 @@ import { RootStackParamList, Activity } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { INTERESTS } from '../constants/interests';
 import InterestIcon from '../components/InterestIcon';
-import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { FONTS, SPACING } from '../constants/theme';
 import { DEMO_ACTIVITIES } from '../constants/demoData';
 import { db } from '../services/firebase';
 import StarRating from '../components/StarRating';
 import { submitRating, hasAlreadyRated } from '../services/ratings';
 
-// White sheet with a purple header — matches Profile/Settings/Subscription,
-// not the old dark-gradient theme this screen used to carry.
+// Flat light page, card-based layout — matches the Pick Interests redesign.
 const C = {
-  page: '#FAFAFA',
-  purple: '#3F2F86',
-  heading: '#16213E',
-  sub: '#767683',
-  muted: '#9A9AA6',
-  border: '#ECEBF2',
-  lime: '#C8DB2E',
-  success: '#06D6A0',
+  brand: '#695DA1',
+  navy: '#3D3081',
+  lime: '#C9E24B',
+  bg: '#F7F7F9',
+  surface: '#FFFFFF',
+  border: '#E6E6EC',
+  text: '#3D3081',
+  textMuted: '#6E6E80',
+  textSubtle: '#9A9AAB',
+  tint: '#ECEBF4',
+  success: '#1F9D6B',
   warning: '#B8860B',
   warningBg: '#FFF6DC',
   error: '#EF233C',
   errorBg: '#FDEDEF',
+  disabled: '#DCDCE4',
 };
 
 type Props = {
@@ -102,7 +105,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   if (loadingActivity) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={C.purple} size="large" />
+        <ActivityIndicator color={C.brand} size="large" />
       </View>
     );
   }
@@ -110,7 +113,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   if (!activity) {
     return (
       <View style={styles.center}>
-        <Ionicons name="alert-circle-outline" size={48} color={C.muted} />
+        <Ionicons name="alert-circle-outline" size={48} color={C.textSubtle} />
         <Text style={styles.notFoundText}>Activity not found</Text>
       </View>
     );
@@ -118,6 +121,8 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
   const interest = INTERESTS.find((i) => i.id === activity.interest);
   const spotsLeft = activity.slots - activity.joinedCount;
+  const isFull = spotsLeft <= 0;
+  const fillPct = activity.slots > 0 ? Math.min(100, (activity.joinedCount / activity.slots) * 100) : 0;
   const date = new Date(activity.date);
   const dateStr = date.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const activityPassed = new Date(activity.date) < new Date();
@@ -300,58 +305,102 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     ]);
   };
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+  const openMessage = () => {
+    if (!isSubscribed()) {
+      Alert.alert('Subscription Required', 'Subscribe to message activity organisers.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Upgrade', onPress: () => navigation.navigate('Subscription') },
+      ]);
+      return;
+    }
+    navigation.navigate('Chat', { chatId: `activity_${activity.id}`, activityTitle: activity.title, participantName: activity.creatorName, recipientId: activity.creatorId });
+  };
 
-      <View style={styles.heroBar}>
-        <View style={styles.heroTopRow}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
+  return (
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" />
+
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.roundBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={C.brand} />
           </TouchableOpacity>
           {isCreator && (
             <TouchableOpacity
               style={styles.editBtn}
               onPress={() => navigation.navigate('CreateActivity', { activityId: activity.id })}
             >
-              <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+              <Ionicons name="create-outline" size={16} color={C.brand} />
               <Text style={styles.editBtnText}>Edit</Text>
             </TouchableOpacity>
           )}
         </View>
-        <InterestIcon id={interest?.id} size={40} color="#FFFFFF" style={styles.heroIcon} />
-        <Text style={styles.heroTitle}>{activity.title}</Text>
-        <Text style={styles.heroInterest}>{interest?.label || activity.interest}</Text>
+
+        <View style={styles.sportTile}>
+          <InterestIcon id={interest?.id} size={26} color={C.lime} />
+        </View>
+        <Text style={styles.title}>{activity.title}</Text>
+        <View style={styles.sportPill}>
+          <Text style={styles.sportPillText}>{interest?.label || activity.interest}</Text>
+        </View>
       </View>
 
-      <ScrollView style={styles.sheet} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        <View style={styles.infoCard}>
-          <Row icon="calendar" label="Date" value={dateStr} />
-          <Row icon="time-outline" label="Time" value={activity.time} />
-          <Row icon="location-outline" label="Location" value={`${activity.location.name}\n${activity.location.address}`} />
-          <Row icon="people-outline" label="Spots" value={`${spotsLeft} of ${activity.slots} remaining`} color={spotsLeft === 0 ? C.error : C.success} />
-          {activity.skillLevel && activity.skillLevel !== 'any' && (
-            <Row icon="bar-chart-outline" label="Skill Level" value={activity.skillLevel.charAt(0).toUpperCase() + activity.skillLevel.slice(1)} />
-          )}
-          {activity.genderPreference && activity.genderPreference !== 'any' && (
-            <Row icon="person-outline" label="Looking for" value={activity.genderPreference.charAt(0).toUpperCase() + activity.genderPreference.slice(1)} last />
-          )}
-        </View>
+      <View style={styles.sheet}>
+        <ScrollView
+          contentContainerStyle={{ paddingTop: SPACING.lg, paddingHorizontal: SPACING.lg, paddingBottom: 140 + insets.bottom }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            <DetailRow icon="calendar-outline" label="Date" value={dateStr} />
+            <Divider />
+            <DetailRow icon="time-outline" label="Time" value={activity.time} />
+            <Divider />
+            <DetailRow icon="location-outline" label="Location" value={activity.location.name} sub={activity.location.address} />
+            {activity.skillLevel && activity.skillLevel !== 'any' && (
+              <>
+                <Divider />
+                <DetailRow icon="bar-chart-outline" label="Skill Level" value={activity.skillLevel.charAt(0).toUpperCase() + activity.skillLevel.slice(1)} />
+              </>
+            )}
+            {activity.genderPreference && activity.genderPreference !== 'any' && (
+              <>
+                <Divider />
+                <DetailRow icon="person-outline" label="Looking for" value={activity.genderPreference.charAt(0).toUpperCase() + activity.genderPreference.slice(1)} />
+              </>
+            )}
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About this Activity</Text>
-          <Text style={styles.description}>{activity.description || 'No description provided.'}</Text>
-        </View>
+          <View style={[styles.card, styles.spotsCard]}>
+            <View style={styles.spotsTop}>
+              <View style={styles.rowIcon}>
+                <Ionicons name="people-outline" size={20} color={C.brand} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowLabel}>Spots</Text>
+                <Text style={[styles.rowValue, { color: isFull ? C.textMuted : C.success }]}>
+                  {isFull ? 'No spots left' : `${spotsLeft} of ${activity.slots} left`}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.trackFill, { width: `${fillPct}%` }]} />
+            </View>
+          </View>
 
-        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About this activity</Text>
+          <View style={styles.card}>
+            <Text style={activity.description ? styles.body : [styles.body, { color: C.textSubtle }]}>
+              {activity.description || 'No description provided.'}
+            </Text>
+          </View>
+
           <Text style={styles.sectionTitle}>Organiser</Text>
-          <View style={styles.creatorRow}>
+          <View style={[styles.card, styles.organiser]}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{activity.creatorName[0]}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.creatorName}>{activity.creatorName}</Text>
-              <Text style={styles.creatorSub}>Activity Organiser</Text>
+              <Text style={styles.orgName}>{activity.creatorName}</Text>
               <StarRating
                 rating={organiserRating.rating}
                 size={14}
@@ -359,149 +408,104 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 reviewCount={organiserRating.reviewCount}
               />
             </View>
-          </View>
-        </View>
-
-        {/* Pending join requests — always visible to creator */}
-        {isCreator && (
-          <View style={styles.section}>
-            <View style={styles.requestsHeader}>
-              <Ionicons name="people-outline" size={16} color={C.warning} />
-              <Text style={styles.requestsTitle}>
-                Join Requests
-                {(activity.pendingRequests?.length || 0) > 0
-                  ? ` (${activity.pendingRequests.length})`
-                  : ''}
-              </Text>
-            </View>
-
-            {(!activity.pendingRequests || activity.pendingRequests.length === 0) ? (
-              <View style={styles.noRequestsRow}>
-                <Ionicons name="checkmark-circle-outline" size={16} color={C.muted} />
-                <Text style={styles.noRequestsText}>No pending requests</Text>
-              </View>
-            ) : (
-              activity.pendingRequests.map((uid) => {
-                const name = activity.pendingRequestNames?.[uid] || `User ${uid.slice(-6)}`;
-                return (
-                  <View key={uid} style={styles.requestRow}>
-                    <View style={styles.requestAvatar}>
-                      <Text style={styles.requestAvatarText}>{name[0].toUpperCase()}</Text>
-                    </View>
-                    <Text style={styles.requestUid} numberOfLines={1}>{name}</Text>
-                    <View style={styles.requestActions}>
-                      <TouchableOpacity
-                        style={styles.acceptBtn}
-                        onPress={() => handleAccept(uid, name)}
-                      >
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                        <Text style={styles.acceptBtnText}>Accept</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.rejectBtn}
-                        onPress={() => handleReject(uid, name)}
-                      >
-                        <Ionicons name="close" size={16} color={C.error} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </View>
-        )}
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
-        {isCreator ? (
-          // Creator actions
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => navigation.navigate('Chat', { chatId: `activity_${activity.id}`, activityTitle: activity.title, participantName: activity.creatorName, recipientId: activity.creatorId })}
-            activeOpacity={0.85}
-          >
-            <View style={styles.actionBtnInner}>
-              <Ionicons name="chatbubbles" size={18} color="#FFFFFF" />
-              <Text style={styles.actionBtnText}>Chat with Participants</Text>
-            </View>
-          </TouchableOpacity>
-        ) : (
-          // Non-creator actions
-          <View style={styles.actionColumn}>
-            {/* Join / status button */}
-            {hasJoined ? (
-              <View style={[styles.joinedRow, styles.actionBtnFlex]}>
-                <View style={[styles.actionBtn, styles.joinedBtn, { flex: 1 }]}>
-                  <View style={styles.actionBtnInner}>
-                    <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                    <Text style={styles.actionBtnText}>You've Joined</Text>
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave} activeOpacity={0.85}>
-                  <Ionicons name="exit-outline" size={18} color={C.error} />
-                  <Text style={styles.leaveBtnText}>Leave</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (requested || hasPendingRequest) ? (
-              <View style={[styles.actionBtn, styles.requestedBtn, styles.actionBtnFlex]}>
-                <View style={styles.actionBtnInner}>
-                  <Ionicons name="time" size={18} color="#FFFFFF" />
-                  <Text style={styles.actionBtnText}>Request Pending</Text>
-                </View>
-              </View>
-            ) : spotsLeft === 0 ? (
-              <View style={[styles.actionBtn, styles.fullBtn, styles.actionBtnFlex]}>
-                <Text style={styles.actionBtnText}>Activity Full</Text>
-              </View>
-            ) : (
-              <TouchableOpacity style={[styles.actionBtn, styles.actionBtnFlex]} onPress={handleJoin} activeOpacity={0.85}>
-                <View style={styles.actionBtnInner}>
-                  <Ionicons name="person-add" size={18} color="#FFFFFF" />
-                  <Text style={styles.actionBtnText}>Request to Join</Text>
-                </View>
-              </TouchableOpacity>
-            )}
-
-            {/* Chat button — always visible to contact organiser */}
-            <TouchableOpacity
-              style={styles.chatBtn}
-              onPress={() => {
-                if (!isSubscribed()) {
-                  Alert.alert('Subscription Required', 'Subscribe to message activity organisers.', [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Upgrade', onPress: () => navigation.navigate('Subscription') },
-                  ]);
-                  return;
-                }
-                navigation.navigate('Chat', { chatId: `activity_${activity.id}`, activityTitle: activity.title, participantName: activity.creatorName, recipientId: activity.creatorId });
-              }}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="chatbubble-ellipses" size={20} color={C.purple} />
-              <Text style={styles.chatBtnText}>Message</Text>
+            <TouchableOpacity style={styles.msgBtn} onPress={openMessage} activeOpacity={0.8}>
+              <Ionicons name="chatbubble-ellipses-outline" size={18} color={C.brand} />
+              <Text style={styles.msgText}>Message</Text>
             </TouchableOpacity>
-
-            {/* Rate organiser — only after activity date passes and user joined */}
-            {activityPassed && hasJoined && (
-              <TouchableOpacity
-                style={[styles.rateBtn, alreadyRated && styles.rateBtnDone]}
-                onPress={() => !alreadyRated && setShowRatingModal(true)}
-                activeOpacity={alreadyRated ? 1 : 0.85}
-              >
-                <Ionicons
-                  name={alreadyRated ? 'star' : 'star-outline'}
-                  size={16}
-                  color={alreadyRated ? '#F59E0B' : C.purple}
-                />
-                <Text style={[styles.rateBtnText, alreadyRated && styles.rateBtnTextDone]}>
-                  {alreadyRated ? 'You rated this organiser' : `Rate ${activity.creatorName}`}
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
-        )}
+
+          {/* Pending join requests — always visible to creator */}
+          {isCreator && (
+            <>
+              <Text style={styles.sectionTitle}>
+                Join Requests{(activity.pendingRequests?.length || 0) > 0 ? ` (${activity.pendingRequests.length})` : ''}
+              </Text>
+              {(!activity.pendingRequests || activity.pendingRequests.length === 0) ? (
+                <View style={[styles.card, styles.noRequestsRow]}>
+                  <Ionicons name="checkmark-circle-outline" size={16} color={C.textSubtle} />
+                  <Text style={styles.noRequestsText}>No pending requests</Text>
+                </View>
+              ) : (
+                activity.pendingRequests.map((uid) => {
+                  const name = activity.pendingRequestNames?.[uid] || `User ${uid.slice(-6)}`;
+                  return (
+                    <View key={uid} style={[styles.card, styles.requestRow]}>
+                      <View style={styles.requestAvatar}>
+                        <Text style={styles.requestAvatarText}>{name[0].toUpperCase()}</Text>
+                      </View>
+                      <Text style={styles.requestUid} numberOfLines={1}>{name}</Text>
+                      <View style={styles.requestActions}>
+                        <TouchableOpacity style={styles.acceptBtn} onPress={() => handleAccept(uid, name)}>
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                          <Text style={styles.acceptBtnText}>Accept</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(uid, name)}>
+                          <Ionicons name="close" size={16} color={C.error} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </>
+          )}
+        </ScrollView>
+
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          {isCreator ? (
+            <TouchableOpacity
+              style={styles.cta}
+              onPress={() => navigation.navigate('Chat', { chatId: `activity_${activity.id}`, activityTitle: activity.title, participantName: activity.creatorName, recipientId: activity.creatorId })}
+              activeOpacity={0.9}
+            >
+              <Ionicons name="chatbubbles" size={20} color={C.lime} />
+              <Text style={styles.ctaText}>Chat with Participants</Text>
+            </TouchableOpacity>
+          ) : hasJoined ? (
+            <View style={styles.joinedRow}>
+              <View style={[styles.cta, styles.joinedCta, { flex: 1 }]}>
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <Text style={styles.ctaText}>You've joined</Text>
+              </View>
+              <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave} activeOpacity={0.85}>
+                <Ionicons name="exit-outline" size={18} color={C.error} />
+                <Text style={styles.leaveBtnText}>Leave</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (requested || hasPendingRequest) ? (
+            <View style={[styles.cta, styles.requestedCta]}>
+              <Ionicons name="time" size={20} color="#fff" />
+              <Text style={styles.ctaText}>Request pending</Text>
+            </View>
+          ) : isFull ? (
+            <View style={[styles.cta, styles.ctaDisabled]}>
+              <Text style={[styles.ctaText, { color: C.textSubtle }]}>Activity is full</Text>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.cta} onPress={handleJoin} activeOpacity={0.9}>
+              <Ionicons name="person-add-outline" size={20} color={C.lime} />
+              <Text style={styles.ctaText}>Request to join</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Rate organiser — only after activity date passes and user joined */}
+          {!isCreator && activityPassed && hasJoined && (
+            <TouchableOpacity
+              style={[styles.rateBtn, alreadyRated && styles.rateBtnDone]}
+              onPress={() => !alreadyRated && setShowRatingModal(true)}
+              activeOpacity={alreadyRated ? 1 : 0.85}
+            >
+              <Ionicons
+                name={alreadyRated ? 'star' : 'star-outline'}
+                size={16}
+                color={alreadyRated ? '#F59E0B' : C.brand}
+              />
+              <Text style={[styles.rateBtnText, alreadyRated && styles.rateBtnTextDone]}>
+                {alreadyRated ? 'You rated this organiser' : `Rate ${activity.creatorName}`}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Rating Modal */}
@@ -545,195 +549,165 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   );
 }
 
-function Row({ icon, label, value, color, last }: {
-  icon: any; label: string; value: string; color?: string; last?: boolean;
+function DetailRow({ icon, label, value, sub }: {
+  icon: any; label: string; value: string; sub?: string;
 }) {
   return (
-    <View style={[rowStyles.row, last && rowStyles.rowLast]}>
-      <View style={rowStyles.iconWrap}>
-        <Ionicons name={icon} size={18} color={color || C.purple} />
+    <View style={styles.row}>
+      <View style={styles.rowIcon}>
+        <Ionicons name={icon} size={20} color={C.brand} />
       </View>
-      <View style={rowStyles.content}>
-        <Text style={rowStyles.label}>{label}</Text>
-        <Text style={[rowStyles.value, color ? { color } : {}]}>{value}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        <Text style={styles.rowValue}>{value}</Text>
+        {sub ? <Text style={styles.rowSub}>{sub}</Text> : null}
       </View>
     </View>
   );
 }
 
-const rowStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: C.border,
-    gap: SPACING.md,
-  },
-  rowLast: { borderBottomWidth: 0 },
-  iconWrap: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: 'rgba(63,47,134,0.08)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  content: { flex: 1, paddingTop: 2 },
-  label: { fontFamily: FONTS.semiBold, fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: 0.7 },
-  value: { fontFamily: FONTS.medium, fontSize: 14, color: C.heading, marginTop: 3, lineHeight: 20 },
-});
+const Divider = () => <View style={styles.divider} />;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.purple },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md, backgroundColor: C.page },
-  notFoundText: { fontFamily: FONTS.semiBold, fontSize: 16, color: C.muted },
-  heroBar: {
-    backgroundColor: C.purple,
-    paddingTop: 56,
-    paddingBottom: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-  },
-  heroTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.md,
-  },
-  backBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    minHeight: 44,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  editBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 13 },
-  heroIcon: { marginBottom: SPACING.sm },
-  heroTitle: { fontFamily: FONTS.extraBold, fontSize: 22, color: '#FFFFFF', lineHeight: 28 },
-  heroInterest: { fontFamily: FONTS.regular, fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
-  sheet: {
-    flex: 1, backgroundColor: C.page,
-    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
-  },
-  body: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: 120 },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    marginBottom: SPACING.lg,
+  root: { flex: 1, backgroundColor: C.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: SPACING.md, backgroundColor: C.bg },
+  notFoundText: { fontFamily: FONTS.semiBold, fontSize: 16, color: C.textSubtle },
+
+  header: { paddingHorizontal: SPACING.lg, paddingBottom: 4 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SPACING.lg },
+  roundBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.surface,
     borderWidth: 1, borderColor: C.border,
-    ...SHADOW.sm,
   },
-  section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading, marginBottom: SPACING.sm },
-  description: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, lineHeight: 22 },
-  creatorRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  avatar: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: C.purple,
+  editBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    height: 40, paddingHorizontal: SPACING.md, borderRadius: 20,
+    backgroundColor: C.surface,
+    borderWidth: 1, borderColor: C.border,
+  },
+  editBtnText: { fontFamily: FONTS.bold, color: C.brand, fontSize: 13 },
+  sportTile: {
+    width: 52, height: 52, borderRadius: 16,
+    backgroundColor: C.brand,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: SPACING.sm + 2,
+  },
+  title: { fontFamily: FONTS.extraBold, fontSize: 26, lineHeight: 32, color: C.text, letterSpacing: -0.3 },
+  sportPill: {
+    alignSelf: 'flex-start', marginTop: SPACING.xs,
+    paddingHorizontal: SPACING.sm + 2, paddingVertical: 6,
+    borderRadius: 12, backgroundColor: C.tint,
+  },
+  sportPillText: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.text },
+
+  sheet: { flex: 1, backgroundColor: C.bg },
+
+  card: {
+    backgroundColor: C.surface,
+    borderRadius: 20,
+    borderWidth: 1, borderColor: C.border,
+    paddingHorizontal: SPACING.md, paddingVertical: 4,
+    marginBottom: SPACING.lg,
+  },
+  row: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, paddingVertical: SPACING.md },
+  rowIcon: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: C.tint,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { fontFamily: FONTS.bold, fontSize: 18, color: '#FFFFFF' },
-  creatorName: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading },
-  creatorSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.muted },
-  requestsHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm },
-  requestsTitle: { fontFamily: FONTS.bold, fontSize: 14, color: C.warning },
-  requestRow: {
-    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
-    backgroundColor: '#FFFFFF', borderRadius: RADIUS.md,
-    padding: SPACING.md, marginBottom: SPACING.sm,
-    borderWidth: 1, borderColor: C.border, ...SHADOW.sm,
+  rowLabel: { fontFamily: FONTS.regular, fontSize: 13, color: C.textSubtle, marginBottom: 2 },
+  rowValue: { fontFamily: FONTS.semiBold, fontSize: 16, color: C.text },
+  rowSub: { fontFamily: FONTS.regular, fontSize: 14, color: C.textMuted, marginTop: 2 },
+  divider: { height: 1, backgroundColor: C.border, marginLeft: 54 },
+
+  spotsCard: { marginTop: -SPACING.sm, paddingVertical: SPACING.md },
+  spotsTop: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
+  track: { height: 8, borderRadius: 4, backgroundColor: C.tint, marginTop: SPACING.md, overflow: 'hidden' },
+  trackFill: { height: '100%', borderRadius: 4, backgroundColor: C.brand },
+
+  sectionTitle: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.text, marginBottom: SPACING.sm + 2 },
+  body: { fontFamily: FONTS.regular, fontSize: 15, lineHeight: 22, color: C.textMuted, paddingVertical: SPACING.sm },
+
+  organiser: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.md },
+  avatar: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: C.brand,
+    alignItems: 'center', justifyContent: 'center',
   },
-  requestAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.purple, alignItems: 'center', justifyContent: 'center' },
-  requestAvatarText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFFFFF' },
-  requestUid: { flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: C.heading },
+  avatarText: { fontFamily: FONTS.extraBold, fontSize: 18, color: '#fff' },
+  orgName: { fontFamily: FONTS.extraBold, fontSize: 16, color: C.text, marginBottom: 2 },
+  msgBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    height: 38, paddingHorizontal: SPACING.md, borderRadius: 19,
+    borderWidth: 1.5, borderColor: C.brand,
+  },
+  msgText: { fontFamily: FONTS.semiBold, fontSize: 14, color: C.brand },
+
+  noRequestsRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.md },
+  noRequestsText: { fontFamily: FONTS.regular, fontSize: 13, color: C.textSubtle },
+  requestRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.sm },
+  requestAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center' },
+  requestAvatarText: { fontFamily: FONTS.bold, fontSize: 14, color: '#fff' },
+  requestUid: { flex: 1, fontFamily: FONTS.medium, fontSize: 13, color: C.text },
   requestActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  acceptBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 44, backgroundColor: C.success, paddingHorizontal: SPACING.sm, borderRadius: RADIUS.full },
-  acceptBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 12 },
-  rejectBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.errorBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(239,35,60,0.3)' },
+  acceptBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 36, backgroundColor: C.success, paddingHorizontal: SPACING.sm, borderRadius: 18 },
+  acceptBtnText: { fontFamily: FONTS.bold, color: '#fff', fontSize: 12 },
+  rejectBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.errorBg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(239,35,60,0.3)' },
+
+  footer: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: C.bg,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.border,
+    paddingHorizontal: SPACING.lg, paddingTop: SPACING.md,
+    gap: SPACING.sm,
+  },
+  cta: {
+    height: 56, borderRadius: 18,
+    backgroundColor: C.brand,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
+  },
+  ctaDisabled: { backgroundColor: C.disabled },
+  ctaText: { fontFamily: FONTS.extraBold, fontSize: 16, color: '#fff' },
   joinedRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  joinedCta: { backgroundColor: C.success },
+  requestedCta: { backgroundColor: C.warning },
   leaveBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
-    minHeight: 44,
-    paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.full, borderWidth: 1.5,
+    height: 56, paddingHorizontal: SPACING.md,
+    borderRadius: 18, borderWidth: 1.5,
     borderColor: C.error, backgroundColor: C.errorBg,
   },
   leaveBtnText: { fontFamily: FONTS.bold, color: C.error, fontSize: 13 },
-  noRequestsRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingVertical: SPACING.sm },
-  noRequestsText: { fontFamily: FONTS.regular, fontSize: 13, color: C.muted },
-  bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1, borderTopColor: C.border,
-    padding: SPACING.lg,
-    ...SHADOW.lg,
-  },
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  actionColumn: { gap: SPACING.sm },
   rateBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.full, borderWidth: 1.5,
-    borderColor: C.purple, backgroundColor: 'rgba(63,47,134,0.06)',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: SPACING.sm, borderRadius: 18,
+    borderWidth: 1.5, borderColor: C.brand, backgroundColor: C.tint,
   },
   rateBtnDone: { borderColor: '#F59E0B', backgroundColor: '#FEF3C7' },
-  rateBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: C.purple },
+  rateBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: C.brand },
   rateBtnTextDone: { color: '#B45309' },
-  // Rating modal
+
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: '#FFFFFF', borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl, padding: SPACING.xl, paddingBottom: 48,
-    alignItems: 'center',
+    backgroundColor: C.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: SPACING.xl, paddingBottom: 48, alignItems: 'center',
   },
-  modalTitle: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading, marginBottom: SPACING.xs },
-  modalSub: { fontFamily: FONTS.regular, fontSize: 14, color: C.sub, marginBottom: SPACING.xl },
+  modalTitle: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.text, marginBottom: SPACING.xs },
+  modalSub: { fontFamily: FONTS.regular, fontSize: 14, color: C.textMuted, marginBottom: SPACING.xl },
   starsRow: { marginBottom: SPACING.md },
-  starLabel: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading, height: 24, marginBottom: SPACING.xl },
+  starLabel: { fontFamily: FONTS.bold, fontSize: 16, color: C.text, height: 24, marginBottom: SPACING.xl },
   modalActions: { flexDirection: 'row', gap: SPACING.md, width: '100%' },
   modalCancelBtn: {
-    flex: 1, paddingVertical: SPACING.md, borderRadius: RADIUS.full,
+    flex: 1, paddingVertical: SPACING.md, borderRadius: 18,
     borderWidth: 1.5, borderColor: C.border, alignItems: 'center',
   },
-  modalCancelText: { fontFamily: FONTS.semiBold, color: C.sub, fontSize: 15 },
+  modalCancelText: { fontFamily: FONTS.semiBold, color: C.textMuted, fontSize: 15 },
   modalSubmitBtn: {
-    flex: 2, paddingVertical: SPACING.md, borderRadius: RADIUS.full,
-    backgroundColor: C.purple, alignItems: 'center',
+    flex: 2, paddingVertical: SPACING.md, borderRadius: 18,
+    backgroundColor: C.brand, alignItems: 'center',
   },
-  modalSubmitBtnDisabled: { backgroundColor: C.muted },
-  modalSubmitText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 15 },
-  actionBtn: {
-    backgroundColor: C.purple,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionBtnFlex: { flex: 1 },
-  actionBtnInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  joinedBtn: { backgroundColor: C.success },
-  requestedBtn: { backgroundColor: C.warning },
-  fullBtn: { backgroundColor: C.muted },
-  actionBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 15 },
-  chatBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(63,47,134,0.08)',
-    borderWidth: 1.5,
-    borderColor: C.purple,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  chatBtnText: { fontFamily: FONTS.bold, color: C.purple, fontSize: 9 },
+  modalSubmitBtnDisabled: { backgroundColor: C.disabled },
+  modalSubmitText: { fontFamily: FONTS.bold, color: '#fff', fontSize: 15 },
 });

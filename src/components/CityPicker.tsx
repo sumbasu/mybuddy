@@ -8,34 +8,45 @@ import { searchCities, isValidCity } from '../constants/cities';
 import { searchRoadsAndLandmarks } from '../services/geocoding';
 import { COLORS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 
-// Light palette for use on a white/light page background (e.g. onboarding
-// screens). The default styling below is tuned for the dark purple cards
-// this component sits in on Edit Profile.
-const LIGHT = {
-  label: '#767683',
-  border: '#ECEBF2',
-  surface: '#FFFFFF',
-  text: '#16213E',
-  muted: '#9A9AA6',
-};
-
 interface Props {
   value: string;
   onChange: (city: string) => void;
   label?: string;
   placeholder?: string;
+  // 'dark' (default) matches the purple-gradient onboarding screens this
+  // component was built for. 'light' is for white-card screens (Edit
+  // Profile's redesign) where the dark variant's cream-on-translucent
+  // colors would be unreadable.
   variant?: 'dark' | 'light';
 }
 
-export default function CityPicker({
-  value, onChange, label = 'Location', placeholder = 'Search location...', variant = 'dark',
-}: Props) {
-  const light = variant === 'light';
-  const labelColor = light ? LIGHT.label : COLORS.textSecondary;
-  const borderColorDefault = light ? LIGHT.border : COLORS.border;
-  const surfaceColor = light ? LIGHT.surface : COLORS.surface;
-  const textColor = light ? LIGHT.text : COLORS.textPrimary;
-  const mutedColor = light ? LIGHT.muted : COLORS.textMuted;
+const THEME = {
+  dark: {
+    label: COLORS.textSecondary,
+    inputBg: COLORS.surface,
+    inputBorder: COLORS.border,
+    text: COLORS.textPrimary,
+    placeholder: COLORS.textMuted,
+    icon: COLORS.textMuted,
+    dropdownBg: COLORS.surface,
+    dropdownBorder: COLORS.border,
+    suggestionBorder: COLORS.border,
+  },
+  light: {
+    label: '#6E6E80',
+    inputBg: '#FFFFFF',
+    inputBorder: '#E6E6EC',
+    text: '#3D3081',
+    placeholder: '#9A9AAB',
+    icon: '#9A9AAB',
+    dropdownBg: '#FFFFFF',
+    dropdownBorder: '#E6E6EC',
+    suggestionBorder: '#E6E6EC',
+  },
+};
+
+export default function CityPicker({ value, onChange, label = 'Location', placeholder = 'Search location...', variant = 'dark' }: Props) {
+  const t = THEME[variant];
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [focused, setFocused] = useState(false);
@@ -134,27 +145,27 @@ export default function CityPicker({
   }, []);
 
   const borderColor = !focused
-    ? borderColorDefault
+    ? t.inputBorder
     : valid
     ? '#C8DB2E'
     : COLORS.primary;
 
   return (
     <View style={styles.wrapper}>
-      {label ? <Text style={[styles.label, { color: labelColor }]}>{label}</Text> : null}
+      {label ? <Text style={[styles.label, { color: t.label }]}>{label}</Text> : null}
 
-      <View style={[styles.inputRow, { borderColor, backgroundColor: surfaceColor }]}>
+      <View style={[styles.inputRow, { borderColor, backgroundColor: t.inputBg }]}>
         <Ionicons
           name="location-outline"
           size={18}
-          color={valid ? '#C8DB2E' : focused ? COLORS.primary : mutedColor}
+          color={valid ? '#C8DB2E' : focused ? COLORS.primary : t.icon}
         />
         <TextInput
-          style={[styles.input, { color: textColor }]}
+          style={[styles.input, { color: t.text }]}
           value={query}
           onChangeText={handleChange}
           placeholder={placeholder}
-          placeholderTextColor={mutedColor}
+          placeholderTextColor={t.placeholder}
           onFocus={() => {
             setFocused(true);
             setSuggestions(searchCities(query, priorityCity));
@@ -169,14 +180,14 @@ export default function CityPicker({
           returnKeyType="done"
           autoCorrect={false}
         />
-        {remoteLoading && <ActivityIndicator size="small" color={mutedColor} />}
+        {remoteLoading && <ActivityIndicator size="small" color={t.icon} />}
         {valid && <Ionicons name="checkmark-circle" size={18} color={'#C8DB2E'} />}
         {showNoMatch && (
           <Ionicons name="alert-circle" size={18} color={COLORS.error} />
         )}
         {query.length > 0 && (
           <TouchableOpacity onPress={() => { setQuery(''); onChange(''); setSuggestions([]); }} hitSlop={12}>
-            <Ionicons name="close-circle" size={18} color={mutedColor} />
+            <Ionicons name="close-circle" size={18} color={t.icon} />
           </TouchableOpacity>
         )}
       </View>
@@ -190,12 +201,12 @@ export default function CityPicker({
 
       {/* Suggestions dropdown */}
       {showDropdown && (
-        <View style={[styles.dropdown, { backgroundColor: surfaceColor, borderColor: borderColorDefault }]}>
+        <View style={[styles.dropdown, { backgroundColor: t.dropdownBg, borderColor: t.dropdownBorder }]}>
           <ScrollView keyboardShouldPersistTaps="handled" nestedScrollEnabled>
             {suggestions.map((city) => (
-              <TouchableOpacity key={city} style={[styles.suggestion, { borderBottomColor: borderColorDefault }]} onPress={() => select(city)}>
+              <TouchableOpacity key={city} style={[styles.suggestion, { borderBottomColor: t.suggestionBorder }]} onPress={() => select(city)}>
                 <Ionicons name="location-outline" size={14} color={COLORS.primary} />
-                <Text style={[styles.suggestionText, { color: textColor }]}>{city}</Text>
+                <Text style={[styles.suggestionText, { color: t.text }]}>{city}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -208,28 +219,27 @@ export default function CityPicker({
 const styles = StyleSheet.create({
   wrapper: { marginBottom: SPACING.sm },
   label: {
-    fontSize: 12, fontWeight: '600', color: COLORS.textSecondary,
+    fontSize: 12, fontWeight: '600',
     textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: SPACING.xs,
   },
   inputRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     borderWidth: 1.5, borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md, paddingVertical: 11,
-    backgroundColor: COLORS.surface,
   },
-  input: { flex: 1, fontSize: 15, color: COLORS.textPrimary },
+  input: { flex: 1, fontSize: 15 },
   errorHint: { fontSize: 11, color: COLORS.error, marginTop: 4, marginLeft: 2 },
   dropdown: {
-    backgroundColor: COLORS.surface, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
     maxHeight: 220, marginTop: 4, ...SHADOW.md,
   },
   suggestion: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     minHeight: 44,
     paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
   },
-  suggestionText: { fontSize: 14, color: COLORS.textPrimary },
+  suggestionText: { fontSize: 14 },
   noResultText: { fontSize: 13, color: COLORS.textMuted, fontStyle: 'italic' },
 });

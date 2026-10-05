@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,20 +9,25 @@ import { RootStackParamList } from '../types';
 import { INTERESTS, INTEREST_CATEGORIES } from '../constants/interests';
 import { useAuth } from '../context/AuthContext';
 import InterestIcon from '../components/InterestIcon';
-import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
-
-// White sheet with a purple header — matches the rest of the app, not the
-// old dark-gradient theme this screen used to carry.
-const C = {
-  page: '#FAFAFA',
-  purple: '#3F2F86',
-  heading: '#16213E',
-  sub: '#767683',
-  muted: '#9A9AA6',
-  border: '#ECEBF2',
-};
+import { FONTS, SPACING } from '../constants/theme';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'InterestPicker'> };
+
+const MIN_SELECTED = 2;
+
+// Flat light page, no purple header — matches the Activity Detail redesign.
+const C = {
+  brand: '#695DA1',
+  lime: '#C9E24B',
+  bg: '#F7F7F9',
+  surface: '#FFFFFF',
+  border: '#E6E6EC',
+  text: '#3D3081',
+  textMuted: '#6E6E80',
+  textSubtle: '#9A9AAB',
+  tint: '#ECEBF4',
+  disabled: '#DCDCE4',
+};
 
 export default function InterestPickerScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -36,8 +41,12 @@ export default function InterestPickerScreen({ navigation }: Props) {
     );
   };
 
+  const count = selected.length;
+  const canContinue = count >= MIN_SELECTED && !loading;
+  const remaining = Math.max(0, MIN_SELECTED - count);
+
   const save = async () => {
-    if (selected.length < 2 || !user) return;
+    if (count < MIN_SELECTED || !user) return;
     setLoading(true);
     await setUser({ ...user, interests: selected });
     // Reached two ways: pushed from Profile/EditProfile inside the main stack
@@ -60,24 +69,35 @@ export default function InterestPickerScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" />
+
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         {navigation.canGoBack() && (
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} hitSlop={12}>
+            <Ionicons name="arrow-back" size={22} color={C.brand} />
           </TouchableOpacity>
         )}
-        <Text style={styles.title}>Pick Your Interests</Text>
+        <Text style={styles.title}>Choose an activity</Text>
         <Text style={styles.subtitle}>
-          Choose at least 2 — we'll match you with people who share them
+          Choose at least {MIN_SELECTED} and we'll match you with people who share them.
         </Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{selected.length} selected</Text>
-        </View>
       </View>
 
       <View style={styles.sheet}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={[styles.scroll, { paddingBottom: 120 + insets.bottom }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.statusRow}>
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>{count} selected</Text>
+            </View>
+            <Text style={styles.statusHint}>
+              {canContinue ? "You're all set" : `Pick ${remaining} more`}
+            </Text>
+          </View>
+
           {INTEREST_CATEGORIES.map((cat) => (
             <View key={cat.id} style={styles.section}>
               <Text style={styles.categoryLabel}>{cat.label}</Text>
@@ -91,35 +111,32 @@ export default function InterestPickerScreen({ navigation }: Props) {
                       onPress={() => toggle(interest.id)}
                       activeOpacity={0.8}
                     >
-                      <InterestIcon id={interest.id} size={16} color={isSelected ? '#FFFFFF' : C.heading} />
+                      <InterestIcon id={interest.id} size={18} color={isSelected ? C.lime : C.textSubtle} />
                       <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
                         {interest.label}
                       </Text>
-                      {isSelected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                      {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
                     </TouchableOpacity>
                   );
                 })}
               </View>
             </View>
           ))}
-          <View style={{ height: 100 }} />
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <TouchableOpacity
-            style={[styles.btn, (selected.length < 2 || loading) && styles.btnDisabled]}
+            style={[styles.btn, !canContinue && styles.btnDisabled]}
             onPress={save}
-            disabled={selected.length < 2 || loading}
-            activeOpacity={0.85}
+            disabled={!canContinue}
+            activeOpacity={0.9}
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : selected.length < 2 ? (
-              <Text style={styles.btnText}>Pick at least 2</Text>
+              <ActivityIndicator color="#fff" />
             ) : (
               <View style={styles.btnInner}>
-                <Text style={styles.btnText}>Continue</Text>
-                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                <Text style={[styles.btnText, !canContinue && styles.btnTextDisabled]}>Continue</Text>
+                <Ionicons name="arrow-forward" size={20} color={canContinue ? C.lime : C.textSubtle} />
               </View>
             )}
           </TouchableOpacity>
@@ -130,76 +147,81 @@ export default function InterestPickerScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.purple },
-  header: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: 56,
-    paddingBottom: SPACING.lg,
-    backgroundColor: C.purple,
+  root: { flex: 1, backgroundColor: C.bg },
+
+  header: { paddingHorizontal: SPACING.lg, paddingBottom: 4 },
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.surface,
+    borderWidth: 1,
+    borderColor: C.border,
+    marginBottom: SPACING.lg,
   },
-  backBtn: { marginBottom: SPACING.md, alignSelf: 'flex-start', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontFamily: FONTS.extraBold, color: '#FFFFFF', marginBottom: SPACING.xs },
-  subtitle: { fontFamily: FONTS.regular, fontSize: 14, color: 'rgba(255,255,255,0.75)', lineHeight: 20 },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-    marginTop: SPACING.sm,
-  },
-  badgeText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 13 },
-  sheet: {
-    flex: 1, backgroundColor: C.page,
-    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
-  },
+  title: { fontFamily: FONTS.extraBold, fontSize: 28, lineHeight: 34, color: C.text, letterSpacing: -0.3 },
+  subtitle: { fontSize: 15, lineHeight: 22, color: C.textMuted, marginTop: SPACING.xs },
+
+  sheet: { flex: 1, backgroundColor: C.bg },
   scroll: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
-  section: { marginBottom: SPACING.xl },
+
+  statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm },
+  countPill: {
+    backgroundColor: C.tint,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: 16,
+  },
+  countPillText: { fontWeight: '700', fontSize: 14, color: C.text },
+  statusHint: { fontSize: 14, color: C.textMuted },
+
+  section: { marginTop: SPACING.xl },
   categoryLabel: {
-    fontFamily: FONTS.bold,
-    fontSize: 12,
-    color: C.sub,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: SPACING.sm,
+    fontFamily: FONTS.extraBold,
+    fontSize: 20,
+    color: C.text,
+    marginBottom: SPACING.sm + 2,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 44,
-    backgroundColor: '#FFFFFF',
-    borderRadius: RADIUS.full,
+    gap: SPACING.xs,
+    height: 44,
     paddingHorizontal: SPACING.md,
+    borderRadius: 22,
+    backgroundColor: C.surface,
     borderWidth: 1.5,
     borderColor: C.border,
-    gap: SPACING.xs,
-    ...SHADOW.sm,
   },
   chipSelected: {
-    backgroundColor: C.purple,
-    borderColor: C.purple,
+    backgroundColor: C.brand,
+    borderColor: C.brand,
   },
-  chipLabel: { fontFamily: FONTS.medium, fontSize: 13, color: C.heading },
-  chipLabelSelected: { fontFamily: FONTS.bold, color: '#FFFFFF' },
+  chipLabel: { fontWeight: '700', fontSize: 15, color: C.textMuted },
+  chipLabelSelected: { color: '#fff' },
+
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
+    backgroundColor: C.bg,
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: C.border,
-    padding: SPACING.lg,
-    ...SHADOW.lg,
   },
   btn: {
-    backgroundColor: C.purple,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.full,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: C.brand,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  btnDisabled: { backgroundColor: C.muted },
+  btnDisabled: { backgroundColor: C.disabled },
   btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  btnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 16 },
+  btnText: { fontFamily: FONTS.extraBold, color: '#fff', fontSize: 17 },
+  btnTextDisabled: { color: C.textSubtle },
 });

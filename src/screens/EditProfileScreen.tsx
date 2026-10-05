@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Modal,
+  ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Modal, StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { auth } from '../services/firebase';
 import CityPicker from '../components/CityPicker';
-import { COLORS, SPACING, RADIUS, SHADOW, FONTS } from '../constants/theme';
+import { SPACING } from '../constants/theme';
 
 const MIN_AGE = 17;
 const MAX_AGE = 74;
@@ -32,15 +34,21 @@ const GENDER_OPTIONS = [
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'EditProfile'> };
 
-// White page with a purple header and purple cards — matches Settings/Profile.
+// Flat card-based page — matches the Pick Interests / Activity Detail redesign.
 const C = {
-  page: '#FAFAFA',
-  purple: '#3F2F86',
-  label: 'rgba(63,47,134,0.45)',
-  heading: '#16213E',
-  lime: '#C8DB2E',
+  brand: '#695DA1',
+  lime: '#C9E24B',
+  bg: '#F7F7F9',
+  surface: '#FFFFFF',
+  border: '#E6E6EC',
+  text: '#3D3081',
+  textMuted: '#6E6E80',
+  textSubtle: '#9A9AAB',
+  tint: '#ECEBF4',
+  danger: '#D64545',
+  dangerBg: '#FDEDED',
+  disabled: '#DCDCE4',
 };
-
 
 // Seeds a starting point for the DOB picker from the legacy integer `age`
 // field (still the source of truth everywhere else in the app) when no
@@ -52,6 +60,7 @@ function seedDob(user: { dob?: string; age?: number } | null): Date | null {
 }
 
 export default function EditProfileScreen({ navigation }: Props) {
+  const insets = useSafeAreaInsets();
   const { user, setUser } = useAuth();
 
   const [name, setName] = useState(user?.name || '');
@@ -59,7 +68,7 @@ export default function EditProfileScreen({ navigation }: Props) {
   const [showDobPicker, setShowDobPicker] = useState(false);
   const [gender, setGender] = useState<'male' | 'female' | 'other' | 'prefer_not_to_say' | ''>(user?.gender || '');
   const [city, setCity] = useState(user?.city || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || auth.currentUser?.phoneNumber || '');
   const [buddyPref, setBuddyPref] = useState<'any' | 'same' | 'male' | 'female'>(
     user?.buddyGenderPreference || 'any'
   );
@@ -71,10 +80,13 @@ export default function EditProfileScreen({ navigation }: Props) {
     dob?.getTime() !== initialDob?.getTime() ||
     gender !== (user?.gender || '') ||
     city !== (user?.city || '') ||
-    email.trim() !== (user?.email || '') ||
+    phone.trim() !== (user?.phone || '') ||
     buddyPref !== (user?.buddyGenderPreference || 'any');
 
   const ageValid = !dob || (ageFromDob(dob) >= MIN_AGE && ageFromDob(dob) <= MAX_AGE);
+  const nameValid = !!name.trim();
+  const phoneValid = !!phone.trim();
+  const canSave = hasChanges && nameValid && ageValid && phoneValid && !loading;
 
   const doSave = async () => {
     if (!user) return;
@@ -88,7 +100,7 @@ export default function EditProfileScreen({ navigation }: Props) {
         dob: dob ? dob.toISOString() : user.dob,
         gender: gender || user.gender,
         city: city || user.city,
-        email: email.trim() || user.email,
+        phone: phone.trim(),
         buddyGenderPreference: buddyPref,
       });
     } catch {
@@ -103,14 +115,7 @@ export default function EditProfileScreen({ navigation }: Props) {
   };
 
   const confirmSave = () => {
-    if (!name.trim()) {
-      Alert.alert('Required', 'Please enter your name.');
-      return;
-    }
-    if (!ageValid) {
-      Alert.alert('Invalid date of birth', `Age must be between ${MIN_AGE} and ${MAX_AGE}.`);
-      return;
-    }
+    if (!canSave) return;
     Alert.alert('Save changes', 'Do you want to save your changes?', [
       { text: 'No', style: 'cancel', onPress: () => navigation.goBack() },
       { text: 'Yes', onPress: doSave },
@@ -118,202 +123,151 @@ export default function EditProfileScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Profile</Text>
-          <TouchableOpacity
-            style={[styles.saveBtn, (!hasChanges || loading) && styles.saveBtnDisabled]}
-            onPress={confirmSave}
-            disabled={!hasChanges || loading}
-          >
-            {loading
-              ? <ActivityIndicator size="small" color={C.lime} />
-              : <Text style={styles.saveBtnText}>Save</Text>}
-          </TouchableOpacity>
-        </View>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.roundBtn} hitSlop={12}>
+          <Ionicons name="arrow-back" size={22} color={C.brand} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit profile</Text>
+        <TouchableOpacity
+          style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}
+          onPress={confirmSave}
+          disabled={!canSave}
+          activeOpacity={0.85}
+        >
+          <Text style={[styles.saveText, !canSave && { color: C.textSubtle }]}>
+            {loading ? 'Saving…' : 'Save'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Email — editable only when the profile doesn't already have one;
-            an existing email is tied to how the user signed in (Google/Apple)
-            and can't be changed here. */}
-        <View style={styles.section}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: SPACING.lg, paddingTop: SPACING.xs, paddingBottom: 40 + insets.bottom }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Account — email is the account's unique ID and can never be
+              changed here; phone is required but editable. */}
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
-            {user?.email ? (
-              <Field
-                icon="mail-outline"
-                label="Email"
-                value={user.email}
-                editable={false}
-                hint="Email cannot be changed"
-              />
-            ) : (
-              <View style={styles.fieldWrap}>
-                <View style={styles.fieldHeader}>
-                  <Ionicons name="mail-outline" size={16} color="#FFFFFF" />
-                  <Text style={styles.label}>Email</Text>
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Add an email address"
-                  placeholderTextColor="rgba(255,255,255,0.5)"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-              </View>
-            )}
+            <FieldLabel icon="mail-outline" label="Email" />
+            <View style={styles.readonly}>
+              <Text style={[styles.inputText, !user?.email && { color: C.textSubtle }]}>
+                {user?.email || 'Not set'}
+              </Text>
+              <Ionicons name="lock-closed-outline" size={18} color={C.textSubtle} />
+            </View>
+            <Text style={styles.helper}>Your email can't be changed.</Text>
+
+            <View style={styles.divider} />
+
+            <FieldLabel icon="call-outline" label="Phone number" required />
+            <TextInput
+              style={[styles.input, styles.inputText, !phoneValid && styles.inputError]}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="+91 98765 43210"
+              placeholderTextColor={C.textSubtle}
+              keyboardType="phone-pad"
+            />
+            {!phoneValid && <ErrorText>Enter your phone number</ErrorText>}
           </View>
-        </View>
 
-        {/* Editable fields */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Details</Text>
+          {/* Personal details */}
+          <Text style={styles.sectionTitle}>Personal details</Text>
           <View style={styles.card}>
-
-            <View style={styles.fieldWrap}>
-              <View style={styles.fieldHeader}>
-                <Ionicons name="person-outline" size={16} color="#FFFFFF" />
-                <Text style={styles.label}>Full Name</Text>
-              </View>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Your full name"
-                placeholderTextColor="rgba(255,255,255,0.5)"
-                autoCapitalize="words"
-              />
-            </View>
+            <FieldLabel icon="person-outline" label="Full name" required />
+            <TextInput
+              style={[styles.input, styles.inputText, !nameValid && styles.inputError]}
+              value={name}
+              onChangeText={setName}
+              placeholder="Your name"
+              placeholderTextColor={C.textSubtle}
+              autoCapitalize="words"
+            />
+            {!nameValid && <ErrorText>Enter your name</ErrorText>}
 
             <View style={styles.divider} />
 
-            <View style={styles.fieldWrap}>
-              <View style={styles.fieldHeader}>
-                <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
-                <Text style={styles.label}>Date of birth</Text>
-              </View>
-              <TouchableOpacity style={styles.dobInput} onPress={() => setShowDobPicker(true)} activeOpacity={0.7}>
-                <Text style={dob ? styles.dobValue : styles.dobPlaceholder}>
-                  {dob ? formatDob(dob) : 'Select your date of birth'}
-                </Text>
-              </TouchableOpacity>
-              {dob && !ageValid && (
-                <Text style={styles.ageHint}>Age must be between {MIN_AGE} and {MAX_AGE}</Text>
-              )}
-            </View>
+            <FieldLabel icon="calendar-outline" label="Date of birth" />
+            <TouchableOpacity
+              onPress={() => setShowDobPicker(true)}
+              activeOpacity={0.7}
+              style={[styles.input, styles.inputRow, dob && !ageValid && styles.inputError]}
+            >
+              <Text style={[styles.inputText, !dob && { color: C.textSubtle }]}>
+                {dob ? formatDob(dob) : 'Select date'}
+              </Text>
+              <Ionicons name="chevron-down" size={22} color={C.textSubtle} />
+            </TouchableOpacity>
+            {dob && !ageValid && (
+              <ErrorText>You need to be between {MIN_AGE} and {MAX_AGE} to use Sweatbud</ErrorText>
+            )}
 
             <View style={styles.divider} />
 
-            <View style={styles.fieldWrap}>
-              <View style={styles.fieldHeader}>
-                <Ionicons name="transgender-outline" size={16} color="#FFFFFF" />
-                <Text style={styles.label}>Gender</Text>
-              </View>
-              <View style={styles.genderGrid}>
-                {GENDER_OPTIONS.map(({ value, label }) => (
+            <FieldLabel icon="transgender-outline" label="Gender" />
+            <View style={styles.genderGrid}>
+              {GENDER_OPTIONS.map(({ value, label }) => {
+                const on = gender === value;
+                return (
                   <TouchableOpacity
                     key={value}
-                    style={[styles.genderChip, gender === value && styles.genderChipActive]}
                     onPress={() => setGender(value)}
+                    activeOpacity={0.85}
+                    style={[styles.genderOpt, on && styles.genderOptOn]}
                   >
-                    <Text style={[styles.genderChipText, gender === value && styles.genderChipTextActive]}>
-                      {label}
-                    </Text>
+                    {on && <Ionicons name="checkmark" size={16} color={C.lime} />}
+                    <Text style={[styles.genderText, on && { color: '#fff' }]}>{label}</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
+                );
+              })}
             </View>
 
             <View style={styles.divider} />
 
-            <View style={styles.fieldWrap}>
-              <CityPicker
-                label="Location"
-                value={city}
-                onChange={setCity}
-                placeholder="Search your location..."
-              />
-            </View>
-
+            <FieldLabel icon="location-outline" label="Location" />
+            <CityPicker
+              label=""
+              value={city}
+              onChange={setCity}
+              placeholder="Search your city"
+              variant="light"
+            />
           </View>
-        </View>
 
-        {showDobPicker && (
-          <Modal transparent animationType="slide">
-            <View style={styles.pickerModal}>
-              <View style={styles.pickerSheet}>
-                <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerTitle}>Date of birth</Text>
-                  <TouchableOpacity onPress={() => setShowDobPicker(false)}>
-                    <Text style={styles.pickerDone}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={dob || new Date(new Date().getFullYear() - 25, 0, 1)}
-                  mode="date"
-                  display="spinner"
-                  maximumDate={new Date(new Date().getFullYear() - MIN_AGE, 11, 31)}
-                  minimumDate={new Date(new Date().getFullYear() - MAX_AGE, 0, 1)}
-                  accentColor={COLORS.primary}
-                  textColor="#000000"
-                  themeVariant="light"
-                  onChange={(_, picked) => { if (picked) setDob(picked); }}
-                  style={{ width: '100%' }}
-                />
-              </View>
-            </View>
-          </Modal>
-        )}
-
-        {/* Buddy gender preference */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Buddy Preference</Text>
+          {/* Buddy gender preference */}
+          <Text style={styles.sectionTitle}>Buddy preference</Text>
           <View style={styles.card}>
-            <View style={styles.fieldWrap}>
-              <View style={styles.fieldHeader}>
-                <Ionicons name="people-outline" size={16} color={COLORS.primary} />
-                <Text style={styles.label}>Preferred Buddy Gender</Text>
-              </View>
-              <Text style={styles.prefHint}>
-                Who would you prefer to connect with for activities?
-              </Text>
-              <View style={styles.prefGrid}>
-                {([
-                  { value: 'any',    label: 'Anyone',      icon: 'people-outline' },
-                  { value: 'same',   label: 'Same as me',  icon: 'person-outline' },
-                  { value: 'male',   label: 'Male',        icon: 'man-outline' },
-                  { value: 'female', label: 'Female',      icon: 'woman-outline' },
-                ] as const).map((opt) => (
+            <FieldLabel icon="people-outline" label="Preferred buddy gender" />
+            <Text style={styles.helper}>Who would you prefer to connect with for activities?</Text>
+            <View style={styles.prefGrid}>
+              {([
+                { value: 'any',    label: 'Anyone',      icon: 'people-outline' },
+                { value: 'same',   label: 'Same as me',  icon: 'person-outline' },
+                { value: 'male',   label: 'Male',        icon: 'man-outline' },
+                { value: 'female', label: 'Female',      icon: 'woman-outline' },
+              ] as const).map((opt) => {
+                const on = buddyPref === opt.value;
+                return (
                   <TouchableOpacity
                     key={opt.value}
-                    style={[styles.prefChip, buddyPref === opt.value && styles.prefChipActive]}
+                    style={[styles.prefChip, on && styles.prefChipActive]}
                     onPress={() => setBuddyPref(opt.value)}
                     activeOpacity={0.8}
                   >
-                    <Ionicons
-                      name={opt.icon}
-                      size={18}
-                      color={buddyPref === opt.value ? COLORS.white : COLORS.textSecondary}
-                    />
-                    <Text style={[styles.prefChipText, buddyPref === opt.value && styles.prefChipTextActive]}>
-                      {opt.label}
-                    </Text>
+                    <Ionicons name={opt.icon} size={18} color={on ? '#fff' : C.textMuted} />
+                    <Text style={[styles.prefChipText, on && styles.prefChipTextActive]}>{opt.label}</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
+                );
+              })}
             </View>
           </View>
-        </View>
 
-        {/* Interests shortcut */}
-        <View style={styles.section}>
+          {/* Interests shortcut */}
           <Text style={styles.sectionTitle}>Interests</Text>
           <TouchableOpacity
             style={styles.interestsRow}
@@ -321,129 +275,165 @@ export default function EditProfileScreen({ navigation }: Props) {
             activeOpacity={0.85}
           >
             <View style={styles.interestsLeft}>
-              <Ionicons name="heart-outline" size={18} color="#FFFFFF" />
+              <View style={styles.interestsIcon}>
+                <Ionicons name="heart-outline" size={18} color={C.brand} />
+              </View>
               <View>
-                <Text style={styles.interestsLabel}>My Interests</Text>
+                <Text style={styles.interestsLabel}>My interests</Text>
                 <Text style={styles.interestsSub}>
-                  {user?.interests?.length
-                    ? `${user.interests.length} selected`
-                    : 'None selected yet'}
+                  {user?.interests?.length ? `${user.interests.length} selected` : 'None selected yet'}
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+            <Ionicons name="chevron-forward" size={18} color={C.textSubtle} />
           </TouchableOpacity>
-        </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
-}
-
-function Field({ icon, label, value, editable = true, hint }: {
-  icon: any; label: string; value: string; editable?: boolean; hint?: string;
-}) {
-  return (
-    <View style={styles.fieldWrap}>
-      <View style={styles.fieldHeader}>
-        <Ionicons name={icon} size={16} color={editable ? '#FFFFFF' : 'rgba(255,255,255,0.5)'} />
-        <Text style={styles.label}>{label}</Text>
-      </View>
-      <Text style={[styles.readValue, !editable && styles.readValueMuted]}>{value}</Text>
-      {hint && <Text style={styles.hint}>{hint}</Text>}
+      {showDobPicker && (
+        <Modal transparent animationType="slide">
+          <View style={styles.pickerModal}>
+            <View style={styles.pickerSheet}>
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>Date of birth</Text>
+                <TouchableOpacity onPress={() => setShowDobPicker(false)}>
+                  <Text style={styles.pickerDone}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={dob || new Date(new Date().getFullYear() - 25, 0, 1)}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date(new Date().getFullYear() - MIN_AGE, 11, 31)}
+                minimumDate={new Date(new Date().getFullYear() - MAX_AGE, 0, 1)}
+                accentColor={C.brand}
+                textColor="#000000"
+                themeVariant="light"
+                onChange={(_, picked) => { if (picked) setDob(picked); }}
+                style={{ width: '100%' }}
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
 
+function FieldLabel({ icon, label, required }: { icon: any; label: string; required?: boolean }) {
+  return (
+    <View style={styles.labelRow}>
+      <View style={styles.labelIcon}>
+        <Ionicons name={icon} size={16} color={C.brand} />
+      </View>
+      <Text style={styles.label}>
+        {label}
+        {required ? <Text style={{ color: C.danger }}> *</Text> : null}
+      </Text>
+    </View>
+  );
+}
+
+const ErrorText = ({ children }: { children: React.ReactNode }) => (
+  <View style={styles.errorRow}>
+    <Ionicons name="alert-circle-outline" size={15} color={C.danger} />
+    <Text style={styles.errorText}>{children}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: C.page, paddingBottom: 40 },
+  root: { flex: 1, backgroundColor: C.bg },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg, paddingTop: 56, paddingBottom: SPACING.md,
-    backgroundColor: C.purple,
+    paddingHorizontal: SPACING.lg, paddingBottom: SPACING.sm + 4,
   },
-  backBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: '#FFFFFF' },
+  roundBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+  },
+  headerTitle: { fontWeight: '800', fontSize: 18, color: C.text },
   saveBtn: {
-    backgroundColor: C.heading, paddingHorizontal: SPACING.md,
-    minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: RADIUS.full,
+    height: 40, paddingHorizontal: SPACING.lg, borderRadius: 20,
+    backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center',
   },
-  saveBtnDisabled: { backgroundColor: 'rgba(255,255,255,0.25)' },
-  saveBtnText: { color: C.lime, fontWeight: '700', fontSize: 14 },
+  saveBtnDisabled: { backgroundColor: C.disabled },
+  saveText: { fontWeight: '800', fontSize: 15, color: '#fff' },
 
-  section: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
-  sectionTitle: { fontSize: 11, fontWeight: '700', color: C.label, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: SPACING.sm },
+  sectionTitle: { fontWeight: '800', fontSize: 20, color: C.text, marginTop: SPACING.lg, marginBottom: SPACING.md },
+  card: {
+    backgroundColor: C.surface, borderRadius: 20,
+    borderWidth: 1, borderColor: C.border, padding: SPACING.lg,
+  },
+  divider: { height: 1, backgroundColor: C.border, marginVertical: SPACING.lg - 2 },
 
-  card: { backgroundColor: C.purple, borderRadius: RADIUS.lg, paddingHorizontal: SPACING.lg },
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm },
+  labelIcon: {
+    width: 28, height: 28, borderRadius: 9,
+    backgroundColor: C.tint, alignItems: 'center', justifyContent: 'center',
+  },
+  label: { fontWeight: '700', fontSize: 14, color: C.text },
 
-  fieldWrap: { paddingVertical: SPACING.md },
-  fieldHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  label: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
-    fontSize: 15, color: '#FFFFFF',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: RADIUS.md, paddingHorizontal: SPACING.md,
-    paddingVertical: 10,
+    minHeight: 50, borderRadius: 14, borderWidth: 1.5, borderColor: C.border,
+    backgroundColor: C.surface, paddingHorizontal: SPACING.md,
   },
-  readValue: { fontSize: 15, color: '#FFFFFF', fontWeight: '500' },
-  readValueMuted: { color: 'rgba(255,255,255,0.6)' },
-  hint: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 },
-  ageHint: { fontSize: 11, color: '#FF8A80', marginTop: 4 },
-  dobInput: {
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: RADIUS.md, paddingHorizontal: SPACING.md,
-    paddingVertical: 12,
+  inputRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  inputText: { fontSize: 16, color: C.text },
+  inputError: { borderColor: C.danger, backgroundColor: C.dangerBg },
+
+  readonly: {
+    minHeight: 50, borderRadius: 14, backgroundColor: C.bg,
+    paddingHorizontal: SPACING.md, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'space-between',
   },
-  dobValue: { fontSize: 15, color: '#FFFFFF' },
-  dobPlaceholder: { fontSize: 15, color: 'rgba(255,255,255,0.5)' },
+  helper: { fontSize: 13, color: C.textSubtle, marginTop: 6, marginBottom: SPACING.sm },
+
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: SPACING.xs },
+  errorText: { fontSize: 13, color: C.danger, flex: 1 },
+
+  genderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
+  genderOpt: {
+    flexBasis: '47%', flexGrow: 1, height: 48, borderRadius: 14,
+    borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+  },
+  genderOptOn: { backgroundColor: C.brand, borderColor: C.brand },
+  genderText: { fontWeight: '700', fontSize: 15, color: C.textMuted },
+
   pickerModal: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  pickerSheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, paddingBottom: 24 },
+  pickerSheet: { backgroundColor: C.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 24 },
   pickerHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    borderBottomWidth: 1, borderBottomColor: C.border,
   },
-  pickerTitle: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
-  pickerDone: { fontSize: 15, fontWeight: '700', color: COLORS.primary },
-  prefHint: { fontSize: 12, color: COLORS.textMuted, marginBottom: SPACING.sm },
+  pickerTitle: { fontSize: 15, fontWeight: '700', color: C.text },
+  pickerDone: { fontSize: 15, fontWeight: '700', color: C.brand },
+
   prefGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   prefChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.full, borderWidth: 1.5,
-    borderColor: COLORS.border, backgroundColor: COLORS.surface,
+    borderRadius: 18, borderWidth: 1.5, borderColor: C.border, backgroundColor: C.surface,
   },
-  prefChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  prefChipText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
-  prefChipTextActive: { color: COLORS.white, fontWeight: '700' },
-
-  genderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
-  genderChip: {
-    width: '47%', minHeight: 44, borderRadius: RADIUS.md,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent',
-    paddingHorizontal: SPACING.xs,
-  },
-  genderChipActive: { borderColor: C.lime, backgroundColor: 'rgba(200,219,46,0.18)' },
-  genderChipText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
-  genderChipTextActive: { color: C.lime, fontWeight: '700' },
-
-  dropdown: {
-    backgroundColor: COLORS.surface, borderRadius: RADIUS.md,
-    borderWidth: 1, borderColor: COLORS.border,
-    marginTop: SPACING.xs, ...SHADOW.sm,
-  },
-  dropdownItem: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm },
-  dropdownText: { fontSize: 14, color: COLORS.textPrimary },
+  prefChipActive: { backgroundColor: C.brand, borderColor: C.brand },
+  prefChipText: { fontSize: 13, color: C.textMuted, fontWeight: '500' },
+  prefChipTextActive: { color: '#fff', fontWeight: '700' },
 
   interestsRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: C.purple, borderRadius: RADIUS.lg,
+    backgroundColor: C.surface, borderRadius: 20,
+    borderWidth: 1, borderColor: C.border,
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   interestsLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-  interestsLabel: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
-  interestsSub: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  interestsIcon: {
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: C.tint, alignItems: 'center', justifyContent: 'center',
+  },
+  interestsLabel: { fontSize: 15, fontWeight: '600', color: C.text },
+  interestsSub: { fontSize: 12, color: C.textSubtle, marginTop: 2 },
 });

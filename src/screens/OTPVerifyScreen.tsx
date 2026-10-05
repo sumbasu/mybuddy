@@ -28,7 +28,7 @@ const C = {
   resendMuted: '#9AA0AC',
   resendLink: '#4B5BD9',
   btnDisabled: '#CBD3F7',
-  btnEnabled: '#4B5BD9',
+  btnEnabled: '#3D3081',
   btnText: '#FFFFFF',
 };
 

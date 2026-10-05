@@ -23,7 +23,7 @@ const C = {
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
-  purple: '#3F2F86',
+  purple: '#3d3081',
   gold: '#E8B84B',
   lime: '#C8DB2E',
   error: '#EF233C',
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md, marginBottom: SPACING.lg },
   avatar: {
     width: 64, height: 64, borderRadius: 32,
-    backgroundColor: C.heading,
+    backgroundColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
   avatarImage: { width: 64, height: 64, borderRadius: 32 },
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   editBtnText: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.purple },
   goProBtn: {
     flex: 1, height: 44, borderRadius: RADIUS.lg,
-    backgroundColor: C.heading,
+    backgroundColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
   goProBtnText: { fontFamily: FONTS.extraBold, fontSize: 13.5, color: C.lime },
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1.2, borderColor: C.border,
   },
-  interestChipActive: { backgroundColor: C.heading, borderColor: C.heading },
+  interestChipActive: { backgroundColor: C.purple, borderColor: C.purple },
   interestChipText: { fontFamily: FONTS.bold, fontSize: 13, color: C.sub },
   interestChipTextActive: { color: '#FFFFFF' },
   addChip: {
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   modalOptionText: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.sub },
   modalOptionTextActive: { color: '#FFFFFF' },
   modalSaveBtn: {
-    height: 50, borderRadius: RADIUS.full, backgroundColor: C.heading,
+    height: 50, borderRadius: RADIUS.full, backgroundColor: C.purple,
     alignItems: 'center', justifyContent: 'center', marginTop: SPACING.sm,
   },
   modalSaveBtnText: { fontFamily: FONTS.extraBold, fontSize: 15, color: C.lime },
