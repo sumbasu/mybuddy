@@ -304,12 +304,14 @@ function GameCard({ activity, onPress }: { activity: Activity; onPress: () => vo
         <Text style={styles.spotsLeft}>{spotsLeft > 0 ? `${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left` : 'Full'}</Text>
       </View>
       <View style={styles.gameCardBody}>
-        <Text style={styles.gameTitle} numberOfLines={2}>{activity.title}</Text>
-        {!!activity.description && (
-          <Text style={styles.gameDesc} numberOfLines={2}>{activity.description}</Text>
-        )}
-        <Text style={styles.gameMetaText} numberOfLines={1}>{titleCase(activity.location.name)}</Text>
-        <Text style={styles.gameMetaText}>{dateStr}</Text>
+        <View>
+          <Text style={styles.gameTitle} numberOfLines={2}>{activity.title}</Text>
+          {!!activity.description && (
+            <Text style={styles.gameDesc} numberOfLines={2}>{activity.description}</Text>
+          )}
+          <Text style={styles.gameMetaText} numberOfLines={1}>{titleCase(activity.location.name)}</Text>
+          <Text style={styles.gameMetaText}>{dateStr}</Text>
+        </View>
         <View style={styles.gameFooter}>
           <View style={styles.avatarStackRow}>
             <View style={styles.avatarStack}>
@@ -415,6 +417,11 @@ const styles = StyleSheet.create({
     width: 265, backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
     borderRadius: RADIUS.xl,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+    // Horizontal ScrollView rows default to alignItems:'stretch', so every
+    // card matches the tallest sibling's height — paired with gameCardBody's
+    // flex+space-between below, this keeps the Join button on one row across
+    // cards no matter how little text a given activity has.
+    alignSelf: 'stretch',
   },
   gameCardTop: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -423,7 +430,7 @@ const styles = StyleSheet.create({
   tagPill: { borderRadius: RADIUS.full, paddingHorizontal: SPACING.sm, paddingVertical: 4 },
   tagPillText: { fontFamily: FONTS.bold, fontSize: 12.5, color: C.heading },
   spotsLeft: { fontFamily: FONTS.bold, fontSize: 11.5, color: '#D14343' },
-  gameCardBody: { padding: SPACING.md, paddingTop: SPACING.sm },
+  gameCardBody: { padding: SPACING.md, paddingTop: SPACING.sm, flex: 1, justifyContent: 'space-between' },
   gameTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading, lineHeight: 21 },
   gameDesc: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 3, lineHeight: 16 },
   gameMetaText: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, marginTop: 4 },
