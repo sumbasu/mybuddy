@@ -72,6 +72,15 @@ export interface Activity {
   createdAt: string;
 }
 
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  createdBy: string;
+  members: string[]; // uids, always includes createdBy
+  createdAt: string;
+}
+
 export interface Message {
   id: string;
   senderId: string;

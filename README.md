@@ -159,6 +159,14 @@ service cloud.firestore {
         allow write: if request.auth != null;
       }
     }
+    match /groups/{groupId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.createdBy
+        && request.resource.data.members.hasAny([request.auth.uid]);
+      allow update: if request.auth != null && resource.data.members.hasAny([request.auth.uid]);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
+    }
   }
 }
 ```
@@ -298,6 +306,18 @@ chats/{chatId}
 |---|---|---|
 | Send message | `addDoc(messagesRef, data)` | User sends a message |
 | Listen to messages | `onSnapshot(orderBy('createdAt', 'asc'))` | Chat screen (real-time) |
+
+**`groups/{groupId}`**
+
+A group is backed by a `chats/group_{groupId}` doc (see above) for its
+messaging — creating a group seeds that chat doc with the full member list
+up front, so ChatScreen (built for 1:1 chats) can be reused unmodified for
+group messaging.
+
+| Operation | Method | Trigger |
+|---|---|---|
+| Create group (+ seed its chat) | `setDoc` on both `groups/{id}` and `chats/group_{id}` | "New group" in Community > Groups |
+| List my groups | `onSnapshot(where('members', 'array-contains', uid))` | Community > Groups tab |
 
 **Firestore FieldValues used:** `serverTimestamp()`, `arrayUnion()`, `arrayRemove()`, `increment()`
 

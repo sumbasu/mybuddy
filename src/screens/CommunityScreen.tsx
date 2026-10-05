@@ -14,6 +14,8 @@ import {
   followUser, unfollowUser, getFollowingIds, getSuggestedUsers, searchUsers,
 } from '../services/follows';
 import { createPost, getFeedPosts, getMyPosts, Post } from '../services/posts';
+import { createGroup } from '../services/groups';
+import { useGroups } from '../hooks/useGroups';
 import NoPostsIllustration from '../components/NoPostsIllustration';
 
 type Props = {
@@ -83,6 +85,17 @@ export default function CommunityScreen({ navigation, route }: Props) {
   const [postText, setPostText] = useState('');
   const [posting, setPosting] = useState(false);
 
+  const { groups, loading: loadingGroups } = useGroups(user?.uid);
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [groupMemberSearch, setGroupMemberSearch] = useState('');
+  const [groupMemberResults, setGroupMemberResults] = useState<User[]>([]);
+  const [groupMemberSearching, setGroupMemberSearching] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const groupMemberSearchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const loadPosts = async () => {
     if (!user) return;
     try {
@@ -101,8 +114,6 @@ export default function CommunityScreen({ navigation, route }: Props) {
     if (!user || !postText.trim() || posting) return;
     setPosting(true);
     try {
-      const { auth } = await import('../services/firebase');
-      Alert.alert('Debug', `auth.currentUser=${auth.currentUser ? auth.currentUser.uid : 'null'}\ncontext user.uid=${user.uid}`);
       await createPost(user.uid, user.name || 'Player', postText);
       setPostText('');
       setComposerVisible(false);
@@ -185,6 +196,70 @@ export default function CommunityScreen({ navigation, route }: Props) {
     setFollowBusy((prev) => ({ ...prev, [targetUid]: false }));
   };
 
+  // Debounced search-as-you-type for the "add members" picker in the
+  // create-group modal — same pattern as the main people search above.
+  useEffect(() => {
+    if (!user || !groupModalVisible) return;
+    const term = groupMemberSearch.trim();
+    if (groupMemberSearchDebounce.current) clearTimeout(groupMemberSearchDebounce.current);
+    if (!term) {
+      setGroupMemberResults([]);
+      setGroupMemberSearching(false);
+      return;
+    }
+    setGroupMemberSearching(true);
+    groupMemberSearchDebounce.current = setTimeout(async () => {
+      try {
+        setGroupMemberResults(await searchUsers(term, user.uid));
+      } catch (err) {
+        console.error('Group member search failed:', err);
+      }
+      setGroupMemberSearching(false);
+    }, 350);
+    return () => {
+      if (groupMemberSearchDebounce.current) clearTimeout(groupMemberSearchDebounce.current);
+    };
+  }, [groupMemberSearch, groupModalVisible, user?.uid]);
+
+  const toggleGroupMember = (person: User) => {
+    setSelectedMembers((prev) =>
+      prev.some((p) => p.uid === person.uid)
+        ? prev.filter((p) => p.uid !== person.uid)
+        : [...prev, person]
+    );
+  };
+
+  const resetGroupModal = () => {
+    setGroupModalVisible(false);
+    setGroupName('');
+    setGroupDescription('');
+    setGroupMemberSearch('');
+    setGroupMemberResults([]);
+    setSelectedMembers([]);
+  };
+
+  const submitGroup = async () => {
+    if (!user || !groupName.trim() || creatingGroup) return;
+    setCreatingGroup(true);
+    try {
+      const groupId = await createGroup(
+        groupName,
+        groupDescription,
+        user.uid,
+        selectedMembers.map((m) => m.uid)
+      );
+      resetGroupModal();
+      navigation.navigate('Chat', {
+        chatId: `group_${groupId}`,
+        activityTitle: groupName.trim(),
+        participantName: groupName.trim(),
+      });
+    } catch (err) {
+      Alert.alert('Error', 'Could not create the group. Please try again.');
+    }
+    setCreatingGroup(false);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -216,19 +291,51 @@ export default function CommunityScreen({ navigation, route }: Props) {
 
         {tab === 'groups' ? (
           <View style={styles.groupsTab}>
-            <View style={styles.groupsCard}>
-              <View style={styles.groupsIconWrap}>
-                <Ionicons name="people-outline" size={30} color={C.muted} />
+            {loadingGroups ? (
+              <View style={styles.groupsLoadingWrap}>
+                <ActivityIndicator color={C.purple} />
               </View>
-              <Text style={styles.groupsCardTitle}>You are not a member of any{'\n'}group yet</Text>
-              <Text style={styles.groupsCardSub}>
-                Do not hesitate to create your own group, invite{'\n'}your friends, play, and improve together!
-              </Text>
-            </View>
+            ) : groups.length === 0 ? (
+              <View style={styles.groupsCard}>
+                <View style={styles.groupsIconWrap}>
+                  <Ionicons name="people-outline" size={30} color={C.muted} />
+                </View>
+                <Text style={styles.groupsCardTitle}>You are not a member of any{'\n'}group yet</Text>
+                <Text style={styles.groupsCardSub}>
+                  Do not hesitate to create your own group, invite{'\n'}your friends, play, and improve together!
+                </Text>
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.groupsList}>
+                {groups.map((group) => (
+                  <TouchableOpacity
+                    key={group.id}
+                    style={styles.groupRow}
+                    activeOpacity={0.85}
+                    onPress={() => navigation.navigate('Chat', {
+                      chatId: `group_${group.id}`,
+                      activityTitle: group.name,
+                      participantName: group.name,
+                    })}
+                  >
+                    <View style={styles.groupRowIconWrap}>
+                      <Ionicons name="people" size={20} color="#FFFFFF" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.groupRowName} numberOfLines={1}>{group.name}</Text>
+                      <Text style={styles.groupRowSub} numberOfLines={1}>
+                        {group.members.length} member{group.members.length === 1 ? '' : 's'}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={C.muted} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
 
             <TouchableOpacity
               style={styles.newGroupBtn}
-              onPress={() => Alert.alert('Coming soon', 'Creating a group will be available in a future update.')}
+              onPress={() => setGroupModalVisible(true)}
               activeOpacity={0.85}
             >
               <Ionicons name="add" size={18} color="#FFFFFF" />
@@ -458,6 +565,99 @@ export default function CommunityScreen({ navigation, route }: Props) {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <Modal visible={groupModalVisible} animationType="slide" transparent onRequestClose={resetGroupModal}>
+        <KeyboardAvoidingView
+          style={styles.composerBackdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.groupModalSheet}>
+            <View style={styles.composerHeader}>
+              <TouchableOpacity onPress={resetGroupModal} hitSlop={8}>
+                <Text style={styles.composerCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.composerTitle}>New group</Text>
+              <TouchableOpacity onPress={submitGroup} disabled={!groupName.trim() || creatingGroup} hitSlop={8}>
+                {creatingGroup ? (
+                  <ActivityIndicator size="small" color={C.purple} />
+                ) : (
+                  <Text style={[styles.composerPost, !groupName.trim() && styles.composerPostDisabled]}>Create</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.groupModalContent}>
+              <Text style={styles.groupModalLabel}>Group name</Text>
+              <TextInput
+                style={styles.groupModalInput}
+                placeholder="e.g. Weekend Tennis Crew"
+                placeholderTextColor={C.muted}
+                value={groupName}
+                onChangeText={setGroupName}
+                maxLength={60}
+                autoFocus
+              />
+
+              <Text style={styles.groupModalLabel}>Description (optional)</Text>
+              <TextInput
+                style={[styles.groupModalInput, styles.groupModalTextArea]}
+                placeholder="What's this group about?"
+                placeholderTextColor={C.muted}
+                value={groupDescription}
+                onChangeText={setGroupDescription}
+                multiline
+                maxLength={200}
+              />
+
+              <Text style={styles.groupModalLabel}>Add members (optional)</Text>
+              <View style={styles.searchBar}>
+                <Ionicons name="search" size={16} color={C.muted} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search players by name"
+                  placeholderTextColor={C.muted}
+                  value={groupMemberSearch}
+                  onChangeText={setGroupMemberSearch}
+                />
+                {groupMemberSearching && <ActivityIndicator size="small" color={C.muted} />}
+              </View>
+
+              {selectedMembers.length > 0 && (
+                <View style={styles.selectedMembersRow}>
+                  {selectedMembers.map((m) => (
+                    <TouchableOpacity key={m.uid} style={styles.selectedMemberChip} onPress={() => toggleGroupMember(m)}>
+                      <Text style={styles.selectedMemberChipText} numberOfLines={1}>{m.name}</Text>
+                      <Ionicons name="close" size={13} color={C.purple} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {groupMemberResults.map((person) => {
+                const isSelected = selectedMembers.some((m) => m.uid === person.uid);
+                return (
+                  <TouchableOpacity
+                    key={person.uid}
+                    style={styles.memberResultRow}
+                    onPress={() => toggleGroupMember(person)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.memberResultAvatar}>
+                      <Text style={styles.memberResultAvatarText}>{initials(person.name)}</Text>
+                    </View>
+                    <Text style={styles.memberResultName} numberOfLines={1}>{person.name}</Text>
+                    <Ionicons
+                      name={isSelected ? 'checkmark-circle' : 'add-circle-outline'}
+                      size={22}
+                      color={isSelected ? C.green : C.muted}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -511,6 +711,56 @@ const styles = StyleSheet.create({
     height: 54,
   },
   newGroupBtnText: { fontFamily: FONTS.extraBold, fontSize: 15.5, color: '#FFFFFF' },
+  groupsLoadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  groupsList: { paddingHorizontal: SPACING.md, gap: SPACING.sm },
+  groupRow: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    backgroundColor: C.card, borderRadius: RADIUS.lg, padding: SPACING.md,
+    borderWidth: 1, borderColor: C.border, ...SHADOW.sm,
+  },
+  groupRowIconWrap: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: C.purple,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  groupRowName: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading },
+  groupRowSub: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, marginTop: 2 },
+
+  groupModalSheet: {
+    backgroundColor: C.card, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    paddingTop: SPACING.md, paddingHorizontal: SPACING.md,
+    maxHeight: '85%',
+  },
+  groupModalContent: { paddingBottom: SPACING.xl },
+  groupModalLabel: {
+    fontFamily: FONTS.semiBold, fontSize: 12, color: C.sub,
+    textTransform: 'uppercase', letterSpacing: 0.5,
+    marginBottom: SPACING.xs, marginTop: SPACING.md,
+  },
+  groupModalInput: {
+    borderWidth: 1.5, borderColor: C.border, borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md, paddingVertical: 12,
+    fontFamily: FONTS.regular, fontSize: 14, color: C.heading,
+    backgroundColor: '#FFFFFF',
+  },
+  groupModalTextArea: { minHeight: 70, textAlignVertical: 'top' },
+  selectedMembersRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs, marginTop: SPACING.sm },
+  selectedMemberChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: C.purpleTint, borderRadius: RADIUS.full,
+    paddingHorizontal: SPACING.sm, paddingVertical: 6, maxWidth: 160,
+  },
+  selectedMemberChipText: { fontFamily: FONTS.medium, fontSize: 12.5, color: C.purple, flexShrink: 1 },
+  memberResultRow: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    paddingVertical: SPACING.sm, marginTop: SPACING.xs,
+    borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  memberResultAvatar: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: C.purpleTint,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  memberResultAvatarText: { fontFamily: FONTS.bold, fontSize: 13, color: C.purple },
+  memberResultName: { flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: C.heading },
 
   scroll: { flex: 1 },
   scrollContent: { padding: SPACING.md, flexGrow: 1 },

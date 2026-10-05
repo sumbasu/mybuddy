@@ -6,7 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import {
   collection, addDoc, onSnapshot, query,
-  orderBy, serverTimestamp, doc, setDoc, updateDoc, increment,
+  orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, increment,
 } from 'firebase/firestore';
 import { auth } from '../services/firebase';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -59,22 +59,31 @@ export default function ChatScreen({ navigation, route }: Props) {
     const myUid = user?.uid || '';
     const chatRef = doc(db, 'chats', chatId);
 
-    // Create or update chat doc — include both participants
-    const participants = recipientId
-      ? [myUid, recipientId].filter(Boolean)
-      : [myUid];
-    setDoc(chatRef, {
-      activityTitle: activityTitle || '',
-      participants,
-      lastMessage: '',
-      lastMessageAt: serverTimestamp(),
-      unreadCounts: { [myUid]: 0 },
-    }, { merge: true });
-
-    // Reset my unread count to 0 when I open the chat
-    if (myUid) {
-      updateDoc(chatRef, { [`unreadCounts.${myUid}`]: 0 }).catch(() => {});
-    }
+    // Only seed the chat doc (and its participants list) if it doesn't
+    // already exist — e.g. a group chat's participants are the group's full
+    // member list, set once at creation (see services/groups.ts). Unconditionally
+    // re-writing `participants` here on every open would collapse it back
+    // down to just [myUid, recipientId] (or just [myUid] for a group, since
+    // there's no recipientId), silently removing every other member.
+    (async () => {
+      const snap = await getDoc(chatRef);
+      if (!snap.exists()) {
+        const participants = recipientId
+          ? [myUid, recipientId].filter(Boolean)
+          : [myUid];
+        await setDoc(chatRef, {
+          activityTitle: activityTitle || '',
+          participants,
+          lastMessage: '',
+          lastMessageAt: serverTimestamp(),
+          unreadCounts: { [myUid]: 0 },
+        });
+      }
+      // Reset my unread count to 0 when I open the chat
+      if (myUid) {
+        updateDoc(chatRef, { [`unreadCounts.${myUid}`]: 0 }).catch(() => {});
+      }
+    })();
 
     // Subscribe to messages subcollection in real-time
     const messagesRef = collection(db, 'chats', chatId, 'messages');
@@ -113,13 +122,19 @@ export default function ChatScreen({ navigation, route }: Props) {
       read: false,
     });
 
-    // Update last message + increment recipient's unread count
+    // Update last message + increment every OTHER participant's unread count
+    // — not just `recipientId` (a 1:1-chat-only param), so group chats with
+    // more than one other member all get notified, not just whichever uid
+    // happened to be passed in the route.
     const update: Record<string, any> = {
       lastMessage: text,
       lastMessageAt: serverTimestamp(),
     };
-    if (recipientId) {
-      update[`unreadCounts.${recipientId}`] = increment(1);
+    const chatSnap = await getDoc(chatRef);
+    const participants: string[] = chatSnap.exists() ? (chatSnap.data().participants || []) : [];
+    const others = participants.length > 0 ? participants.filter((uid) => uid !== user.uid) : [recipientId].filter(Boolean);
+    for (const uid of others) {
+      update[`unreadCounts.${uid}`] = increment(1);
     }
     await updateDoc(chatRef, update);
   };

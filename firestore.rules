@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth.uid == userId;
+      // Following/unfollowing bumps the OTHER user's followersCount — allow
+      // any signed-in user to touch only that one field on someone else's doc.
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount']);
+    }
+    match /follows/{followId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.followerId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.followerId;
+    }
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
+    match /activities/{activityId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth.uid == resource.data.creatorId
+        || (request.auth != null &&
+            request.resource.data.diff(resource.data)
+              .affectedKeys().hasOnly(['pendingRequests', 'pendingRequestNames']))
+        || (request.auth != null &&
+            resource.data.participants.hasAll([request.auth.uid]) &&
+            request.resource.data.diff(resource.data)
+              .affectedKeys().hasOnly(['participants', 'joinedCount']));
+      allow delete: if request.auth.uid == resource.data.creatorId;
+    }
+    match /chats/{chatId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      match /messages/{messageId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+    match /groups/{groupId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.createdBy
+        && request.resource.data.members.hasAny([request.auth.uid]);
+      // Any existing member can update the group (e.g. adding more members
+      // later); only the creator can delete it.
+      allow update: if request.auth != null && resource.data.members.hasAny([request.auth.uid]);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.createdBy;
+    }
+  }
+}
