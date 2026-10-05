@@ -414,14 +414,9 @@ const styles = StyleSheet.create({
 
   gameRow: { gap: SPACING.md, paddingRight: SPACING.md },
   gameCard: {
-    width: 265, backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
+    width: 265, minHeight: 240, backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
     borderRadius: RADIUS.xl,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
-    // Horizontal ScrollView rows default to alignItems:'stretch', so every
-    // card matches the tallest sibling's height — paired with gameCardBody's
-    // flex+space-between below, this keeps the Join button on one row across
-    // cards no matter how little text a given activity has.
-    alignSelf: 'stretch',
   },
   gameCardTop: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
