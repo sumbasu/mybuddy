@@ -59,7 +59,11 @@ function MainTabs() {
           paddingBottom: tabBarPaddingBottom,
           borderTopWidth: 1,
           borderTopColor: COLORS.border,
-          backgroundColor: COLORS.surface,
+          // Must be opaque, not the usual translucent COLORS.surface — on
+          // Android, the padding region added for the system nav bar inset
+          // composites against a different background than the icon row
+          // above it, so a translucent fill shows up as two visible shades.
+          backgroundColor: COLORS.brandPurpleLight,
         },
         tabBarIcon: ({ focused, color }) => {
           const icons: Record<string, { active: string; inactive: string }> = {
