@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPendingConfirmation, clearPendingConfirmation } from '../services/phoneAuth';
+import { saveLastAuthMethod } from '../services/lastAuthMethod';
 import { RootStackParamList } from '../types';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
 
@@ -83,6 +84,7 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
       }
       await confirmation.confirm(code);
       clearPendingConfirmation();
+      saveLastAuthMethod('phone');
       // AppNavigator watches the Firebase auth state and swaps to the
       // profile-setup stack automatically once this resolves.
     } catch (err: any) {

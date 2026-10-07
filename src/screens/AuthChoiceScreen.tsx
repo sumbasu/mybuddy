@@ -10,6 +10,8 @@ import FirebaseRecaptchaVerifier, { FirebaseRecaptchaVerifierHandle } from '../c
 import { setPendingConfirmation } from '../services/phoneAuth';
 import { useGoogleSignIn } from '../services/googleAuth';
 import { signInWithApple, isAppleSignInAvailable } from '../services/appleAuth';
+import { getLastAuthMethod, saveLastAuthMethod, AuthMethod } from '../services/lastAuthMethod';
+import { setPendingMarketingOptIn } from '../services/pendingMarketingOptIn';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'AuthChoice'> };
 
@@ -62,6 +64,16 @@ export default function AuthChoiceScreen({ navigation }: Props) {
     if (APPLE_SIGNIN_ENABLED && Platform.OS === 'ios') isAppleSignInAvailable().then(setAppleAvailable);
   }, []);
 
+  // Each sign-in method is a separate Firebase Auth account, so a returning
+  // user who picks a different one than before lands on what looks like a
+  // blank new profile. Nudge them toward whichever method this device last
+  // used — see src/services/lastAuthMethod.ts for why this isn't a real
+  // account link.
+  const [lastMethod, setLastMethod] = useState<AuthMethod | null>(null);
+  useEffect(() => {
+    getLastAuthMethod().then(setLastMethod);
+  }, []);
+
   const isPhoneValid = phone.trim().length >= 7;
 
   const onContinueWithPhone = async () => {
@@ -69,6 +81,7 @@ export default function AuthChoiceScreen({ navigation }: Props) {
     const fullPhone = `${countryCode}${phone.trim()}`;
     setPhoneLoading(true);
     try {
+      await setPendingMarketingOptIn(optIn);
       const confirmation = await signInWithPhoneNumber(auth, fullPhone, recaptchaVerifier.current!);
       setPendingConfirmation(confirmation);
       navigation.navigate('OTPVerify', { phone: fullPhone });
@@ -85,7 +98,9 @@ export default function AuthChoiceScreen({ navigation }: Props) {
   const onPressGoogle = async () => {
     if (googleLoading || !googleReady) return;
     try {
+      await setPendingMarketingOptIn(optIn);
       await signInWithGoogle();
+      saveLastAuthMethod('google');
       // AppNavigator watches Firebase auth state and swaps stacks automatically.
     } catch {
       Alert.alert('Error', 'Could not sign in with Google. Please try again.');
@@ -96,7 +111,9 @@ export default function AuthChoiceScreen({ navigation }: Props) {
     if (appleLoading) return;
     setAppleLoading(true);
     try {
+      await setPendingMarketingOptIn(optIn);
       await signInWithApple();
+      saveLastAuthMethod('apple');
       // AppNavigator watches Firebase auth state and swaps stacks automatically.
     } catch {
       Alert.alert('Error', 'Could not sign in with Apple. Please try again.');
@@ -125,6 +142,12 @@ export default function AuthChoiceScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>Let's find your game buddy</Text>
         </View>
 
+        {lastMethod === 'phone' && (
+          <View style={styles.lastUsedBadge}>
+            <Ionicons name="checkmark-circle" size={13} color={C.purple} />
+            <Text style={styles.lastUsedText}>You used phone last time</Text>
+          </View>
+        )}
         <View style={styles.row}>
           <TouchableOpacity style={styles.codeBox} activeOpacity={0.8}>
             <Text style={styles.codeText}>{countryLabel} ({countryCode})</Text>
@@ -171,25 +194,39 @@ export default function AuthChoiceScreen({ navigation }: Props) {
         </View>
 
         {appleAvailable && (
-          <TouchableOpacity
-            style={[styles.pillBtn, styles.appleBtn]}
-            onPress={onPressApple}
-            disabled={appleLoading}
-            activeOpacity={0.8}
-          >
-            {appleLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Ionicons name="logo-apple" size={18} color="#FFFFFF" style={styles.pillIcon} />
-                <Text style={styles.appleBtnText}>Continue with Apple</Text>
-              </>
+          <>
+            {lastMethod === 'apple' && (
+              <View style={styles.lastUsedBadge}>
+                <Ionicons name="checkmark-circle" size={13} color={C.purple} />
+                <Text style={styles.lastUsedText}>You used Apple last time</Text>
+              </View>
             )}
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.pillBtn, styles.appleBtn, lastMethod === 'apple' && styles.pillBtnHighlighted]}
+              onPress={onPressApple}
+              disabled={appleLoading}
+              activeOpacity={0.8}
+            >
+              {appleLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Ionicons name="logo-apple" size={18} color="#FFFFFF" style={styles.pillIcon} />
+                  <Text style={styles.appleBtnText}>Continue with Apple</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </>
         )}
 
+        {lastMethod === 'google' && (
+          <View style={styles.lastUsedBadge}>
+            <Ionicons name="checkmark-circle" size={13} color={C.purple} />
+            <Text style={styles.lastUsedText}>You used Google last time</Text>
+          </View>
+        )}
         <TouchableOpacity
-          style={styles.pillBtn}
+          style={[styles.pillBtn, lastMethod === 'google' && styles.pillBtnHighlighted]}
           onPress={onPressGoogle}
           disabled={googleLoading}
           activeOpacity={0.8}
@@ -257,11 +294,19 @@ const styles = StyleSheet.create({
   continueBtnDisabled: { backgroundColor: C.btnDisabled },
   continueBtnText: { fontFamily: FONTS.bold, fontSize: 16, color: C.btnText },
 
+  lastUsedBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-start', marginBottom: 6,
+  },
+  lastUsedText: { fontFamily: FONTS.medium, fontSize: 11, color: C.purple },
+
   pillBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     height: 45, borderRadius: RADIUS.lg, backgroundColor: C.pillBg,
     paddingHorizontal: SPACING.md,
+    borderWidth: 1.5, borderColor: 'transparent',
   },
+  pillBtnHighlighted: { borderColor: C.purple },
   pillIcon: { position: 'absolute', left: SPACING.md },
   pillText: { fontFamily: FONTS.semiBold, fontSize: 12, color: C.heading, textAlign: 'center' },
 

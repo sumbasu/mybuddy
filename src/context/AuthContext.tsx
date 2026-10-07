@@ -4,6 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { setAnalyticsUserId, setCrashlyticsUserId, requestPushPermissionAndToken } from '../services/firebaseNative';
+import { consumePendingMarketingOptIn } from '../services/pendingMarketingOptIn';
 import { User } from '../types';
 
 const USER_CACHE_KEY = 'mybuddy_user_profile';
@@ -101,12 +102,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           u.signInProvider = signInProvider;
           await setDoc(ref, { signInProvider }, { merge: true });
         }
+        // Picks up the opt-in checkbox on a fresh sign-in, including a
+        // returning user logging back in — but only when they actually just
+        // went through AuthChoiceScreen (a pending value is present), not on
+        // an ordinary app resume of an already-active session.
+        const pendingOptIn = await consumePendingMarketingOptIn();
+        if (pendingOptIn !== null && pendingOptIn !== u.marketingOptIn) {
+          u.marketingOptIn = pendingOptIn;
+          await setDoc(ref, { marketingOptIn: pendingOptIn }, { merge: true });
+        }
         await saveToCache(u);
         setUserState(u);
       } else {
         // New user — create Firestore doc
         const trialEnd = new Date();
         trialEnd.setDate(trialEnd.getDate() + 7);
+        const marketingOptIn = (await consumePendingMarketingOptIn()) ?? false;
         const newUser: User = {
           uid,
           email,
@@ -123,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           freeMonthsEarned: 0,
           discountPct: 0,
           signInProvider,
+          marketingOptIn,
         };
         await setDoc(ref, newUser);
         await saveToCache(newUser);

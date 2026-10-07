@@ -36,6 +36,9 @@ export interface User {
   // not re-derived later, so it reflects the original sign-up method even
   // if the user later links another provider to the same Firebase account.
   signInProvider?: 'phone' | 'google' | 'apple' | 'email' | 'unknown';
+  // Marketing/offers consent, captured once from the opt-in checkbox on the
+  // sign-in screen at account creation — editable later from Settings.
+  marketingOptIn?: boolean;
 }
 
 export interface SubscriptionStatus {

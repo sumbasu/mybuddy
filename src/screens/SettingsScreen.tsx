@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Image, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -43,6 +43,28 @@ function Row({
   );
 }
 
+function ToggleRow({
+  icon, label, sub, value, onValueChange,
+}: { icon: any; label: string; sub?: string; value: boolean; onValueChange: (v: boolean) => void }) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.rowIconWrap}>
+        <Ionicons name={icon} size={16} color="#FFFFFF" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {sub ? <Text style={styles.rowSub} numberOfLines={1}>{sub}</Text> : null}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: '#D9D9E3', true: C.purple }}
+        thumbColor="#FFFFFF"
+      />
+    </View>
+  );
+}
+
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
@@ -53,8 +75,13 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 }
 
 export default function SettingsScreen({ navigation }: Props) {
-  const { user, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const soon = () => Alert.alert('Coming soon', 'This section will be available in a future update.');
+
+  const toggleMarketingOptIn = (value: boolean) => {
+    if (!user) return;
+    setUser({ ...user, marketingOptIn: value });
+  };
 
   const handleLogout = () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
@@ -108,6 +135,13 @@ export default function SettingsScreen({ navigation }: Props) {
         <Section label="Your account">
           <Row icon="person-outline" label="Edit profile" sub="Name, email, phone, location, gender..." onPress={() => navigation.navigate('EditProfile')} />
           <Row icon="time-outline" label="Your activity" sub="Matches, classes, competitions, groups..." onPress={() => navigation.navigate('YourActivity')} />
+          <ToggleRow
+            icon="pricetag-outline"
+            label="Offers & promotions"
+            sub="Exclusive offers, match updates and promos"
+            value={!!user?.marketingOptIn}
+            onValueChange={toggleMarketingOptIn}
+          />
           <Row icon="card-outline" label="Your payments" sub="Payment methods, transactions, club..." onPress={soon} />
           <Row icon="settings-outline" label="Settings" sub="Configure privacy, notifications, security..." onPress={soon} />
         </Section>
