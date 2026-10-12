@@ -24,6 +24,7 @@ import CreateActivityScreen from '../screens/CreateActivityScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import ChatsScreen from '../screens/ChatsScreen';
 import ChatScreen from '../screens/ChatScreen';
+import GroupDetailScreen from '../screens/GroupDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -143,6 +144,7 @@ export default function AppNavigator() {
             <Stack.Screen name="InterestPicker" component={InterestPickerScreen} />
             <Stack.Screen name="Chats"          component={ChatsScreen} />
             <Stack.Screen name="Chat"           component={ChatScreen} />
+            <Stack.Screen name="GroupDetail"    component={GroupDetailScreen} />
             <Stack.Screen name="EditProfile"    component={EditProfileScreen} />
             <Stack.Screen name="Settings"       component={SettingsScreen} />
             <Stack.Screen name="YourActivity"   component={YourActivityScreen} />

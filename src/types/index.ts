@@ -78,6 +78,7 @@ export interface Group {
   description?: string;
   createdBy: string;
   members: string[]; // uids, always includes createdBy
+  memberNames?: Record<string, string>; // uid -> display name, keyed to avoid N+1 user-doc fetches
   createdAt: string;
 }
 
@@ -122,6 +123,7 @@ export type RootStackParamList = {
   Chats: undefined;
   Chat: { chatId: string; activityTitle?: string; participantName?: string; recipientId?: string };
   Subscription: undefined;
+  GroupDetail: { groupId: string };
 };
 
 export type TabParamList = {

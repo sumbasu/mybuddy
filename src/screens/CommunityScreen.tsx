@@ -245,8 +245,8 @@ export default function CommunityScreen({ navigation, route }: Props) {
       const groupId = await createGroup(
         groupName,
         groupDescription,
-        user.uid,
-        selectedMembers.map((m) => m.uid)
+        { uid: user.uid, name: user.name || 'Someone' },
+        selectedMembers.map((m) => ({ uid: m.uid, name: m.name }))
       );
       resetGroupModal();
       navigation.navigate('Chat', {
@@ -312,11 +312,7 @@ export default function CommunityScreen({ navigation, route }: Props) {
                     key={group.id}
                     style={styles.groupRow}
                     activeOpacity={0.85}
-                    onPress={() => navigation.navigate('Chat', {
-                      chatId: `group_${group.id}`,
-                      activityTitle: group.name,
-                      participantName: group.name,
-                    })}
+                    onPress={() => navigation.navigate('GroupDetail', { groupId: group.id })}
                   >
                     <View style={styles.groupRowIconWrap}>
                       <Ionicons name="people" size={20} color="#FFFFFF" />
