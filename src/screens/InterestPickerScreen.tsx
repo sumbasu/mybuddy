@@ -134,10 +134,7 @@ export default function InterestPickerScreen({ navigation }: Props) {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <View style={styles.btnInner}>
-                <Text style={[styles.btnText, !canContinue && styles.btnTextDisabled]}>Continue</Text>
-                <Ionicons name="arrow-forward" size={20} color={canContinue ? C.lime : C.textSubtle} />
-              </View>
+              <Text style={[styles.btnText, !canContinue && styles.btnTextDisabled]}>Continue</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -221,7 +218,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnDisabled: { backgroundColor: C.disabled },
-  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   btnText: { fontFamily: FONTS.extraBold, color: '#fff', fontSize: 17 },
   btnTextDisabled: { color: C.textSubtle },
 });
