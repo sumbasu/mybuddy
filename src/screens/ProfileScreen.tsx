@@ -136,7 +136,7 @@ export default function ProfileScreen({ navigation }: Props) {
     ]);
   };
 
-  const removeInterest = (id: string) => {
+  const removeInterest = (id: string, label: string) => {
     if (!user) return;
     const remaining = (user.interests || []).filter((i) => i !== id);
     // Dropping below 2 kicks the whole app into the onboarding interest-picker
@@ -145,7 +145,10 @@ export default function ProfileScreen({ navigation }: Props) {
       Alert.alert('Keep at least 2', 'You need at least 2 interests so we can match you with people who share them.');
       return;
     }
-    setUser({ ...user, interests: remaining });
+    Alert.alert('Remove interest', `Remove "${label}" from your interests?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => setUser({ ...user, interests: remaining }) },
+    ]);
   };
 
   return (
@@ -233,7 +236,7 @@ export default function ProfileScreen({ navigation }: Props) {
                 <Text style={[styles.interestChipText, i === 0 && styles.interestChipTextActive]}>
                   {interest?.label || id}
                 </Text>
-                <TouchableOpacity onPress={() => removeInterest(id)} hitSlop={8}>
+                <TouchableOpacity onPress={() => removeInterest(id, interest?.label || id)} hitSlop={8}>
                   <Ionicons name="close" size={13} color={i === 0 ? '#FFFFFF' : C.sub} />
                 </TouchableOpacity>
               </View>
