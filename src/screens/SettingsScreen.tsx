@@ -15,7 +15,8 @@ const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 const C = {
   page: '#FAFAFA',
   purple: '#3d3081',
-  purpleBorder: 'rgba(255,255,255,0.15)',
+  card: '#FFFFFF',
+  cardBorder: '#ECEBF2',
   label: 'rgba(63,47,134,0.45)',
   sub: '#767683',
   heading: '#16213E',
@@ -32,13 +33,13 @@ function Row({
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.rowIconWrap}>
-        <Ionicons name={icon} size={16} color={danger ? C.danger : '#FFFFFF'} />
+        <Ionicons name={icon} size={16} color={danger ? C.danger : C.purple} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[styles.rowLabel, danger && { color: C.danger }]}>{label}</Text>
         {sub ? <Text style={styles.rowSub} numberOfLines={1}>{sub}</Text> : null}
       </View>
-      {!danger && <Ionicons name="chevron-forward" size={13} color="#FFFFFF" />}
+      {!danger && <Ionicons name="chevron-forward" size={13} color={C.sub} />}
     </TouchableOpacity>
   );
 }
@@ -179,16 +180,17 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: SPACING.sm,
   },
   card: {
-    backgroundColor: C.purple,
+    backgroundColor: C.card,
+    borderWidth: 1, borderColor: C.cardBorder,
     borderRadius: RADIUS.md, overflow: 'hidden', marginTop: SPACING.lg,
   },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
     minHeight: 64,
     paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    borderBottomWidth: 0.8, borderBottomColor: C.purpleBorder,
+    borderBottomWidth: 0.8, borderBottomColor: C.cardBorder,
   },
   rowIconWrap: { width: 26, alignItems: 'center' },
-  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: '#FFFFFF' },
-  rowSub: { fontFamily: FONTS.regular, fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.heading },
+  rowSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 2 },
 });
