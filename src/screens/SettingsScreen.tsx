@@ -191,6 +191,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.8, borderBottomColor: C.cardBorder,
   },
   rowIconWrap: { width: 26, alignItems: 'center' },
-  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.heading },
+  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purple },
   rowSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 2 },
 });
