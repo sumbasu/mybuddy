@@ -142,10 +142,10 @@ export default function ProfileScreen({ navigation }: Props) {
     // Dropping below 2 kicks the whole app into the onboarding interest-picker
     // stack (AppNavigator), which has no way back — keep at least 2 here.
     if (remaining.length < 2) {
-      Alert.alert('Keep at least 2', 'You need at least 2 interests so we can match you with people who share them.');
+      Alert.alert('Keep at least 2', 'You need at least 2 activities so we can match you with people who share them.');
       return;
     }
-    Alert.alert('Remove interest', `Remove "${label}" from your interests?`, [
+    Alert.alert('Remove activity', `Remove "${label}" from your activities?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: () => setUser({ ...user, interests: remaining }) },
     ]);
