@@ -14,6 +14,9 @@ import Constants from 'expo-constants';
 const C = {
   page: '#FAFAFA',
   purple: '#3F2F86',
+  // Darker than C.purple — at small/medium text sizes that hue reads as
+  // bright blue rather than dark purple; this reads unambiguously purple.
+  purpleDark: '#2A1F5E',
   heading: '#16213E',
   sub: '#767683',
   border: '#ECEBF2',
@@ -266,7 +269,7 @@ const styles = StyleSheet.create({
   trialBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.sm, backgroundColor: C.warningBg, borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.lg, borderWidth: 1, borderColor: C.warningBorder },
   trialExpired: { backgroundColor: C.errorBg, borderColor: C.errorBorder },
   trialText: { fontFamily: FONTS.bold, fontSize: 14, color: C.heading },
-  trialBold: { color: C.purple },
+  trialBold: { color: C.purpleDark },
   trialSub: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, marginTop: 4 },
   featuresBox: { backgroundColor: '#FFFFFF', borderRadius: RADIUS.lg, padding: SPACING.lg, marginBottom: SPACING.lg, borderWidth: 1, borderColor: C.border, ...SHADOW.sm },
   featuresTitle: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading, marginBottom: SPACING.md },
@@ -289,10 +292,10 @@ const styles = StyleSheet.create({
   strikePrice: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, textDecorationLine: 'line-through', textAlign: 'right' },
   planTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   planLabel: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
-  planLabelActive: { color: C.purple },
+  planLabelActive: { color: C.purpleDark },
   planBilling: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 2 },
   planPrice: { fontFamily: FONTS.extraBold, fontSize: 21, color: C.heading, textAlign: 'right' },
-  planPriceActive: { color: C.purple },
+  planPriceActive: { color: C.purpleDark },
   planPerMonth: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, textAlign: 'right' },
   badge: { alignSelf: 'flex-start', backgroundColor: C.purple, borderRadius: RADIUS.full, paddingHorizontal: SPACING.sm, paddingVertical: 3, marginTop: SPACING.sm },
   badgeText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 11 },

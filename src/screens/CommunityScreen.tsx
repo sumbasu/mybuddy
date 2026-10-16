@@ -35,6 +35,9 @@ const C = {
   muted: '#9A9AA6',
   border: '#ECEBF2',
   purple: '#3D3081',
+  // Darker than C.purple — at small/medium text sizes that hue reads as
+  // bright blue rather than dark purple; this reads unambiguously purple.
+  purpleDark: '#2A1F5E',
   purpleTint: 'rgba(63,47,134,0.1)',
   green: '#8BC34A',
 };
@@ -746,7 +749,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.purpleTint, borderRadius: RADIUS.full,
     paddingHorizontal: SPACING.sm, paddingVertical: 6, maxWidth: 160,
   },
-  selectedMemberChipText: { fontFamily: FONTS.medium, fontSize: 12.5, color: C.purple, flexShrink: 1 },
+  selectedMemberChipText: { fontFamily: FONTS.medium, fontSize: 12.5, color: C.purpleDark, flexShrink: 1 },
   memberResultRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     paddingVertical: SPACING.sm, marginTop: SPACING.xs,
@@ -756,7 +759,7 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18, backgroundColor: C.purpleTint,
     alignItems: 'center', justifyContent: 'center',
   },
-  memberResultAvatarText: { fontFamily: FONTS.bold, fontSize: 13, color: C.purple },
+  memberResultAvatarText: { fontFamily: FONTS.bold, fontSize: 13, color: C.purpleDark },
   memberResultName: { flex: 1, fontFamily: FONTS.medium, fontSize: 14, color: C.heading },
 
   scroll: { flex: 1 },
@@ -787,7 +790,7 @@ const styles = StyleSheet.create({
   },
   findTitle: { fontFamily: FONTS.bold, fontSize: 15, color: C.heading, marginBottom: 2 },
   findSub: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, lineHeight: 17, marginBottom: 6 },
-  findLink: { fontFamily: FONTS.bold, fontSize: 13, color: C.purple },
+  findLink: { fontFamily: FONTS.bold, fontSize: 13, color: C.purpleDark },
 
   emptyPosts: { alignItems: 'center', paddingTop: SPACING.xxl, paddingHorizontal: SPACING.md },
   emptyPostsTitle: { fontFamily: FONTS.bold, fontSize: 20, color: C.heading, marginTop: SPACING.lg, marginBottom: SPACING.sm },
@@ -803,7 +806,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: C.purple, borderRadius: RADIUS.full,
     paddingVertical: SPACING.sm,
   },
-  createPostBtnOutlineText: { fontFamily: FONTS.bold, fontSize: 14, color: C.purple },
+  createPostBtnOutlineText: { fontFamily: FONTS.bold, fontSize: 14, color: C.purpleDark },
 
   composerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   composerSheet: {
@@ -816,7 +819,7 @@ const styles = StyleSheet.create({
   },
   composerCancel: { fontFamily: FONTS.regular, fontSize: 15, color: C.sub },
   composerTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
-  composerPost: { fontFamily: FONTS.bold, fontSize: 15, color: C.purple },
+  composerPost: { fontFamily: FONTS.bold, fontSize: 15, color: C.purpleDark },
   composerPostDisabled: { color: C.muted },
   composerInput: {
     fontFamily: FONTS.regular, fontSize: 15, color: C.heading,

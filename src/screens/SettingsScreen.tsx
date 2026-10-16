@@ -15,6 +15,9 @@ const PRIVACY_URL = 'https://mybuddy-bd717.web.app/privacy-policy.html';
 const C = {
   page: '#FAFAFA',
   purple: '#3d3081',
+  // Darker than C.purple — at small/medium text sizes that hue reads as
+  // bright blue rather than dark purple; this reads unambiguously purple.
+  purpleDark: '#2A1F5E',
   card: '#FFFFFF',
   cardBorder: '#ECEBF2',
   label: 'rgba(63,47,134,0.7)',
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
     width: 136, height: 44, borderRadius: RADIUS.lg,
     borderWidth: 1.2, borderColor: C.purple,
   },
-  shareBtnText: { fontFamily: FONTS.semiBold, fontSize: 13.5, color: C.purple },
+  shareBtnText: { fontFamily: FONTS.semiBold, fontSize: 13.5, color: C.purpleDark },
 
   section: { marginBottom: SPACING.lg },
   sectionLabel: {
@@ -191,6 +194,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0.8, borderBottomColor: C.cardBorder,
   },
   rowIconWrap: { width: 26, alignItems: 'center' },
-  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purple },
+  rowLabel: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purpleDark },
   rowSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 2 },
 });

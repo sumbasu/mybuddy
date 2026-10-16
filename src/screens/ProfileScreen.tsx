@@ -25,6 +25,9 @@ const C = {
   muted: '#9A9AA6',
   border: '#ECEBF2',
   purple: '#3d3081',
+  // Darker than C.purple — at small/medium text sizes that hue reads as
+  // bright blue rather than dark purple; this reads unambiguously purple.
+  purpleDark: '#2A1F5E',
   gold: '#E8B84B',
   lime: '#C8DB2E',
   error: '#EF233C',
@@ -387,7 +390,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
   locationText: { fontSize: 12, fontFamily: FONTS.medium, color: C.sub },
-  addLocationText: { fontSize: 13.5, fontFamily: FONTS.semiBold, color: C.purple, marginTop: 4 },
+  addLocationText: { fontSize: 13.5, fontFamily: FONTS.semiBold, color: C.purpleDark, marginTop: 4 },
 
   statsCard: {
     flexDirection: 'row', alignItems: 'center',
@@ -404,7 +407,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.4, borderColor: C.purple,
     alignItems: 'center', justifyContent: 'center',
   },
-  editBtnText: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.purple },
+  editBtnText: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.purpleDark },
   goProBtn: {
     flex: 1, height: 44, borderRadius: RADIUS.lg,
     backgroundColor: C.purple,
@@ -453,7 +456,7 @@ const styles = StyleSheet.create({
   progressSub: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, textAlign: 'center' },
 
   prefsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
-  prefsEdit: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.purple },
+  prefsEdit: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.purpleDark },
   prefRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
     backgroundColor: '#FFFFFF',
