@@ -22,9 +22,7 @@ const C = {
   bg: '#F7F7F9',
   surface: '#FFFFFF',
   border: '#E6E6EC',
-  // Darker than the brand purple (#3D3081) — at text sizes that hue reads
-  // as bright blue rather than dark purple; this reads unambiguously purple.
-  text: '#2A1F5E',
+  text: '#3D3081',
   textMuted: '#6E6E80',
   textSubtle: '#9A9AAB',
   tint: '#ECEBF4',

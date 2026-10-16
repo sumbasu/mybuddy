@@ -18,9 +18,6 @@ import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
 const C = {
   page: '#FAFAFA',
   purple: '#3F2F86',
-  // Darker than C.purple — at small/medium text sizes that hue reads as
-  // bright blue rather than dark purple; this reads unambiguously purple.
-  purpleDark: '#2A1F5E',
   heading: '#16213E',
   sub: '#767683',
   muted: '#9A9AA6',
@@ -406,7 +403,7 @@ const styles = StyleSheet.create({
   container: { backgroundColor: C.page, paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: SPACING.lg },
   headerCancelBtn: { minHeight: 44, justifyContent: 'center' },
-  cancel: { fontFamily: FONTS.semiBold, color: C.purpleDark, fontSize: 15 },
+  cancel: { fontFamily: FONTS.semiBold, color: C.purple, fontSize: 15 },
   headerTitle: { fontFamily: FONTS.extraBold, fontSize: 17, color: C.heading },
   interestRow: { gap: SPACING.sm, paddingBottom: SPACING.xs },
   interestChip: { alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: RADIUS.md, padding: SPACING.sm, width: 76, borderWidth: 1.5, borderColor: C.border },
@@ -462,7 +459,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.border,
   },
   pickerTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
-  pickerDone: { fontFamily: FONTS.bold, fontSize: 16, color: C.purpleDark },
+  pickerDone: { fontFamily: FONTS.bold, fontSize: 16, color: C.purple },
   submitBtn: { backgroundColor: C.purple, paddingVertical: SPACING.md, borderRadius: RADIUS.full, alignItems: 'center', marginTop: SPACING.md },
   submitBtnDisabled: { backgroundColor: C.muted },
   submitBtnText: { fontFamily: FONTS.bold, color: '#FFFFFF', fontSize: 16 },

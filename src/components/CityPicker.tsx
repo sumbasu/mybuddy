@@ -36,9 +36,7 @@ const THEME = {
     label: '#6E6E80',
     inputBg: '#FFFFFF',
     inputBorder: '#E6E6EC',
-    // Darker than the brand purple (#3D3081) — at text sizes that hue reads
-    // as bright blue rather than dark purple; this reads unambiguously purple.
-    text: '#2A1F5E',
+    text: '#3D3081',
     placeholder: '#9A9AAB',
     icon: '#9A9AAB',
     dropdownBg: '#FFFFFF',

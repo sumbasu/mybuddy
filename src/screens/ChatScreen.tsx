@@ -21,9 +21,6 @@ import { FONTS, SPACING, RADIUS } from '../constants/theme';
 const C = {
   page: '#FAFAFA',
   purple: '#3F2F86',
-  // Darker than C.purple — at small/medium text sizes that hue reads as
-  // bright blue rather than dark purple; this reads unambiguously purple.
-  purpleDark: '#2A1F5E',
   heading: '#16213E',
   sub: '#767683',
   muted: '#9A9AA6',
@@ -276,7 +273,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(63,47,134,0.12)',
     alignItems: 'center', justifyContent: 'center',
   },
-  senderAvatarText: { fontFamily: FONTS.bold, fontSize: 12, color: C.purpleDark },
+  senderAvatarText: { fontFamily: FONTS.bold, fontSize: 12, color: C.purple },
   bubble: {
     maxWidth: '75%', backgroundColor: '#F4F3F9',
     borderRadius: RADIUS.lg, borderBottomLeftRadius: 4,
@@ -286,7 +283,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.purple,
     borderBottomLeftRadius: RADIUS.lg, borderBottomRightRadius: 4,
   },
-  senderName: { fontFamily: FONTS.bold, fontSize: 11, color: C.purpleDark, marginBottom: 3 },
+  senderName: { fontFamily: FONTS.bold, fontSize: 11, color: C.purple, marginBottom: 3 },
   bubbleText: { fontFamily: FONTS.regular, fontSize: 14, color: C.heading, lineHeight: 20 },
   bubbleTextMe: { color: '#FFFFFF' },
   bubbleTime: { fontFamily: FONTS.regular, fontSize: 10, color: C.muted, marginTop: 3, alignSelf: 'flex-end' },
