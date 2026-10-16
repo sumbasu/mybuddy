@@ -3,7 +3,16 @@
 // (src/services/geocoding.ts). Overpass has no official rate-limit doc like
 // Nominatim's, but the public instance asks for restraint, so this is used
 // on-demand only (one query per "Choose an activity" pick), never polled.
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+//
+// Every public Overpass mirror turned out to be independently flaky during
+// testing (each one failed at some point, then recovered minutes later), so
+// instead of pinning one, each query tries them in order and falls through
+// to the next on any failure or non-2xx response.
+const OVERPASS_URLS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.osm.ch/api/interpreter',
+];
 const RADIUS_METERS = 5000;
 
 export interface Venue {
@@ -57,20 +66,53 @@ function formatAddress(tags: Record<string, string>): string | undefined {
   return parts.length ? parts.join(', ') : undefined;
 }
 
+async function fetchOne(url: string, ql: string): Promise<any[]> {
+  // An overloaded mirror can hang on the connection itself rather than
+  // respond with an error — Overpass's own [timeout:N] in the query only
+  // bounds execution time *after* it starts processing — so this caps the
+  // attempt independently of that.
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+        // Overpass's nginx front-end 406s requests with a generic/missing
+        // User-Agent — same requirement as Nominatim (see geocoding.ts).
+        'User-Agent': 'SweatBud/1.0 (https://sweatbud.com)',
+      },
+      body: ql,
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`Overpass ${url} returned ${res.status}`);
+    const data = await res.json();
+    return data.elements || [];
+  } finally {
+    clearTimeout(abortTimer);
+  }
+}
+
+// Queries every mirror in parallel rather than one at a time — these public
+// mirrors turned out to be independently flaky (each failed outright at some
+// point during testing, and recovered minutes later), and racing them keeps
+// the worst case bounded to the slowest single mirror instead of the sum of
+// all of them timing out in sequence. Prefers the first result that actually
+// has venues — a mirror can return 200 with an incomplete/stale dataset
+// (seen in testing: one mirror returned zero results for a query where two
+// others found 20), so an empty response alone isn't trusted until every
+// mirror has reported back.
 async function runQuery(ql: string): Promise<any[]> {
-  const res = await fetch(OVERPASS_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/plain',
-      // Overpass's nginx front-end 406s requests with a generic/missing
-      // User-Agent — same requirement as Nominatim (see geocoding.ts).
-      'User-Agent': 'SweatBud/1.0 (https://sweatbud.com)',
-    },
-    body: ql,
-  });
-  if (!res.ok) throw new Error(`Overpass error ${res.status}`);
-  const data = await res.json();
-  return data.elements || [];
+  const settled = await Promise.allSettled(OVERPASS_URLS.map((url) => fetchOne(url, ql)));
+
+  for (const result of settled) {
+    if (result.status === 'fulfilled' && result.value.length > 0) return result.value;
+  }
+  for (const result of settled) {
+    if (result.status === 'fulfilled') return result.value;
+  }
+  const firstFailure = settled.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+  throw firstFailure?.reason ?? new Error('All Overpass endpoints failed');
 }
 
 export async function searchVenues(activityId: string, lat: number, lng: number): Promise<Venue[]> {
@@ -84,14 +126,14 @@ export async function searchVenues(activityId: string, lat: number, lng: number)
   // tagging is sparse outside major cities, so fall back to any venue of
   // the right leisure type nearby if that comes back empty.
   const specificQuery = spec.sport
-    ? `[out:json][timeout:20];
+    ? `[out:json][timeout:12];
 (
   nwr["leisure"~"^(${leisureFilter})$"]["sport"~"(^|;)${spec.sport}(;|$)"]${around};
 );
 out center 30;`
     : null;
 
-  const fallbackQuery = `[out:json][timeout:20];
+  const fallbackQuery = `[out:json][timeout:12];
 (
   nwr["leisure"~"^(${leisureFilter})$"]${around};
 );
