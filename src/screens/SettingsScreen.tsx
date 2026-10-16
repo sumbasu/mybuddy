@@ -19,7 +19,7 @@ const C = {
   cardBorder: '#ECEBF2',
   label: 'rgba(63,47,134,0.7)',
   sub: '#767683',
-  heading: '#16213E',
+  heading: '#3D3081',
   lime: '#C8DB2E',
   danger: '#FF6B6B',
 };

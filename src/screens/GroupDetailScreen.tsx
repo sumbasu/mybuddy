@@ -32,7 +32,7 @@ const C = {
   surface: '#FFFFFF',
   border: '#E6E6EC',
   text: '#3D3081',
-  heading: '#16213E',
+  heading: '#3D3081',
   textMuted: '#6E6E80',
   textSubtle: '#9A9AAB',
   tint: '#ECEBF4',

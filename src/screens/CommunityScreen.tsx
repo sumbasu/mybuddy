@@ -30,7 +30,7 @@ const C = {
   headerBg: '#3F2F86',
   page: '#F4F3F9',
   card: '#FFFFFF',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',

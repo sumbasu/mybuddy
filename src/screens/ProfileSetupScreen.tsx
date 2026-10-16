@@ -16,7 +16,7 @@ import { FONTS, SPACING, RADIUS } from '../constants/theme';
 const C = {
   page: '#FAFAFA',
   purple: '#3F2F86',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
