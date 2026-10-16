@@ -54,7 +54,7 @@ const QUICK_ACTIONS = [
   { key: 'find',   label: 'Find a game',  icon: 'magnify' as const,                  onPress: (nav: any) => nav.navigate('FindGame') },
   { key: 'host',   label: 'Add a game',   icon: 'calendar-plus-outline' as const,    onPress: (nav: any) => nav.navigate('CreateActivity') },
   { key: 'venue',  label: 'Find venue',   icon: 'map-marker-radius-outline' as const, onPress: () => comingSoon('Find venue') },
-  { key: 'coach',  label: 'Coach',        icon: 'account-tie-outline' as const,       onPress: () => comingSoon('Coach') },
+  { key: 'coach',  label: 'Find a coach', icon: 'account-tie-outline' as const,       onPress: () => comingSoon('Coach') },
 ];
 
 const titleCase = (s: string) => s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
