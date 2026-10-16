@@ -124,6 +124,7 @@ export type RootStackParamList = {
   Chat: { chatId: string; activityTitle?: string; participantName?: string; recipientId?: string };
   Subscription: undefined;
   GroupDetail: { groupId: string };
+  VenueList: { activityId: string; activityLabel: string };
 };
 
 export type TabParamList = {

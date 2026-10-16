@@ -147,9 +147,9 @@ export default function HomeScreen({ navigation }: Props) {
     .map((id) => INTERESTS.find((i) => i.id === id))
     .filter((i): i is typeof INTERESTS[number] => !!i);
 
-  const chooseVenueActivity = (label: string) => {
+  const chooseVenueActivity = (id: string, label: string) => {
     setVenuePickerVisible(false);
-    comingSoon(`Venue search for ${label}`);
+    navigation.navigate('VenueList', { activityId: id, activityLabel: label });
   };
 
   const upgradeBanner = !subscribed && (
@@ -324,7 +324,7 @@ export default function HomeScreen({ navigation }: Props) {
                   <TouchableOpacity
                     key={interest.id}
                     style={styles.modalRow}
-                    onPress={() => chooseVenueActivity(interest.label)}
+                    onPress={() => chooseVenueActivity(interest.id, interest.label)}
                     activeOpacity={0.7}
                   >
                     <View style={styles.modalRowIconWrap}>
