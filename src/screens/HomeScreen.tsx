@@ -24,10 +24,6 @@ const C = {
   muted: '#9A9AA6',
   border: '#ECEBF2',
   purple: '#3D3081',
-  // Darker/less saturated than C.purple — small semiBold text at this hue
-  // reads as bright blue rather than the app's dark purple; this reads
-  // unambiguously as purple at text size.
-  purpleDark: '#2A1F5E',
   purpleTint: 'rgba(63,47,134,0.08)',
   purpleLight: '#52449A',
   lime: '#C8DB2E',
@@ -385,7 +381,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   bannerDismissBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purpleDark },
+  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purple },
   bannerSub: { fontFamily: FONTS.regular, fontSize: 13, color: C.sub, marginTop: 2 },
 
   quickRow: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -415,7 +411,7 @@ const styles = StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
-  seeAll: { fontFamily: FONTS.semiBold, fontSize: 12.5, color: C.purpleDark },
+  seeAll: { fontFamily: FONTS.semiBold, fontSize: 12.5, color: C.purple },
 
   gameRow: { gap: SPACING.md, paddingRight: SPACING.md },
   gameCard: {
