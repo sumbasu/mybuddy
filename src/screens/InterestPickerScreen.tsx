@@ -112,7 +112,10 @@ export default function InterestPickerScreen({ navigation }: Props) {
                       activeOpacity={0.8}
                     >
                       <InterestIcon id={interest.id} size={18} color={isSelected ? C.lime : C.textSubtle} />
-                      <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                      <Text
+                        style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}
+                        maxFontSizeMultiplier={1.4}
+                      >
                         {interest.label}
                       </Text>
                       {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}

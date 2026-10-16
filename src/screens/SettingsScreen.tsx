@@ -17,7 +17,7 @@ const C = {
   purple: '#3d3081',
   card: '#FFFFFF',
   cardBorder: '#ECEBF2',
-  label: 'rgba(63,47,134,0.45)',
+  label: 'rgba(63,47,134,0.7)',
   sub: '#767683',
   heading: '#16213E',
   lime: '#C8DB2E',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
 
   section: { marginBottom: SPACING.lg },
   sectionLabel: {
-    fontFamily: FONTS.bold, fontSize: 11, color: C.label,
+    fontFamily: FONTS.bold, fontSize: 12.5, color: C.label,
     textTransform: 'uppercase', letterSpacing: 1, marginBottom: SPACING.sm,
   },
   card: {

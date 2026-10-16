@@ -11,6 +11,7 @@ import { INTERESTS } from '../constants/interests';
 import StarRating from '../components/StarRating';
 import { storage } from '../services/firebase';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { TYPE_SCALE } from '../constants/typography';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
   addChipText: { fontFamily: FONTS.bold, fontSize: 13, color: C.sub },
 
   section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
   filterRow: { flexDirection: 'row', gap: SPACING.xs, marginTop: SPACING.sm, marginBottom: SPACING.sm },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,

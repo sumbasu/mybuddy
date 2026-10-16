@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { INTERESTS } from '../constants/interests';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
+import { TYPE_SCALE } from '../constants/typography';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -358,7 +359,7 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    fontSize: 18, fontFamily: FONTS.bold, color: C.heading,
+    ...TYPE_SCALE.screenHeading, color: C.heading,
     paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, paddingBottom: SPACING.sm,
   },
 
@@ -380,8 +381,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   bannerDismissBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.purple },
-  bannerSub: { fontFamily: FONTS.regular, fontSize: 9.7, color: C.sub, marginTop: 2 },
+  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purple },
+  bannerSub: { fontFamily: FONTS.regular, fontSize: 13, color: C.sub, marginTop: 2 },
 
   quickRow: { flexDirection: 'row', justifyContent: 'space-between' },
   quickItem: { alignItems: 'center', gap: 8, width: 64 },
@@ -389,7 +390,7 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: C.lime, alignItems: 'center', justifyContent: 'center',
   },
-  quickLabel: { fontFamily: FONTS.semiBold, fontSize: 9.7, color: C.heading, textAlign: 'center' },
+  quickLabel: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.heading, textAlign: 'center' },
 
   locationCard: {
     flexDirection: 'row',
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
 
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
   seeAll: { fontFamily: FONTS.semiBold, fontSize: 12.5, color: C.purple },
 
   gameRow: { gap: SPACING.md, paddingRight: SPACING.md },
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
   tagPillText: { fontFamily: FONTS.bold, fontSize: 12.5, color: C.heading },
   spotsLeft: { fontFamily: FONTS.bold, fontSize: 11.5, color: '#D14343' },
   gameCardBody: { padding: SPACING.md, paddingTop: SPACING.sm, flex: 1, justifyContent: 'space-between' },
-  gameTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading, lineHeight: 21 },
+  gameTitle: { ...TYPE_SCALE.cardTitle, color: C.heading, lineHeight: 22 },
   gameDesc: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 3, lineHeight: 16 },
   gameMetaText: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, marginTop: 4 },
   gameFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: SPACING.md },

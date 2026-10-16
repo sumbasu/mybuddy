@@ -16,6 +16,7 @@ import {
   renameGroup, updateGroupDescription, addMemberToGroup, removeMemberFromGroup,
 } from '../services/groups';
 import { FONTS, SPACING } from '../constants/theme';
+import { TYPE_SCALE } from '../constants/typography';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'GroupDetail'>;
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
 
   sheet: { flex: 1, backgroundColor: C.bg },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: SPACING.sm + 2 },
-  sectionTitle: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading },
+  sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
   addBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: C.brand, borderRadius: 18,
@@ -393,7 +394,7 @@ const styles = StyleSheet.create({
   },
   memberAvatarText: { fontFamily: FONTS.bold, fontSize: 14, color: '#fff' },
   memberName: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.heading },
-  creatorBadge: { fontFamily: FONTS.medium, fontSize: 11.5, color: C.textSubtle, marginTop: 1 },
+  creatorBadge: { fontFamily: FONTS.medium, fontSize: 12, color: C.textMuted, marginTop: 1 },
   removeBtn: {
     width: 32, height: 32, borderRadius: 16,
     backgroundColor: C.errorBg, alignItems: 'center', justifyContent: 'center',

@@ -52,8 +52,11 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.textPrimary,
-        tabBarInactiveTintColor: COLORS.textMuted,
+        // Closer to white (~70% opacity) than COLORS.textMuted (~50%) so
+        // inactive labels stay legible against the purple tab bar.
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginBottom: 4 },
+        tabBarAllowFontScaling: false,
         tabBarStyle: {
           height: 62 + tabBarPaddingBottom,
           paddingTop: 8,
