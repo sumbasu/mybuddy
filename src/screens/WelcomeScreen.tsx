@@ -15,12 +15,10 @@ const C = {
   page: '#FAFAFA',
   heading: '#16213E',
   sub: '#767683',
-  link: '#3F2F86',
 };
 
 export default function WelcomeScreen({ navigation }: Props) {
   const goToSignUp = () => navigation.navigate('AuthChoice');
-  const goToLogin = () => navigation.navigate('AuthChoice');
 
   return (
     <View style={styles.container}>
@@ -37,12 +35,6 @@ export default function WelcomeScreen({ navigation }: Props) {
 
         <TouchableOpacity style={styles.ctaBtn} onPress={goToSignUp} activeOpacity={0.88}>
           <Text style={styles.ctaBtnText}>Get started</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.loginRow} onPress={goToLogin} activeOpacity={0.7}>
-          <Text style={styles.loginText}>
-            Already have an account? <Text style={styles.loginLink}>Log in</Text>
-          </Text>
         </TouchableOpacity>
 
         <Text style={styles.terms}>
@@ -85,10 +77,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   ctaBtnText: { fontFamily: FONTS.bold, fontSize: 16, color: '#FFFFFF' },
-
-  loginRow: { minHeight: 44, alignItems: 'center', justifyContent: 'center', marginTop: SPACING.xs },
-  loginText: { fontFamily: FONTS.regular, fontSize: 14, color: C.heading },
-  loginLink: { fontFamily: FONTS.bold, color: C.link },
 
   terms: {
     fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, textAlign: 'center',
