@@ -11,6 +11,7 @@ import { INTERESTS } from '../constants/interests';
 import StarRating from '../components/StarRating';
 import { storage } from '../services/firebase';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
+import { TYPE_SCALE } from '../constants/typography';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -19,7 +20,7 @@ const C = {
   headerBg: '#3F2F86',
   page: '#FAFAFA',
   card: '#FFFFFF',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
@@ -136,16 +137,19 @@ export default function ProfileScreen({ navigation }: Props) {
     ]);
   };
 
-  const removeInterest = (id: string) => {
+  const removeInterest = (id: string, label: string) => {
     if (!user) return;
     const remaining = (user.interests || []).filter((i) => i !== id);
     // Dropping below 2 kicks the whole app into the onboarding interest-picker
     // stack (AppNavigator), which has no way back — keep at least 2 here.
     if (remaining.length < 2) {
-      Alert.alert('Keep at least 2', 'You need at least 2 interests so we can match you with people who share them.');
+      Alert.alert('Keep at least 2', 'You need at least 2 activities so we can match you with people who share them.');
       return;
     }
-    setUser({ ...user, interests: remaining });
+    Alert.alert('Remove activity', `Remove "${label}" from your activities?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => setUser({ ...user, interests: remaining }) },
+    ]);
   };
 
   return (
@@ -233,7 +237,7 @@ export default function ProfileScreen({ navigation }: Props) {
                 <Text style={[styles.interestChipText, i === 0 && styles.interestChipTextActive]}>
                   {interest?.label || id}
                 </Text>
-                <TouchableOpacity onPress={() => removeInterest(id)} hitSlop={8}>
+                <TouchableOpacity onPress={() => removeInterest(id, interest?.label || id)} hitSlop={8}>
                   <Ionicons name="close" size={13} color={i === 0 ? '#FFFFFF' : C.sub} />
                 </TouchableOpacity>
               </View>
@@ -427,7 +431,7 @@ const styles = StyleSheet.create({
   addChipText: { fontFamily: FONTS.bold, fontSize: 13, color: C.sub },
 
   section: { marginBottom: SPACING.lg },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
   filterRow: { flexDirection: 'row', gap: SPACING.xs, marginTop: SPACING.sm, marginBottom: SPACING.sm },
   filterChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,

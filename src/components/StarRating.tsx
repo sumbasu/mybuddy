@@ -1,7 +1,15 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING } from '../constants/theme';
+import { SPACING } from '../constants/theme';
+
+// Deliberately not COLORS.textMuted/textSecondary — those assume the cream-
+// on-purple gradient background, but this component is used on white cards
+// (Profile, Activity Detail), where the near-white cream tones were nearly
+// invisible.
+const UNFILLED_STAR = '#C9C9D4';
+const RATING_LABEL = '#4B4B5A';
+const NO_RATING_LABEL = '#6E6E80';
 
 interface Props {
   rating: number;           // current value (0–5, can be decimal for display)
@@ -23,7 +31,7 @@ export default function StarRating({
         const filled = i < Math.floor(rating);
         const half   = !filled && i < rating;
         const name   = filled ? 'star' : half ? 'star-half' : 'star-outline';
-        const color  = filled || half ? '#F59E0B' : COLORS.textMuted;
+        const color  = filled || half ? '#F59E0B' : UNFILLED_STAR;
 
         return interactive ? (
           <TouchableOpacity key={i} onPress={() => onChange?.(i + 1)} activeOpacity={0.7}>
@@ -47,6 +55,6 @@ export default function StarRating({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  label: { color: COLORS.textSecondary, fontWeight: '600', marginLeft: SPACING.xs },
-  noRating: { color: COLORS.textMuted, marginLeft: SPACING.xs },
+  label: { color: RATING_LABEL, fontWeight: '600', marginLeft: SPACING.xs },
+  noRating: { color: NO_RATING_LABEL, marginLeft: SPACING.xs },
 });

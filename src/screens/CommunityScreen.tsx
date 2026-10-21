@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, TabParamList, User } from '../types';
 import { FONTS, SPACING, RADIUS, SHADOW } from '../constants/theme';
+import { TYPE_SCALE, MAX_FONT_SCALE_TIGHT } from '../constants/typography';
 import { INTERESTS } from '../constants/interests';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -29,7 +30,7 @@ const C = {
   headerBg: '#3F2F86',
   page: '#F4F3F9',
   card: '#FFFFFF',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
@@ -245,8 +246,8 @@ export default function CommunityScreen({ navigation, route }: Props) {
       const groupId = await createGroup(
         groupName,
         groupDescription,
-        user.uid,
-        selectedMembers.map((m) => m.uid)
+        { uid: user.uid, name: user.name || 'Someone' },
+        selectedMembers.map((m) => ({ uid: m.uid, name: m.name }))
       );
       resetGroupModal();
       navigation.navigate('Chat', {
@@ -312,11 +313,7 @@ export default function CommunityScreen({ navigation, route }: Props) {
                     key={group.id}
                     style={styles.groupRow}
                     activeOpacity={0.85}
-                    onPress={() => navigation.navigate('Chat', {
-                      chatId: `group_${group.id}`,
-                      activityTitle: group.name,
-                      participantName: group.name,
-                    })}
+                    onPress={() => navigation.navigate('GroupDetail', { groupId: group.id })}
                   >
                     <View style={styles.groupRowIconWrap}>
                       <Ionicons name="people" size={20} color="#FFFFFF" />
@@ -354,14 +351,14 @@ export default function CommunityScreen({ navigation, route }: Props) {
                 onPress={() => setFilter('all')}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.filterChipText, filter === 'all' && styles.filterChipTextActive]}>All</Text>
+                <Text style={[styles.filterChipText, filter === 'all' && styles.filterChipTextActive]} maxFontSizeMultiplier={MAX_FONT_SCALE_TIGHT}>All</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.filterChip, filter === 'mine' && styles.filterChipActive]}
                 onPress={() => setFilter('mine')}
                 activeOpacity={0.85}
               >
-                <Text style={[styles.filterChipText, filter === 'mine' && styles.filterChipTextActive]}>Your posts</Text>
+                <Text style={[styles.filterChipText, filter === 'mine' && styles.filterChipTextActive]} maxFontSizeMultiplier={MAX_FONT_SCALE_TIGHT}>Your posts</Text>
               </TouchableOpacity>
             </View>
 
@@ -452,7 +449,7 @@ export default function CommunityScreen({ navigation, route }: Props) {
                         <View style={styles.addFriendsCircle}>
                           <Ionicons name="add" size={22} color={C.muted} />
                         </View>
-                        <Text style={styles.addFriendsText}>Add friends from your address book</Text>
+                        <Text style={styles.addFriendsText}>Add from contacts</Text>
                       </View>
                     )}
 
@@ -464,7 +461,7 @@ export default function CommunityScreen({ navigation, route }: Props) {
                           <View style={styles.personAvatar}>
                             <Text style={styles.personAvatarText}>{initials(p.name)}</Text>
                           </View>
-                          <Text style={styles.personName} numberOfLines={1}>{p.name}</Text>
+                          <Text style={styles.personName} numberOfLines={2}>{p.name}</Text>
                           <Text style={styles.personSport} numberOfLines={1}>{primaryInterest(p)}</Text>
                           <TouchableOpacity
                             style={[styles.followBtn, isFollowing && styles.followBtnActive]}
@@ -626,7 +623,7 @@ export default function CommunityScreen({ navigation, route }: Props) {
                 <View style={styles.selectedMembersRow}>
                   {selectedMembers.map((m) => (
                     <TouchableOpacity key={m.uid} style={styles.selectedMemberChip} onPress={() => toggleGroupMember(m)}>
-                      <Text style={styles.selectedMemberChipText} numberOfLines={1}>{m.name}</Text>
+                      <Text style={styles.selectedMemberChipText} numberOfLines={1} maxFontSizeMultiplier={MAX_FONT_SCALE_TIGHT}>{m.name}</Text>
                       <Ionicons name="close" size={13} color={C.purple} />
                     </TouchableOpacity>
                   ))}
@@ -827,7 +824,7 @@ const styles = StyleSheet.create({
   },
 
   suggestedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
   noPeopleText: { fontFamily: FONTS.regular, fontSize: 13.5, color: C.sub, paddingBottom: SPACING.lg },
 
   suggestedRow: { gap: SPACING.sm, paddingBottom: SPACING.lg, paddingRight: SPACING.md },
@@ -839,7 +836,7 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 28, borderWidth: 1.5, borderColor: C.border,
     borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center',
   },
-  addFriendsText: { fontFamily: FONTS.medium, fontSize: 11, color: C.sub, textAlign: 'center', lineHeight: 15 },
+  addFriendsText: { fontFamily: FONTS.medium, fontSize: 13, color: C.sub, textAlign: 'center', lineHeight: 17 },
 
   personCard: {
     width: 128, backgroundColor: C.card, borderRadius: RADIUS.lg, padding: SPACING.md,
@@ -850,7 +847,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
   personAvatarText: { fontFamily: FONTS.bold, fontSize: 18, color: '#FFFFFF' },
-  personName: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.heading },
+  personName: { fontFamily: FONTS.bold, fontSize: 14.5, color: C.heading, lineHeight: 18 },
   personSport: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, marginBottom: 6 },
   followBtn: {
     alignSelf: 'stretch', height: 44, borderRadius: RADIUS.full,
@@ -868,7 +865,7 @@ const styles = StyleSheet.create({
   },
   postAvatarText: { fontFamily: FONTS.bold, fontSize: 13, color: '#FFFFFF' },
   postAuthor: { fontFamily: FONTS.bold, fontSize: 14, color: C.heading },
-  postTime: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.muted },
+  postTime: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub },
   postHeadline: { fontFamily: FONTS.bold, fontSize: 14.5, color: C.heading, marginBottom: 6 },
   postBody: { fontFamily: FONTS.regular, fontSize: 13.5, color: C.sub, lineHeight: 19 },
 });

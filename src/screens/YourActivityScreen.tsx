@@ -9,7 +9,7 @@ type Props = { navigation: NativeStackNavigationProp<RootStackParamList, 'YourAc
 
 // White page, deliberately departing from the app's purple gradient (matches the Playtomic reference).
 const C = {
-  text: '#111111',
+  text: '#3D3081',
   sub: '#8A8A93',
   border: '#ECECEF',
   chevron: '#B9B9C2',

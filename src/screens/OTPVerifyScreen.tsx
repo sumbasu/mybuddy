@@ -21,7 +21,7 @@ type Props = {
 // continuation of that step.
 const C = {
   bg: '#FAFAFA',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#888888',
   boxBorder: '#E1E3E8',
   boxBorderFilled: '#4B5BD9',

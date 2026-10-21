@@ -24,6 +24,8 @@ import CreateActivityScreen from '../screens/CreateActivityScreen';
 import ActivityDetailScreen from '../screens/ActivityDetailScreen';
 import ChatsScreen from '../screens/ChatsScreen';
 import ChatScreen from '../screens/ChatScreen';
+import GroupDetailScreen from '../screens/GroupDetailScreen';
+import VenueListScreen from '../screens/VenueListScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -51,8 +53,11 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.textPrimary,
-        tabBarInactiveTintColor: COLORS.textMuted,
+        // Closer to white (~70% opacity) than COLORS.textMuted (~50%) so
+        // inactive labels stay legible against the purple tab bar.
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginBottom: 4 },
+        tabBarAllowFontScaling: false,
         tabBarStyle: {
           height: 62 + tabBarPaddingBottom,
           paddingTop: 8,
@@ -143,6 +148,8 @@ export default function AppNavigator() {
             <Stack.Screen name="InterestPicker" component={InterestPickerScreen} />
             <Stack.Screen name="Chats"          component={ChatsScreen} />
             <Stack.Screen name="Chat"           component={ChatScreen} />
+            <Stack.Screen name="GroupDetail"    component={GroupDetailScreen} />
+            <Stack.Screen name="VenueList"      component={VenueListScreen} />
             <Stack.Screen name="EditProfile"    component={EditProfileScreen} />
             <Stack.Screen name="Settings"       component={SettingsScreen} />
             <Stack.Screen name="YourActivity"   component={YourActivityScreen} />

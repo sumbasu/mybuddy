@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, StatusBar, Alert, Linking, Platform,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, StatusBar, Alert, Linking, Platform, Modal,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,6 +10,8 @@ import { useAuth } from '../context/AuthContext';
 import { useActivities } from '../hooks/useActivities';
 import { INTERESTS } from '../constants/interests';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
+import { TYPE_SCALE } from '../constants/typography';
+import InterestIcon from '../components/InterestIcon';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -18,7 +20,7 @@ const C = {
   headerBg: '#3F2F86',
   page: '#FAFAFA',
   card: '#FFFFFF',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#767683',
   muted: '#9A9AA6',
   border: '#ECEBF2',
@@ -52,8 +54,8 @@ const comingSoon = (feature: string) =>
 const QUICK_ACTIONS = [
   { key: 'find',   label: 'Find a game',  icon: 'magnify' as const,                  onPress: (nav: any) => nav.navigate('FindGame') },
   { key: 'host',   label: 'Add a game',   icon: 'calendar-plus-outline' as const,    onPress: (nav: any) => nav.navigate('CreateActivity') },
-  { key: 'venue',  label: 'Find venue',   icon: 'map-marker-radius-outline' as const, onPress: () => comingSoon('Find venue') },
-  { key: 'coach',  label: 'Coach',        icon: 'account-tie-outline' as const,       onPress: () => comingSoon('Coach') },
+  { key: 'venue',  label: 'Find venue',   icon: 'map-marker-radius-outline' as const, onPress: null },
+  { key: 'coach',  label: 'Find a coach', icon: 'account-tie-outline' as const,       onPress: () => comingSoon('Coach') },
 ];
 
 const titleCase = (s: string) => s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
@@ -72,6 +74,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [locationLabel, setLocationLabel] = useState<string | null>(null);
+  const [venuePickerVisible, setVenuePickerVisible] = useState(false);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -140,6 +143,15 @@ export default function HomeScreen({ navigation }: Props) {
   const visibleGames = subscribed ? openActivities : openActivities.slice(0, 5);
   const hiddenGamesCount = openActivities.length - visibleGames.length;
 
+  const userInterests = (user?.interests || [])
+    .map((id) => INTERESTS.find((i) => i.id === id))
+    .filter((i): i is typeof INTERESTS[number] => !!i);
+
+  const chooseVenueActivity = (id: string, label: string) => {
+    setVenuePickerVisible(false);
+    navigation.navigate('VenueList', { activityId: id, activityLabel: label });
+  };
+
   const upgradeBanner = !subscribed && (
     <View style={styles.section}>
       <TouchableOpacity
@@ -202,7 +214,7 @@ export default function HomeScreen({ navigation }: Props) {
               <TouchableOpacity
                 key={qa.key}
                 style={styles.quickItem}
-                onPress={() => qa.onPress(navigation)}
+                onPress={() => (qa.key === 'venue' ? setVenuePickerVisible(true) : qa.onPress?.(navigation))}
                 activeOpacity={0.8}
               >
                 <View style={styles.quickIconWrap}>
@@ -283,6 +295,50 @@ export default function HomeScreen({ navigation }: Props) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <Modal visible={venuePickerVisible} transparent animationType="slide" onRequestClose={() => setVenuePickerVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Choose an activity</Text>
+              <TouchableOpacity onPress={() => setVenuePickerVisible(false)} hitSlop={10}>
+                <Ionicons name="close" size={22} color={C.sub} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Find venues for one of your activities</Text>
+
+            {userInterests.length === 0 ? (
+              <View style={styles.modalEmpty}>
+                <Text style={styles.modalEmptyText}>Add activities to your profile to find venues for them.</Text>
+                <TouchableOpacity
+                  style={styles.modalEmptyBtn}
+                  onPress={() => { setVenuePickerVisible(false); navigation.navigate('InterestPicker'); }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.modalEmptyBtnText}>Add activities</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView contentContainerStyle={{ paddingBottom: SPACING.lg }}>
+                {userInterests.map((interest) => (
+                  <TouchableOpacity
+                    key={interest.id}
+                    style={styles.modalRow}
+                    onPress={() => chooseVenueActivity(interest.id, interest.label)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.modalRowIconWrap}>
+                      <InterestIcon id={interest.id} size={20} color={C.purple} />
+                    </View>
+                    <Text style={styles.modalRowLabel}>{interest.label}</Text>
+                    <Ionicons name="chevron-forward" size={18} color={C.muted} />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -358,7 +414,7 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    fontSize: 18, fontFamily: FONTS.bold, color: C.heading,
+    ...TYPE_SCALE.screenHeading, color: C.heading,
     paddingHorizontal: SPACING.md, paddingTop: SPACING.lg, paddingBottom: SPACING.sm,
   },
 
@@ -380,8 +436,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   bannerDismissBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 11.3, color: C.purple },
-  bannerSub: { fontFamily: FONTS.regular, fontSize: 9.7, color: C.sub, marginTop: 2 },
+  bannerTitle: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.purple },
+  bannerSub: { fontFamily: FONTS.regular, fontSize: 13, color: C.sub, marginTop: 2 },
 
   quickRow: { flexDirection: 'row', justifyContent: 'space-between' },
   quickItem: { alignItems: 'center', gap: 8, width: 64 },
@@ -389,7 +445,7 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: C.lime, alignItems: 'center', justifyContent: 'center',
   },
-  quickLabel: { fontFamily: FONTS.semiBold, fontSize: 9.7, color: C.heading, textAlign: 'center' },
+  quickLabel: { fontFamily: FONTS.semiBold, fontSize: 13, color: C.heading, textAlign: 'center' },
 
   locationCard: {
     flexDirection: 'row',
@@ -409,7 +465,7 @@ const styles = StyleSheet.create({
 
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  sectionTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading },
+  sectionTitle: { ...TYPE_SCALE.sectionHeading, color: C.heading },
   seeAll: { fontFamily: FONTS.semiBold, fontSize: 12.5, color: C.purple },
 
   gameRow: { gap: SPACING.md, paddingRight: SPACING.md },
@@ -426,7 +482,7 @@ const styles = StyleSheet.create({
   tagPillText: { fontFamily: FONTS.bold, fontSize: 12.5, color: C.heading },
   spotsLeft: { fontFamily: FONTS.bold, fontSize: 11.5, color: '#D14343' },
   gameCardBody: { padding: SPACING.md, paddingTop: SPACING.sm, flex: 1, justifyContent: 'space-between' },
-  gameTitle: { fontFamily: FONTS.bold, fontSize: 16, color: C.heading, lineHeight: 21 },
+  gameTitle: { ...TYPE_SCALE.cardTitle, color: C.heading, lineHeight: 22 },
   gameDesc: { fontFamily: FONTS.regular, fontSize: 12, color: C.sub, marginTop: 3, lineHeight: 16 },
   gameMetaText: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.sub, marginTop: 4 },
   gameFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: SPACING.md },
@@ -447,4 +503,26 @@ const styles = StyleSheet.create({
   },
   moreCardCount: { fontFamily: FONTS.semiBold, fontSize: 12, color: C.heading, marginTop: 4 },
   moreCardLabel: { fontFamily: FONTS.regular, fontSize: 10, color: C.sub },
+
+  modalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalSheet: {
+    backgroundColor: C.card, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    maxHeight: '75%', padding: SPACING.lg,
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  modalTitle: { fontFamily: FONTS.extraBold, fontSize: 19, color: C.heading },
+  modalSubtitle: { fontFamily: FONTS.regular, fontSize: 13, color: C.sub, marginTop: 4, marginBottom: SPACING.md },
+  modalEmpty: { alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.md },
+  modalEmptyText: { fontFamily: FONTS.medium, fontSize: 14, color: C.sub, textAlign: 'center', lineHeight: 20 },
+  modalEmptyBtn: { backgroundColor: C.purple, borderRadius: RADIUS.full, paddingHorizontal: SPACING.xl, height: 46, alignItems: 'center', justifyContent: 'center' },
+  modalEmptyBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: '#FFFFFF' },
+  modalRow: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+    paddingVertical: SPACING.sm + 2, borderBottomWidth: 0.8, borderBottomColor: C.border,
+  },
+  modalRowIconWrap: {
+    width: 38, height: 38, borderRadius: 19, backgroundColor: C.purpleTint,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modalRowLabel: { flex: 1, fontFamily: FONTS.semiBold, fontSize: 15, color: C.heading },
 });

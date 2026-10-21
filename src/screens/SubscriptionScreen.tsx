@@ -14,7 +14,7 @@ import Constants from 'expo-constants';
 const C = {
   page: '#FAFAFA',
   purple: '#3F2F86',
-  heading: '#16213E',
+  heading: '#3D3081',
   sub: '#767683',
   border: '#ECEBF2',
   lime: '#C8DB2E',

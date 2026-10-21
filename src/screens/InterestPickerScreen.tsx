@@ -112,7 +112,10 @@ export default function InterestPickerScreen({ navigation }: Props) {
                       activeOpacity={0.8}
                     >
                       <InterestIcon id={interest.id} size={18} color={isSelected ? C.lime : C.textSubtle} />
-                      <Text style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}>
+                      <Text
+                        style={[styles.chipLabel, isSelected && styles.chipLabelSelected]}
+                        maxFontSizeMultiplier={1.4}
+                      >
                         {interest.label}
                       </Text>
                       {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
@@ -134,10 +137,7 @@ export default function InterestPickerScreen({ navigation }: Props) {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <View style={styles.btnInner}>
-                <Text style={[styles.btnText, !canContinue && styles.btnTextDisabled]}>Continue</Text>
-                <Ionicons name="arrow-forward" size={20} color={canContinue ? C.lime : C.textSubtle} />
-              </View>
+              <Text style={[styles.btnText, !canContinue && styles.btnTextDisabled]}>Continue</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -221,7 +221,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnDisabled: { backgroundColor: C.disabled },
-  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   btnText: { fontFamily: FONTS.extraBold, color: '#fff', fontSize: 17 },
   btnTextDisabled: { color: C.textSubtle },
 });
