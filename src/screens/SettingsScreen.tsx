@@ -50,7 +50,7 @@ function ToggleRow({
   return (
     <View style={styles.row}>
       <View style={styles.rowIconWrap}>
-        <Ionicons name={icon} size={16} color="#FFFFFF" />
+        <Ionicons name={icon} size={16} color={C.purple} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowLabel}>{label}</Text>
