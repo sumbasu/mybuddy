@@ -56,7 +56,23 @@ export default function AuthChoiceScreen({ navigation }: Props) {
   const [phoneLoading, setPhoneLoading] = useState(false);
   const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierHandle>(null);
 
-  const { signIn: signInWithGoogle, loading: googleLoading, ready: googleReady } = useGoogleSignIn();
+  const { signIn: signInWithGoogle, loading: googleLoading, ready: googleReady, linkRequiredEmail } = useGoogleSignIn();
+
+  // Fires once Firebase reports the Google sign-in collided with an existing
+  // verified-email account under a different provider (phone, most likely).
+  // The actual OAuth credential is already safely stashed by useGoogleSignIn
+  // — this just tells the user how to unlock linking it.
+  useEffect(() => {
+    if (linkRequiredEmail) promptToLinkViaPhone(linkRequiredEmail);
+  }, [linkRequiredEmail]);
+
+  const promptToLinkViaPhone = (email: string | null) => {
+    Alert.alert(
+      'Account already exists',
+      (email ? `${email} is` : 'This email is') +
+        ' already signed in with phone on Sweatbud. Enter that phone number below and verify it to link your account — your Google/Apple sign-in will work from then on too.'
+    );
+  };
 
   const [appleAvailable, setAppleAvailable] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
@@ -115,8 +131,12 @@ export default function AuthChoiceScreen({ navigation }: Props) {
       await signInWithApple();
       saveLastAuthMethod('apple');
       // AppNavigator watches Firebase auth state and swaps stacks automatically.
-    } catch {
-      Alert.alert('Error', 'Could not sign in with Apple. Please try again.');
+    } catch (err: any) {
+      if (err?.code === 'auth/account-exists-with-different-credential') {
+        promptToLinkViaPhone(err.customData?.email ?? null);
+      } else {
+        Alert.alert('Error', 'Could not sign in with Apple. Please try again.');
+      }
     }
     setAppleLoading(false);
   };

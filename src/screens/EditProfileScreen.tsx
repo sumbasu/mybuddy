@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { verifyBeforeUpdateEmail, reload } from 'firebase/auth';
 import { RootStackParamList } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../services/firebase';
@@ -73,6 +74,54 @@ export default function EditProfileScreen({ navigation }: Props) {
     user?.buddyGenderPreference || 'any'
   );
   const [loading, setLoading] = useState(false);
+
+  // Email is only editable once, from empty — phone sign-ups have none by
+  // default. Kept separate from the rest of the form since it's a multi-step
+  // async flow (send link, wait, confirm) rather than a plain field save.
+  const [emailInput, setEmailInput] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
+  const emailInputValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.trim());
+
+  const sendEmailForVerification = async () => {
+    if (!user || !emailInputValid || !auth.currentUser) return;
+    setEmailSending(true);
+    try {
+      await verifyBeforeUpdateEmail(auth.currentUser, emailInput.trim());
+      await setUser({ ...user, pendingEmail: emailInput.trim() });
+      Alert.alert(
+        'Verification sent',
+        `We've sent a link to ${emailInput.trim()}. Open it, then come back and tap "I've verified".`
+      );
+    } catch (err: any) {
+      const msg =
+        err?.code === 'auth/requires-recent-login'
+          ? 'For security, please log out and log back in, then try adding your email again.'
+          : err?.code === 'auth/email-already-in-use'
+          ? 'That email is already linked to another account.'
+          : 'Could not send the verification email. Please try again.';
+      Alert.alert('Error', msg);
+    }
+    setEmailSending(false);
+  };
+
+  const checkEmailVerified = async () => {
+    if (!user || !auth.currentUser) return;
+    setEmailChecking(true);
+    try {
+      await reload(auth.currentUser);
+      const confirmedEmail = auth.currentUser.email;
+      if (confirmedEmail && auth.currentUser.emailVerified && confirmedEmail === user.pendingEmail) {
+        await setUser({ ...user, email: confirmedEmail, emailVerified: true, pendingEmail: undefined });
+        Alert.alert('Email verified', 'Your email is now confirmed.');
+      } else {
+        Alert.alert('Not yet verified', "We haven't seen you click the link yet — check your inbox (and spam folder).");
+      }
+    } catch {
+      Alert.alert('Error', 'Could not check verification status. Please try again.');
+    }
+    setEmailChecking(false);
+  };
 
   const initialDob = seedDob(user);
   const hasChanges =
@@ -149,18 +198,76 @@ export default function EditProfileScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Account — email is the account's unique ID and can never be
-              changed here; phone is required but editable. */}
+          {/* Account — once an email is verified it becomes permanent (like
+              the unique account ID it effectively is); phone stays editable. */}
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
             <FieldLabel icon="mail-outline" label="Email" />
-            <View style={styles.readonly}>
-              <Text style={[styles.inputText, !user?.email && { color: C.textSubtle }]}>
-                {user?.email || 'Not set'}
-              </Text>
-              <Ionicons name="lock-closed-outline" size={18} color={C.textSubtle} />
-            </View>
-            <Text style={styles.helper}>Your email can't be changed.</Text>
+            {user?.email ? (
+              <>
+                <View style={styles.readonly}>
+                  <Text style={styles.inputText}>{user.email}</Text>
+                  <Ionicons name="lock-closed-outline" size={18} color={C.textSubtle} />
+                </View>
+                <Text style={styles.helper}>Your email can't be changed.</Text>
+              </>
+            ) : user?.pendingEmail ? (
+              <>
+                <View style={styles.readonly}>
+                  <Text style={[styles.inputText, { color: C.textSubtle }]}>{user.pendingEmail}</Text>
+                  <Ionicons name="time-outline" size={18} color={C.textSubtle} />
+                </View>
+                <Text style={styles.helper}>
+                  Check your inbox for a verification link, then tap below.
+                </Text>
+                <View style={styles.inlineBtnRow}>
+                  <TouchableOpacity
+                    style={[styles.inlineBtn, styles.inlineBtnPrimary]}
+                    onPress={checkEmailVerified}
+                    disabled={emailChecking}
+                    activeOpacity={0.85}
+                  >
+                    {emailChecking ? <ActivityIndicator color="#fff" size="small" /> : (
+                      <Text style={styles.inlineBtnPrimaryText}>I've verified</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.inlineBtn}
+                    onPress={sendEmailForVerification}
+                    disabled={emailSending}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.inlineBtnText}>Resend</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  style={[styles.input, styles.inputText]}
+                  value={emailInput}
+                  onChangeText={setEmailInput}
+                  placeholder="you@example.com"
+                  placeholderTextColor={C.textSubtle}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Text style={styles.helper}>
+                  Add your email so you can also sign in with Google or Apple later using the same account.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.inlineBtn, styles.inlineBtnPrimary, (!emailInputValid || emailSending) && styles.saveBtnDisabled]}
+                  onPress={sendEmailForVerification}
+                  disabled={!emailInputValid || emailSending}
+                  activeOpacity={0.85}
+                >
+                  {emailSending ? <ActivityIndicator color="#fff" size="small" /> : (
+                    <Text style={styles.inlineBtnPrimaryText}>Send verification link</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
 
             <View style={styles.divider} />
 
@@ -389,6 +496,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'space-between',
   },
   helper: { fontSize: 13, color: C.textSubtle, marginTop: 6, marginBottom: SPACING.sm },
+
+  inlineBtnRow: { flexDirection: 'row', gap: SPACING.sm },
+  inlineBtn: {
+    flex: 1, minHeight: 44, borderRadius: 14, borderWidth: 1.5, borderColor: C.border,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: SPACING.md,
+  },
+  inlineBtnText: { fontWeight: '700', fontSize: 14, color: C.textMuted },
+  inlineBtnPrimary: { backgroundColor: C.brand, borderColor: C.brand },
+  inlineBtnPrimaryText: { fontWeight: '700', fontSize: 14, color: '#fff' },
 
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: SPACING.xs },
   errorText: { fontSize: 13, color: C.danger, flex: 1 },

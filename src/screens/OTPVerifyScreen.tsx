@@ -7,8 +7,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { linkWithCredential } from 'firebase/auth';
 import { getPendingConfirmation, clearPendingConfirmation } from '../services/phoneAuth';
 import { saveLastAuthMethod } from '../services/lastAuthMethod';
+import { getPendingLinkCredential, clearPendingLinkCredential } from '../services/pendingLinkCredential';
 import { RootStackParamList } from '../types';
 import { FONTS, SPACING, RADIUS } from '../constants/theme';
 
@@ -82,9 +84,26 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
         setLoading(false);
         return;
       }
-      await confirmation.confirm(code);
+      const credential = await confirmation.confirm(code);
       clearPendingConfirmation();
       saveLastAuthMethod('phone');
+
+      // If this phone sign-in was prompted by a Google/Apple collision (see
+      // AuthChoiceScreen), finish the link now that phone ownership is
+      // re-proven — same Firebase uid keeps both providers from here on.
+      const pendingLink = getPendingLinkCredential();
+      if (pendingLink) {
+        clearPendingLinkCredential();
+        try {
+          await linkWithCredential(credential.user, pendingLink);
+          Alert.alert('Accounts linked', "You're all set — Google/Apple sign-in will work for this account too.");
+        } catch {
+          Alert.alert(
+            'Signed in, but linking failed',
+            "You're signed in, but we couldn't link the other account. You can try again from the login screen."
+          );
+        }
+      }
       // AppNavigator watches the Firebase auth state and swaps to the
       // profile-setup stack automatically once this resolves.
     } catch (err: any) {

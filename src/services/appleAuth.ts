@@ -2,6 +2,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import { OAuthProvider, signInWithCredential, updateProfile } from 'firebase/auth';
 import { auth } from './firebase';
+import { setPendingLinkCredential } from './pendingLinkCredential';
 
 export async function isAppleSignInAvailable(): Promise<boolean> {
   return AppleAuthentication.isAvailableAsync();
@@ -47,7 +48,16 @@ export async function signInWithApple() {
     rawNonce,
   });
 
-  const result = await signInWithCredential(auth, firebaseCredential);
+  let result;
+  try {
+    result = await signInWithCredential(auth, firebaseCredential);
+  } catch (err: any) {
+    if (err?.code === 'auth/account-exists-with-different-credential') {
+      const pending = OAuthProvider.credentialFromError(err);
+      if (pending) setPendingLinkCredential(pending);
+    }
+    throw err;
+  }
 
   // Apple only sends the name on the very first sign-in ever, and Firebase
   // doesn't populate it on the user profile automatically — set it here so

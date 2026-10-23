@@ -12,6 +12,7 @@ import StarRating from '../components/StarRating';
 import { storage } from '../services/firebase';
 import { COLORS, FONTS, SPACING, RADIUS } from '../constants/theme';
 import { TYPE_SCALE } from '../constants/typography';
+import { getProfileCompletion } from '../utils/profileCompletion';
 
 type Props = { navigation: NativeStackNavigationProp<RootStackParamList> };
 
@@ -60,6 +61,8 @@ export default function ProfileScreen({ navigation }: Props) {
   });
 
   const subscribed = isSubscribed();
+  const { percent: completionPercent, fields: completionFields } = getProfileCompletion(user);
+  const missingFields = completionFields.filter((f) => !f.done);
   const myUid = user?.uid || 'demo_user';
   const matches = activities.filter(
     (a) => a.creatorId === myUid || a.participants.includes(myUid)
@@ -199,6 +202,28 @@ export default function ProfileScreen({ navigation }: Props) {
             )}
           </View>
         </View>
+
+        {/* Profile completion */}
+        {completionPercent < 100 && (
+          <TouchableOpacity
+            style={styles.completionCard}
+            onPress={() => navigation.navigate('EditProfile')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.completionHeader}>
+              <Text style={styles.completionTitle}>Profile {completionPercent}% complete</Text>
+              <Ionicons name="chevron-forward" size={16} color={C.purple} />
+            </View>
+            <View style={styles.completionBarTrack}>
+              <View style={[styles.completionBarFill, { width: `${completionPercent}%` }]} />
+            </View>
+            {missingFields.length > 0 && (
+              <Text style={styles.completionHint} numberOfLines={1}>
+                Still missing: {missingFields.map((f) => f.label).join(', ')}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
 
         {/* Stats */}
         <View style={styles.statsCard}>
@@ -388,6 +413,18 @@ const styles = StyleSheet.create({
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
   locationText: { fontSize: 12, fontFamily: FONTS.medium, color: C.sub },
   addLocationText: { fontSize: 13.5, fontFamily: FONTS.semiBold, color: C.purple, marginTop: 4 },
+
+  completionCard: {
+    backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
+    borderRadius: RADIUS.lg, padding: SPACING.md, marginBottom: SPACING.lg,
+  },
+  completionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  completionTitle: { fontFamily: FONTS.bold, fontSize: 13.5, color: C.heading },
+  completionBarTrack: {
+    height: 6, borderRadius: 3, backgroundColor: C.border, marginTop: SPACING.sm, overflow: 'hidden',
+  },
+  completionBarFill: { height: 6, borderRadius: 3, backgroundColor: C.purple },
+  completionHint: { fontFamily: FONTS.regular, fontSize: 11.5, color: C.sub, marginTop: 6 },
 
   statsCard: {
     flexDirection: 'row', alignItems: 'center',

@@ -3,6 +3,11 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 export interface User {
   uid: string;
   email?: string;
+  // Set once email verification is requested but before the user has clicked
+  // the link Firebase sends — lets the UI show "check your inbox" even
+  // though Firebase Auth itself won't report the new email until then.
+  pendingEmail?: string;
+  emailVerified?: boolean;
   phone?: string;
   name: string;
   nameLower?: string;
