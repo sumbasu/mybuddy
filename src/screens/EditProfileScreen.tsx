@@ -83,15 +83,20 @@ export default function EditProfileScreen({ navigation }: Props) {
   const [emailChecking, setEmailChecking] = useState(false);
   const emailInputValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.trim());
 
-  const sendEmailForVerification = async () => {
-    if (!user || !emailInputValid || !auth.currentUser) return;
+  // Takes the target email explicitly rather than always reading emailInput
+  // — the Resend button (shown once a verification is already pending) has
+  // no text field bound to emailInput at all, so defaulting to that left
+  // Resend silently doing nothing.
+  const sendEmailForVerification = async (targetEmail: string) => {
+    const email = targetEmail.trim();
+    if (!user || !email || !auth.currentUser) return;
     setEmailSending(true);
     try {
-      await verifyBeforeUpdateEmail(auth.currentUser, emailInput.trim());
-      await setUser({ ...user, pendingEmail: emailInput.trim() });
+      await verifyBeforeUpdateEmail(auth.currentUser, email);
+      await setUser({ ...user, pendingEmail: email });
       Alert.alert(
         'Verification sent',
-        `We've sent a link to ${emailInput.trim()}. Open it, then come back and tap "I've verified".`
+        `We've sent a link to ${email}. Open it, then come back and tap "I've verified".`
       );
     } catch (err: any) {
       const msg =
@@ -112,7 +117,13 @@ export default function EditProfileScreen({ navigation }: Props) {
       await reload(auth.currentUser);
       const confirmedEmail = auth.currentUser.email;
       if (confirmedEmail && auth.currentUser.emailVerified && confirmedEmail === user.pendingEmail) {
-        await setUser({ ...user, email: confirmedEmail, emailVerified: true, pendingEmail: undefined });
+        // Firestore's setDoc throws on a literal `undefined` field value —
+        // destructure pendingEmail out entirely instead of nulling it,
+        // otherwise this whole write silently fails and email/emailVerified
+        // never actually reach Firestore despite the UI looking updated
+        // (setUser updates local state before attempting the Firestore write).
+        const { pendingEmail: _pendingEmail, ...rest } = user;
+        await setUser({ ...rest, email: confirmedEmail, emailVerified: true });
         Alert.alert('Email verified', 'Your email is now confirmed.');
       } else {
         Alert.alert('Not yet verified', "We haven't seen you click the link yet — check your inbox (and spam folder).");
@@ -233,11 +244,13 @@ export default function EditProfileScreen({ navigation }: Props) {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.inlineBtn}
-                    onPress={sendEmailForVerification}
+                    onPress={() => sendEmailForVerification(user.pendingEmail!)}
                     disabled={emailSending}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.inlineBtnText}>Resend</Text>
+                    {emailSending ? <ActivityIndicator color={C.textMuted} size="small" /> : (
+                      <Text style={styles.inlineBtnText}>Resend</Text>
+                    )}
                   </TouchableOpacity>
                 </View>
               </>
@@ -258,7 +271,7 @@ export default function EditProfileScreen({ navigation }: Props) {
                 </Text>
                 <TouchableOpacity
                   style={[styles.inlineBtn, styles.inlineBtnPrimary, (!emailInputValid || emailSending) && styles.saveBtnDisabled]}
-                  onPress={sendEmailForVerification}
+                  onPress={() => sendEmailForVerification(emailInput)}
                   disabled={!emailInputValid || emailSending}
                   activeOpacity={0.85}
                 >

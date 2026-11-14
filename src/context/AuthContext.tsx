@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           firebaseUser.uid,
           firebaseUser.email || '',
           firebaseUser.displayName || '',
-          resolveSignInProvider(firebaseUser)
+          resolveSignInProvider(firebaseUser),
+          firebaseUser.emailVerified
         );
         setAnalyticsUserId(firebaseUser.uid);
         setCrashlyticsUserId(firebaseUser.uid);
@@ -69,7 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     uid: string,
     email: string,
     displayName: string,
-    signInProvider: User['signInProvider']
+    signInProvider: User['signInProvider'],
+    // Google/Apple already verify ownership of the email themselves, so
+    // Firebase marks it verified immediately — this is only ever false for
+    // a phone account, where no email exists on the Auth record until the
+    // user completes the verify-by-link flow in Edit Profile.
+    emailVerified: boolean
   ) => {
     try {
       const ref = doc(db, 'users', uid);
@@ -101,6 +107,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!u.signInProvider) {
           u.signInProvider = signInProvider;
           await setDoc(ref, { signInProvider }, { merge: true });
+        }
+        // Backfill emailVerified for Google/Apple accounts created before
+        // this field was captured — Firebase already considers the email
+        // verified for these providers, this profile doc just never
+        // recorded it until now.
+        if (u.email && emailVerified && !u.emailVerified) {
+          u.emailVerified = true;
+          await setDoc(ref, { emailVerified: true }, { merge: true });
         }
         // Picks up the opt-in checkbox on a fresh sign-in, including a
         // returning user logging back in — but only when they actually just
@@ -135,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           discountPct: 0,
           signInProvider,
           marketingOptIn,
+          emailVerified: !!email && emailVerified,
         };
         await setDoc(ref, newUser);
         await saveToCache(newUser);
