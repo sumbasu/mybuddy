@@ -130,7 +130,7 @@ export default function VenueListScreen({ navigation, route }: Props) {
           <Ionicons name="compass-outline" size={40} color={C.textSubtle} />
           <Text style={styles.messageTitle}>No venues found nearby</Text>
           <Text style={styles.messageSub}>
-            We couldn't find any {activityLabel.toLowerCase()} venues within 5 km. Try again later as our map data grows.
+            We couldn't find any {activityLabel.toLowerCase()} venues within 5 km of you in Bengaluru yet.
           </Text>
         </View>
       )}
@@ -142,17 +142,42 @@ export default function VenueListScreen({ navigation, route }: Props) {
         >
           {venues.map((venue) => (
             <View key={venue.id} style={styles.card}>
-              <View style={styles.cardIconWrap}>
-                <InterestIcon id={activityId} size={20} color={C.purple} />
+              <View style={styles.cardTopRow}>
+                <View style={styles.cardIconWrap}>
+                  <InterestIcon id={activityId} size={20} color={C.purple} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.cardNameRow}>
+                    <Text style={styles.cardName} numberOfLines={2}>{venue.name}</Text>
+                    {venue.rating != null && (
+                      <View style={styles.ratingPill}>
+                        <Ionicons name="star" size={11} color="#C9900A" />
+                        <Text style={styles.ratingText}>{venue.rating.toFixed(1)}</Text>
+                      </View>
+                    )}
+                  </View>
+                  {venue.address && <Text style={styles.cardAddress} numberOfLines={1}>{venue.address}</Text>}
+                  {venue.sportSummary && <Text style={styles.cardSummary} numberOfLines={1}>{venue.sportSummary}</Text>}
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.cardName} numberOfLines={2}>{venue.name}</Text>
-                {venue.address && <Text style={styles.cardAddress} numberOfLines={1}>{venue.address}</Text>}
+
+              <View style={styles.cardBottomRow}>
                 <Text style={styles.cardDistance}>{venue.distanceKm.toFixed(1)} km away</Text>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity style={styles.directionsBtn} onPress={() => openDirections(venue)} hitSlop={8}>
+                    <Ionicons name="navigate" size={15} color={C.brand} />
+                  </TouchableOpacity>
+                  {venue.bookingUrl && (
+                    <TouchableOpacity
+                      style={styles.bookBtn}
+                      onPress={() => Linking.openURL(venue.bookingUrl!)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.bookBtnText}>Book</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-              <TouchableOpacity style={styles.directionsBtn} onPress={() => openDirections(venue)} hitSlop={8}>
-                <Ionicons name="navigate" size={16} color="#fff" />
-              </TouchableOpacity>
             </View>
           ))}
         </ScrollView>
@@ -189,19 +214,37 @@ const styles = StyleSheet.create({
   retryBtnText: { fontFamily: FONTS.bold, fontSize: 14, color: '#fff' },
 
   card: {
-    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
     backgroundColor: C.surface, borderRadius: 18, borderWidth: 1, borderColor: C.border,
     padding: SPACING.md, marginBottom: SPACING.sm + 2,
   },
+  cardTopRow: { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md },
   cardIconWrap: {
     width: 44, height: 44, borderRadius: 14, backgroundColor: C.tint,
     alignItems: 'center', justifyContent: 'center',
   },
-  cardName: { fontFamily: FONTS.semiBold, fontSize: 15, color: C.heading },
+  cardNameRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
+  cardName: { flexShrink: 1, fontFamily: FONTS.semiBold, fontSize: 15, color: C.heading },
+  ratingPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 2,
+    backgroundColor: '#FFF6E0', borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2,
+  },
+  ratingText: { fontFamily: FONTS.bold, fontSize: 11.5, color: '#8A6400' },
   cardAddress: { fontFamily: FONTS.regular, fontSize: 12.5, color: C.textMuted, marginTop: 2 },
-  cardDistance: { fontFamily: FONTS.medium, fontSize: 12.5, color: C.brand, marginTop: 3 },
+  cardSummary: { fontFamily: FONTS.medium, fontSize: 12, color: C.textSubtle, marginTop: 3 },
+
+  cardBottomRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: SPACING.sm, paddingTop: SPACING.sm, borderTopWidth: 0.8, borderTopColor: C.border,
+  },
+  cardDistance: { fontFamily: FONTS.medium, fontSize: 12.5, color: C.brand },
+  cardActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   directionsBtn: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: C.brand,
+    width: 34, height: 34, borderRadius: 17, backgroundColor: C.tint,
     alignItems: 'center', justifyContent: 'center',
   },
+  bookBtn: {
+    backgroundColor: C.brand, borderRadius: 999,
+    paddingHorizontal: SPACING.md, height: 34, alignItems: 'center', justifyContent: 'center',
+  },
+  bookBtnText: { fontFamily: FONTS.bold, fontSize: 13, color: '#fff' },
 });
